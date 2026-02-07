@@ -1,0 +1,16 @@
+#!/bin/bash
+# Pocket Empire Launcher
+# Resolves the directory of this script, then moves up 3 levels to project root
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$DIR/../../.."
+
+cd "$PROJECT_ROOT"
+# Run the startup script
+/bin/bash start_system.sh
+
+# Keep terminal open to show status
+echo "---------------------------------------------------"
+echo "✅ Launcher finished. The Hub is starting..."
+echo "---------------------------------------------------"
+echo "Press [Enter] to close this window..."
+read

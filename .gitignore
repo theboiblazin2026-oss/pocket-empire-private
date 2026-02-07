@@ -1,0 +1,45 @@
+# Pocket Empire - Git Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+.venv_*/
+venv/
+ENV/
+
+# Secrets - NEVER commit these
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Local data files (use Supabase instead)
+*.json
+!package.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large files
+*.tar.gz
+google-cloud-sdk/
+chroma_db/
+media-studio/node_modules/
+
+# Logs
+*.log
+server.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+deletion_*.txt
+duplicates_report.txt
+safer_debug.html

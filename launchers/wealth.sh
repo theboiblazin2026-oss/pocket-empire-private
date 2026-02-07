@@ -1,0 +1,11 @@
+#!/bin/bash
+# Wealth Manager Launcher
+cd /Users/newguy/.gemini/antigravity/playground/shimmering-eagle
+
+# Check if already running on port 8501
+if ! lsof -i :8501 > /dev/null 2>&1; then
+    /Users/newguy/pocket_venv/bin/streamlit run pocket_wealth/dashboard.py --server.port 8501 --server.headless true &
+    sleep 3
+fi
+
+open http://localhost:8501

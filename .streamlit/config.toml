@@ -1,0 +1,15 @@
+[theme]
+primaryColor="#FFD700"  # Gold for Empire
+backgroundColor="#0E1117" # Dark Background
+secondaryBackgroundColor="#262730" # Sidebar
+textColor="#FAFAFA"
+font="sans serif"
+
+[server]
+headless = true
+port = 8500
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8500
