@@ -23,9 +23,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Header ---
-BANNER_PATH = "/Users/newguy/.gemini/antigravity/brain/7ee22e88-9edf-4e14-b473-1bce1477c2f5/pocket_empire_logo_ultra_cropped.png"
+BANNER_PATH = os.path.join(os.path.dirname(__file__), "logo.png")
 if os.path.exists(BANNER_PATH):
     st.image(BANNER_PATH, use_container_width=True)
+else:
+    st.warning(f"Banner not found at: {BANNER_PATH}")
 
 # --- Dashboard Grid ---
 # Row 1: Alerts (Left) + Critical Stats (Right)
