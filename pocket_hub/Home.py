@@ -59,13 +59,17 @@ with col_law:
 st.divider()
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    st.button("⛏️ Launch Prospector")
+    if st.button("⛏️ Launch Prospector"):
+        st.switch_page("pages/11_⛏️_Prospector.py")
 with c2:
-    st.button("🛣️ Check Routes")
+    if st.button("🛣️ Check Routes"):
+        st.switch_page("pages/10_🛣️_Route_Planner.py")
 with c3:
-    st.button("🧾 Run Payroll")
+    if st.button("🧾 Run Payroll"):
+        st.switch_page("pages/06_🧾_Invoices.py")
 with c4:
-    st.button("📋 Compliance")
+    if st.button("📋 Compliance"):
+        st.switch_page("pages/04_📋_Compliance.py")
 
 # --- Footer ---
 st.caption(f"System Online | {datetime.datetime.now().strftime('%A, %B %d')} | Pocket Empire Cloud v1.0")
