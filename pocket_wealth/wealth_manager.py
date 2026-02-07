@@ -30,6 +30,21 @@ def get_client_file(client_name):
     return os.path.join(DATA_DIR, f"{safe_name}_wealth.json")
 
 def load_data(client_name):
+    # Try DB First
+    try:
+        import sys
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        client = db.get_db()
+        if client:
+            key = f"wealth_{client_name}"
+            res = client.table("app_data").select("value").eq("key", key).execute()
+            if res.data:
+                return res.data[0]['value']
+    except:
+        pass
+
+    # Fallback to Local
     filepath = get_client_file(client_name)
     if os.path.exists(filepath):
         with open(filepath, 'r') as f:
@@ -41,9 +56,27 @@ def load_data(client_name):
     }
 
 def save_data(client_name, data):
+    # Local Save
     filepath = get_client_file(client_name)
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=2)
+        
+    # DB Save
+    try:
+        import sys
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        client = db.get_db()
+        if client:
+            key = f"wealth_{client_name}"
+            payload = {
+                "key": key,
+                "value": data,
+                "updated_at": datetime.now().isoformat()
+            }
+            client.table("app_data").upsert(payload).execute()
+    except Exception as e:
+        print(f"Wealth Sync Error: {e}")
 
 def update_budget(client_name, daily_target, bills, streams):
     data = load_data(client_name)

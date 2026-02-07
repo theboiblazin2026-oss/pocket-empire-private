@@ -12,25 +12,98 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 def load_data():
     """Load invoice data from JSON."""
     if not os.path.exists(DATA_FILE):
-        return {
+        local_data = {
             "invoices": [],
             "next_invoice_number": 1001,
             "company_info": {
                 "name": "YOUR COMPANY NAME",
-                "address": "Your Address",
+                "address": "Your Address", 
                 "city_state_zip": "City, ST 00000",
                 "phone": "(000) 000-0000",
                 "email": "email@example.com"
             },
             "clients": []
         }
-    with open(DATA_FILE, 'r') as f:
-        return json.load(f)
+    else:
+        with open(DATA_FILE, 'r') as f:
+            local_data = json.load(f)
+
+    # Try DB Overlay
+    try:
+        # Import here to avoid circular dependency issues if any
+        import sys
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        
+        client = db.get_db()
+        if client:
+            # Fetch Invoices
+            res = client.table("invoices").select("data").execute()
+            db_invoices = [row['data'] for row in res.data if row.get('data')]
+            
+            # Merge: DB takes precedence or we just use DB if available?
+            # For simplicity, if DB connects, we use DB invoices.
+            # But we also need clients and company info.
+            # Creating tables for those is best, but for now let's stick to local for settings/clients 
+            # and DB for invoices (the main transactional data).
+            
+            # actually, let's just use local data structure but replace invoices list
+            if db_invoices:
+                local_data["invoices"] = db_invoices
+                
+    except Exception as e:
+        # Fail silently to local
+        pass
+        
+    return local_data
 
 def save_data(data):
-    """Save invoice data to JSON."""
+    """Save invoice data to JSON and Sync to DB."""
+    # Local Save
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f, indent=2, default=str)
+
+    # DB Sync
+    try:
+        import sys
+        # ensure path is there (it should be from load_data but good to be safe)
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        
+        client = db.get_db()
+        if client:
+            # Sync Invoices
+            # We only sync items that are in the data object
+            for inv in data.get("invoices", []):
+                # Flatten what we can, put rest in data
+                # We need to extract origin/dest/ref from nested 'details' if present, or it might be raw?
+                # The invoice structure in create_invoice:
+                # {invoice_number, client, line_items, total, ...}
+                # It does NOT have 'details' key by default in my previous read of create_invoice
+                # Wait, create_invoice in this file line 108:
+                # invoice = {invoice_number, client, date, due_date, line_items...}
+                # It does NOT have origin/dest/ref fields at top level! 
+                # They must be in line items logic or notes? 
+                
+                # In dashboard.py (Step 5483), user inputs route origin/dest but where does it go?
+                # It goes into line item description! "Load from Chicago to Miami..."
+                # It is NOT structured!
+                
+                # So my SQL schema with origin/dest columns is actually unused unless I parse it.
+                # That's fine. We rely on 'data' col.
+                
+                payload = {
+                    "id": str(inv.get("invoice_number")), # ID is text in SQL
+                    "client_name": inv.get("client", {}).get("name", "Unknown"),
+                    "amount": inv.get("total", 0),
+                    "status": inv.get("status", "draft"),
+                    "data": inv,
+                    "created_at": inv.get("created_at", datetime.now().isoformat())
+                }
+                client.table("invoices").upsert(payload).execute()
+                
+    except Exception as e:
+        print(f"DB Sync Error: {e}")
 
 def update_company_info(name, address, city_state_zip, phone, email):
     """Update company information."""

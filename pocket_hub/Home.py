@@ -35,6 +35,18 @@ with col_alerts:
     st.subheader("🚨 Alerts")
     alerts_found = False
     
+    # 0. Database Status
+    try:
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        if db.get_db():
+            st.success("✅ Database: **Connected**")
+        else:
+            st.warning("⚠️ Database: **Offline** (Add Keys to Secrets)")
+            alerts_found = True
+    except Exception as e:
+        st.error(f"DB Error: {e}")
+    
     # 1. Credit Check
     try:
         with open("/Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_credit/personal_credit.json") as f:

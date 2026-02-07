@@ -10,14 +10,46 @@ from bs4 import BeautifulSoup
 DATA_FILE = os.path.join(os.path.dirname(__file__), "leads.json")
 
 def load_data():
+    # Try DB First
+    try:
+        import sys
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        client = db.get_db()
+        if client:
+            key = "leads_history"
+            res = client.table("app_data").select("value").eq("key", key).execute()
+            if res.data:
+                return res.data[0]['value']
+    except:
+        pass
+
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             return json.load(f)
     return {"scored_leads": [], "score_history": []}
 
 def save_data(data):
+    # Local Save
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f, indent=2)
+        
+    # DB Save
+    try:
+        import sys
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+        import db
+        client = db.get_db()
+        if client:
+            key = "leads_history"
+            payload = {
+                "key": key,
+                "value": data,
+                "updated_at": datetime.now().isoformat()
+            }
+            client.table("app_data").upsert(payload).execute()
+    except Exception as e:
+        print(f"Lead Sync Error: {e}")
 
 def get_carrier_info(identifier, search_type="MC_MX"):
     """Fetch carrier info from FMCSA SAFER"""
