@@ -140,11 +140,38 @@ if st.session_state.client:
             
         # 2. Data View
         st.subheader("📊 Lead Database")
-        if st.button("🔄 Refresh Data"):
-            st.rerun()
-            
+        
+        # Filters row
+        f1, f2, f3 = st.columns([1, 1, 2])
+        with f1:
+            if st.button("🔄 Refresh Data"):
+                st.rerun()
+        
         df = load_data(worksheet)
-        st.dataframe(df, use_container_width=True, height=600)
+        
+        # State Filter
+        with f2:
+            states = ["All States", "GA", "TX", "CA", "FL", "IL", "TN", "OH", "PA", "NY", "NJ", 
+                      "NC", "IN", "MO", "AZ", "NV", "WA", "CO", "VA", "MD", "LA", "AL", "KY", 
+                      "SC", "MS", "AR", "OK", "KS", "UT", "OR", "MI", "MN", "WI", "IA", "NE"]
+            state_filter = st.selectbox("Filter by State", states)
+        
+        # Company Search
+        with f3:
+            company_search = st.text_input("🔍 Search Company", placeholder="Type company name...")
+        
+        # Apply filters
+        filtered_df = df.copy()
+        
+        if state_filter != "All States" and "Address" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["Address"].str.contains(state_filter, case=False, na=False)]
+        
+        if company_search and "Business Name" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["Business Name"].str.contains(company_search, case=False, na=False)]
+        
+        # Show filtered count
+        st.caption(f"Showing {len(filtered_df)} of {len(df)} leads")
+        st.dataframe(filtered_df, use_container_width=True, height=600)
         
         # 3. Stats
         st.sidebar.header("Stats")
