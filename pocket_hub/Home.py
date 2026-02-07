@@ -50,15 +50,19 @@ with col_alerts:
         st.error(f"DB Error: {e}")
     
     # 1. Credit Check
+    # 1. Credit Check
     try:
-        with open("/Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_credit/personal_credit.json") as f:
-            credit_data = json.load(f)
-            score = credit_data.get("current_score", 0)
-            if score < 700:
-                st.error(f"⚠️ Credit Score: **{score}** (Goal: 750+)")
-                alerts_found = True
-    except:
-        pass
+        CREDIT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_credit/personal_credit.json'))
+        if os.path.exists(CREDIT_PATH):
+            with open(CREDIT_PATH) as f:
+                credit_data = json.load(f)
+                score = credit_data.get("current_score", 0)
+                if score < 700:
+                    st.error(f"⚠️ Credit Score: **{score}** (Goal: 750+)")
+                    alerts_found = True
+    except Exception as e:
+        # Fail silently or log if needed, but don't crash the app
+        print(f"Credit load error: {e}")
 
     # 2. Lead Check (Mock)
     st.info("ℹ️ Leads: **5 New** pending review")
