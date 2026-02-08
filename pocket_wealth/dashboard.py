@@ -244,7 +244,7 @@ def main():
                     paid_off = max(0, original - current)
                     progress_pct = (paid_off / original) if original > 0 else 1.0
                     
-                    c1, c2, c3 = st.columns([2, 1, 1])
+                    c1, c2, c3, c4 = st.columns([2, 1, 0.5, 0.5])
                     with c1:
                         st.markdown(f"**{debt.get('name', 'Unnamed Debt')}**")
                         st.progress(min(1.0, progress_pct))
@@ -252,11 +252,15 @@ def main():
                     with c2:
                         pmt_amt = st.number_input("Payment", min_value=0.0, step=10.0, key=f"pmt_{debt['id']}")
                     with c3:
-                        if st.button("💸 Pay", key=f"btn_{debt['id']}"):
+                        if st.button("💸", key=f"btn_{debt['id']}", help="Pay"):
                             if pmt_amt > 0:
                                 wm.log_debt_payment(client_key, debt["id"], pmt_amt)
                                 st.success(f"Paid ${pmt_amt:.2f}!")
                                 st.rerun()
+                    with c4:
+                        if st.button("🗑️", key=f"del_debt_{debt['id']}", help="Delete"):
+                            wm.delete_debt(client_key, debt["id"])
+                            st.rerun()
                     
                     if current == 0:
                         st.success("🎉 PAID OFF!")
@@ -299,7 +303,7 @@ def main():
                     current_amt = goal.get("current_amount", 0)
                     progress_pct = (current_amt / target_amt) if target_amt > 0 else 0
                     
-                    c1, c2, c3 = st.columns([2, 1, 1])
+                    c1, c2, c3, c4 = st.columns([2, 1, 0.5, 0.5])
                     with c1:
                         st.markdown(f"**{goal.get('name', 'Unnamed Goal')}**")
                         st.progress(min(1.0, progress_pct))
@@ -307,11 +311,15 @@ def main():
                     with c2:
                         contrib_amt = st.number_input("Contribute", min_value=0.0, step=10.0, key=f"contrib_{goal['id']}")
                     with c3:
-                        if st.button("💰 Add", key=f"goal_btn_{goal['id']}"):
+                        if st.button("💰", key=f"goal_btn_{goal['id']}", help="Add"):
                             if contrib_amt > 0:
                                 wm.contribute_to_goal(client_key, goal["id"], contrib_amt)
                                 st.success(f"Added ${contrib_amt:.2f}!")
                                 st.rerun()
+                    with c4:
+                        if st.button("🗑️", key=f"del_goal_{goal['id']}", help="Delete"):
+                            wm.delete_savings_goal(client_key, goal["id"])
+                            st.rerun()
                     
                     if current_amt >= target_amt:
                         st.balloons()
