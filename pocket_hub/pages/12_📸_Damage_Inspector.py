@@ -250,20 +250,22 @@ with tab2:
             vehicle_vin = st.text_input("VIN Number", placeholder="1HGCV1F34PA123456", key="v_vin")
         
         st.markdown("##### 🔧 Damage Checklist")
-        damage_cols = st.columns(4)
+        damage_cols = st.columns(5)
         with damage_cols[0]:
-            dmg_front = st.checkbox("Front Damage", key="dmg_front")
-            dmg_rear = st.checkbox("Rear Damage", key="dmg_rear")
+            dmg_front = st.checkbox("Front", key="dmg_front")
+            dmg_rear = st.checkbox("Rear", key="dmg_rear")
         with damage_cols[1]:
-            dmg_left = st.checkbox("Left Side Damage", key="dmg_left")
-            dmg_right = st.checkbox("Right Side Damage", key="dmg_right")
+            dmg_left = st.checkbox("Left Side", key="dmg_left")
+            dmg_right = st.checkbox("Right Side", key="dmg_right")
         with damage_cols[2]:
-            dmg_roof = st.checkbox("Roof Damage", key="dmg_roof")
-            dmg_undercarriage = st.checkbox("Under", key="dmg_under")
+            dmg_roof = st.checkbox("Roof", key="dmg_roof")
+            dmg_undercarriage = st.checkbox("Undercarriage", key="dmg_under")
         with damage_cols[3]:
             dmg_front_glass = st.checkbox("Front Glass", key="dmg_fglass")
             dmg_rear_glass = st.checkbox("Rear Glass", key="dmg_rglass")
+        with damage_cols[4]:
             dmg_interior = st.checkbox("Interior", key="dmg_interior")
+            st.write("") # Spacer
         
         damage_notes = st.text_area("Damage Notes", placeholder="Describe any visible damage...", key="dmg_notes")
         
