@@ -10,7 +10,8 @@ if DIR not in sys.path:
 
 from invoice_manager import (
     load_data, save_data, update_company_info, add_client, get_clients,
-    create_invoice, get_invoices, mark_invoice_paid, generate_invoice_docx, get_stats
+    create_invoice, get_invoices, mark_invoice_paid, generate_invoice_docx, get_stats,
+    record_payment, get_payment_history, delete_invoice, update_invoice, delete_client, update_client
 )
 
 OUTPUT_DIR = os.path.join(DIR, "output")
@@ -200,12 +201,20 @@ def main():
                         st.write("**Line Items:**")
                         for item in inv["line_items"]:
                             st.caption(f"• {item['description']} - {item['quantity']} x ${item['rate']:,.2f}")
-                        st.write(f"**Total: ${inv['total']:,.2f}**")
+                        
+                        # Payment Info
+                        amount_paid = inv.get('amount_paid', 0)
+                        balance = inv.get('balance', inv['total'])
+                        st.write(f"**Total:** ${inv['total']:,.2f}")
+                        if amount_paid > 0:
+                            st.write(f"**Paid:** ${amount_paid:,.2f} | **Balance:** ${balance:,.2f}")
                     
-                    # Actions
-                    col_a, col_b, col_c = st.columns(3)
+                    # Actions Row
+                    st.markdown("---")
+                    col_a, col_b, col_c, col_d = st.columns(4)
+                    
                     with col_a:
-                        if inv["status"] == "unpaid":
+                        if inv["status"] != "paid":
                             if st.button("✅ Mark Paid", key=f"paid_{inv['invoice_number']}"):
                                 mark_invoice_paid(inv["invoice_number"])
                                 st.rerun()
@@ -228,6 +237,59 @@ def main():
                             if st.button("📄 Generate", key=f"gen_{inv['invoice_number']}"):
                                 generate_invoice_docx(inv["invoice_number"])
                                 st.rerun()
+                    
+                    with col_c:
+                        if st.button("✏️ Edit", key=f"edit_{inv['invoice_number']}"):
+                            st.session_state[f"editing_{inv['invoice_number']}"] = True
+                    
+                    with col_d:
+                        if st.button("🗑️ Delete", key=f"del_{inv['invoice_number']}"):
+                            delete_invoice(inv["invoice_number"])
+                            st.success("Invoice deleted!")
+                            st.rerun()
+                    
+                    # Payment Recording (for unpaid/partial invoices)
+                    if inv["status"] in ["unpaid", "partial"]:
+                        st.markdown("### 💵 Record Payment")
+                        with st.form(key=f"payment_{inv['invoice_number']}"):
+                            pcol1, pcol2, pcol3 = st.columns([1, 1, 2])
+                            with pcol1:
+                                pay_amount = st.number_input("Amount ($)", min_value=0.01, value=float(inv.get('balance', inv['total'])), key=f"pamt_{inv['invoice_number']}")
+                            with pcol2:
+                                pay_method = st.selectbox("Method", ["Check", "ACH", "Wire", "Cash", "Credit Card"], key=f"pmethod_{inv['invoice_number']}")
+                            with pcol3:
+                                pay_notes = st.text_input("Notes", placeholder="Check #1234", key=f"pnotes_{inv['invoice_number']}")
+                            
+                            if st.form_submit_button("💰 Record Payment"):
+                                record_payment(inv["invoice_number"], pay_amount, pay_method, pay_notes)
+                                st.success(f"Recorded ${pay_amount:,.2f} payment!")
+                                st.rerun()
+                    
+                    # Payment History
+                    payments = get_payment_history(inv["invoice_number"])
+                    if payments:
+                        st.markdown("### 📜 Payment History")
+                        for p in payments:
+                            st.caption(f"• {p['date'][:10]} - ${p['amount']:,.2f} ({p['method']}) {p.get('notes', '')}")
+                    
+                    # Edit Mode
+                    if st.session_state.get(f"editing_{inv['invoice_number']}", False):
+                        st.markdown("### ✏️ Edit Invoice")
+                        with st.form(key=f"edit_form_{inv['invoice_number']}"):
+                            new_notes = st.text_area("Notes", value=inv.get('notes', ''), key=f"enotes_{inv['invoice_number']}")
+                            new_status = st.selectbox("Status", ["unpaid", "partial", "paid"], index=["unpaid", "partial", "paid"].index(inv['status']), key=f"estatus_{inv['invoice_number']}")
+                            
+                            ec1, ec2 = st.columns(2)
+                            with ec1:
+                                if st.form_submit_button("💾 Save Changes"):
+                                    update_invoice(inv["invoice_number"], {"notes": new_notes, "status": new_status})
+                                    st.session_state[f"editing_{inv['invoice_number']}"] = False
+                                    st.success("Invoice updated!")
+                                    st.rerun()
+                            with ec2:
+                                if st.form_submit_button("❌ Cancel"):
+                                    st.session_state[f"editing_{inv['invoice_number']}"] = False
+                                    st.rerun()
 
     with tab3:
         st.subheader("👥 Client Management")
@@ -265,6 +327,41 @@ def main():
                     st.write(f"**City/State/ZIP:** {c['city_state_zip']}")
                     if c.get('email'):
                         st.write(f"**Email:** {c['email']}")
+                    if c.get('phone'):
+                        st.write(f"**Phone:** {c['phone']}")
+                    
+                    # Action buttons
+                    cb1, cb2 = st.columns(2)
+                    with cb1:
+                        if st.button("✏️ Edit", key=f"editc_{c['id']}"):
+                            st.session_state[f"editing_client_{c['id']}"] = True
+                    with cb2:
+                        if st.button("🗑️ Delete", key=f"delc_{c['id']}"):
+                            delete_client(c['id'])
+                            st.success("Client deleted!")
+                            st.rerun()
+                    
+                    # Edit form
+                    if st.session_state.get(f"editing_client_{c['id']}", False):
+                        st.markdown("### ✏️ Edit Client")
+                        with st.form(key=f"edit_client_{c['id']}"):
+                            new_name = st.text_input("Name", value=c['name'], key=f"cn_{c['id']}")
+                            new_addr = st.text_input("Address", value=c['address'], key=f"ca_{c['id']}")
+                            new_csz = st.text_input("City/State/ZIP", value=c['city_state_zip'], key=f"ccsz_{c['id']}")
+                            new_email = st.text_input("Email", value=c.get('email', ''), key=f"ce_{c['id']}")
+                            new_phone = st.text_input("Phone", value=c.get('phone', ''), key=f"cp_{c['id']}")
+                            
+                            if st.form_submit_button("💾 Save"):
+                                update_client(c['id'], {
+                                    'name': new_name, 
+                                    'address': new_addr, 
+                                    'city_state_zip': new_csz,
+                                    'email': new_email,
+                                    'phone': new_phone
+                                })
+                                st.session_state[f"editing_client_{c['id']}"] = False
+                                st.success("Client updated!")
+                                st.rerun()
         else:
             st.info("No clients added yet.")
 

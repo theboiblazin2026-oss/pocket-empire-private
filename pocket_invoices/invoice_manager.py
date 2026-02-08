@@ -197,13 +197,129 @@ def get_invoices(status=None):
     return sorted(invoices, key=lambda x: x["invoice_number"], reverse=True)
 
 def mark_invoice_paid(invoice_number):
-    """Mark an invoice as paid."""
+    """Mark an invoice as fully paid."""
     data = load_data()
     
     for inv in data["invoices"]:
         if inv["invoice_number"] == invoice_number:
             inv["status"] = "paid"
             inv["paid_at"] = datetime.now().isoformat()
+            inv["amount_paid"] = inv.get("total", 0)
+            inv["balance"] = 0
+            save_data(data)
+            return True
+    
+    return False
+
+# ============== PAYMENT TRACKING ==============
+
+def record_payment(invoice_number, amount, method="Check", notes=""):
+    """Record a partial or full payment on an invoice."""
+    data = load_data()
+    
+    for inv in data["invoices"]:
+        if inv["invoice_number"] == invoice_number:
+            # Initialize payment tracking if not exists
+            if "payments" not in inv:
+                inv["payments"] = []
+            if "amount_paid" not in inv:
+                inv["amount_paid"] = 0
+            
+            # Record payment
+            payment = {
+                "date": datetime.now().isoformat(),
+                "amount": float(amount),
+                "method": method,
+                "notes": notes
+            }
+            inv["payments"].append(payment)
+            
+            # Update totals
+            inv["amount_paid"] = sum(p["amount"] for p in inv["payments"])
+            inv["balance"] = inv.get("total", 0) - inv["amount_paid"]
+            
+            # Auto-mark as paid if fully paid
+            if inv["balance"] <= 0:
+                inv["status"] = "paid"
+                inv["paid_at"] = datetime.now().isoformat()
+            else:
+                inv["status"] = "partial"
+            
+            save_data(data)
+            return True
+    
+    return False
+
+def get_payment_history(invoice_number):
+    """Get payment history for an invoice."""
+    data = load_data()
+    for inv in data["invoices"]:
+        if inv["invoice_number"] == invoice_number:
+            return inv.get("payments", [])
+    return []
+
+# ============== DELETE / EDIT ==============
+
+def delete_invoice(invoice_number):
+    """Delete an invoice permanently."""
+    data = load_data()
+    original_count = len(data["invoices"])
+    data["invoices"] = [i for i in data["invoices"] if i["invoice_number"] != invoice_number]
+    
+    if len(data["invoices"]) < original_count:
+        save_data(data)
+        return True
+    return False
+
+def update_invoice(invoice_number, updates):
+    """
+    Update invoice fields.
+    
+    Args:
+        invoice_number: The invoice number to update
+        updates: Dict of fields to update (e.g., {'notes': 'new note', 'due_date': '2024-03-01'})
+    """
+    data = load_data()
+    
+    allowed_fields = ['notes', 'due_date', 'status', 'line_items']
+    
+    for inv in data["invoices"]:
+        if inv["invoice_number"] == invoice_number:
+            for key, value in updates.items():
+                if key in allowed_fields:
+                    inv[key] = value
+            
+            # Recalculate total if line items changed
+            if 'line_items' in updates:
+                inv["total"] = sum(item["quantity"] * item["rate"] for item in updates["line_items"])
+                inv["balance"] = inv["total"] - inv.get("amount_paid", 0)
+            
+            inv["updated_at"] = datetime.now().isoformat()
+            save_data(data)
+            return True
+    
+    return False
+
+def delete_client(client_id):
+    """Delete a client."""
+    data = load_data()
+    original_count = len(data["clients"])
+    data["clients"] = [c for c in data["clients"] if c["id"] != client_id]
+    
+    if len(data["clients"]) < original_count:
+        save_data(data)
+        return True
+    return False
+
+def update_client(client_id, updates):
+    """Update client information."""
+    data = load_data()
+    
+    for client in data["clients"]:
+        if client["id"] == client_id:
+            for key, value in updates.items():
+                if key in ['name', 'address', 'city_state_zip', 'email', 'phone']:
+                    client[key] = value
             save_data(data)
             return True
     
