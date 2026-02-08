@@ -134,7 +134,7 @@ def main():
         with st.expander("➕ Add New Bill"):
             with st.form("add_bill"):
                 bname = st.text_input("Bill Name", placeholder="Rent")
-                bamt = st.number_input("Amount", min_value=0.0,Step=10.0)
+                bamt = st.number_input("Amount", min_value=0.0, step=10.0)
                 if st.form_submit_button("Add Bill"):
                     if bname and bamt > 0:
                         current_bills = budget.get("monthly_bills", [])
