@@ -261,7 +261,8 @@ with tab2:
             dmg_roof = st.checkbox("Roof Damage", key="dmg_roof")
             dmg_undercarriage = st.checkbox("Under", key="dmg_under")
         with damage_cols[3]:
-            dmg_glass = st.checkbox("Glass", key="dmg_glass")
+            dmg_front_glass = st.checkbox("Front Glass", key="dmg_fglass")
+            dmg_rear_glass = st.checkbox("Rear Glass", key="dmg_rglass")
             dmg_interior = st.checkbox("Interior", key="dmg_interior")
         
         damage_notes = st.text_area("Damage Notes", placeholder="Describe any visible damage...", key="dmg_notes")
@@ -276,7 +277,8 @@ with tab2:
             },
             "damage": {
                 "front": dmg_front, "rear": dmg_rear, "left": dmg_left, "right": dmg_right,
-                "roof": dmg_roof, "undercarriage": dmg_undercarriage, "glass": dmg_glass, "interior": dmg_interior,
+                "roof": dmg_roof, "undercarriage": dmg_undercarriage, 
+                "front_glass": dmg_front_glass, "rear_glass": dmg_rear_glass, "interior": dmg_interior,
                 "notes": damage_notes
             }
         })
