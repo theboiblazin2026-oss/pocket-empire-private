@@ -85,6 +85,31 @@ def main():
                     tooltip=['date', 'source', 'amount']
                 ).interactive()
                 st.altair_chart(chart, use_container_width=True)
+                
+                # Detailed List with Actions
+                st.markdown("### 📝 History")
+                logs = data.get("daily_log", [])
+                for entry in reversed(logs[-5:]):  # Show last 5, newest first
+                    with st.expander(f"{entry['date']} - ${entry['amount']:.2f} ({entry['source']})"):
+                        ec1, ec2 = st.columns(2)
+                        with ec1:
+                            st.write(f"**Notes:** {entry.get('notes', '-')}")
+                        with ec2:
+                            if st.button("🗑️ Delete", key=f"del_log_{entry['timestamp']}"):
+                                wm.delete_earning_log(client_key, entry['timestamp'])
+                                st.success("Entry deleted!")
+                                st.rerun()
+                                
+                        # Edit Form inside expander
+                        with st.form(key=f"edit_log_{entry['timestamp']}"):
+                            nem = st.number_input("Amount", value=float(entry['amount']), key=f"nem_{entry['timestamp']}")
+                            nsrc = st.selectbox("Source", [s['name'] for s in budget.get('income_streams', [])], index=0, key=f"nsrc_{entry['timestamp']}")
+                            nnotes = st.text_input("Notes", value=entry.get('notes', ''), key=f"nnotes_{entry['timestamp']}")
+                            
+                            if st.form_submit_button("💾 Update"):
+                                wm.update_earning_log(client_key, entry['timestamp'], nem, nsrc, nnotes)
+                                st.success("Updated!")
+                                st.rerun()
             else:
                 st.info("No earnings logged yet.")
 
@@ -92,43 +117,76 @@ def main():
         st.subheader("💸 Build the Budget")
         st.caption("Define the daily target by listing monthly bills.")
         
-        with st.form("budget_form"):
-            # Daily Target
+        # 1. Daily Target
+        with st.form("target_form"):
             new_target = st.number_input("Daily Income Target ($)", value=float(budget.get("daily_target", 100.0)), step=5.0)
-            
-            # Bills Editor (Simple Text Area for JSON-ish entry or just list)
-            st.markdown("### Monthly Bills")
-            st.caption("Format: Name, Amount (one per line)")
-            
-            current_bills_text = ""
-            for b in budget.get("monthly_bills", []):
-                current_bills_text += f"{b['name']}, {b['amount']}\n"
-                
-            bills_input = st.text_area("Bills List", value=current_bills_text, height=150)
-            
-            # Income Streams
-            st.markdown("### Income Streams")
-            st.caption("Add Gig Apps or Jobs here (comma separated)")
-            current_streams = ", ".join([s["name"] for s in budget.get("income_streams", [])])
-            streams_input = st.text_input("Income Sources", value=current_streams)
-            
-            if st.form_submit_button("💾 Save Budget"):
-                # Parse Bills
-                new_bills = []
-                for line in bills_input.split('\n'):
-                    if ',' in line:
-                        parts = line.split(',')
-                        try:
-                            new_bills.append({"name": parts[0].strip(), "amount": float(parts[1].strip())})
-                        except:
-                            pass
-                
-                # Parse Streams
-                new_streams = [{"name": s.strip(), "target": 0} for s in streams_input.split(',') if s.strip()]
-                
-                wm.update_budget(client_key, new_target, new_bills, new_streams)
-                st.success("Budget Updated!")
+            if st.form_submit_button("Update Target"):
+                wm.update_budget(client_key, new_target, budget.get("monthly_bills", []), budget.get("income_streams", []))
+                st.success("Target Updated!")
                 st.rerun()
+
+        st.divider()
+
+        # 2. Monthly Bills
+        st.markdown("### 📉 Monthly Bills")
+        
+        # Add Bill
+        with st.expander("➕ Add New Bill"):
+            with st.form("add_bill"):
+                bname = st.text_input("Bill Name", placeholder="Rent")
+                bamt = st.number_input("Amount", min_value=0.0,Step=10.0)
+                if st.form_submit_button("Add Bill"):
+                    if bname and bamt > 0:
+                        current_bills = budget.get("monthly_bills", [])
+                        current_bills.append({"name": bname, "amount": bamt})
+                        wm.update_budget(client_key, budget.get("daily_target"), current_bills, budget.get("income_streams"))
+                        st.rerun()
+
+        # List Bills
+        if budget.get("monthly_bills"):
+            for idx, bill in enumerate(budget["monthly_bills"]):
+                c1, c2, c3 = st.columns([3, 2, 1])
+                with c1:
+                    st.write(f"**{bill['name']}**")
+                with c2:
+                    st.write(f"${bill['amount']:.2f}")
+                with c3:
+                    if st.button("🗑️", key=f"del_bill_{idx}"):
+                        new_bills = [b for i, b in enumerate(budget["monthly_bills"]) if i != idx]
+                        wm.update_budget(client_key, budget.get("daily_target"), new_bills, budget.get("income_streams"))
+                        st.rerun()
+        else:
+            st.info("No bills added.")
+
+        st.divider()
+
+        # 3. Income Streams
+        st.markdown("### 💰 Income Streams")
+        
+        # Add Stream
+        with st.expander("➕ Add Income Source"):
+            with st.form("add_stream"):
+                sname = st.text_input("Source Name", placeholder="Uber")
+                if st.form_submit_button("Add Source"):
+                    if sname:
+                        current_streams = budget.get("income_streams", [])
+                        current_streams.append({"name": sname, "type": "variable"})
+                        wm.update_budget(client_key, budget.get("daily_target"), budget.get("monthly_bills"), current_streams)
+                        st.rerun()
+
+        # List Streams
+        if budget.get("income_streams"):
+            for idx, stream in enumerate(budget["income_streams"]):
+                c1, c2 = st.columns([4, 1])
+                with c1:
+                    st.write(f"🔹 {stream['name']}")
+                with c2:
+                    if st.button("🗑️", key=f"del_stream_{idx}"):
+                        new_streams = [s for i, s in enumerate(budget["income_streams"]) if i != idx]
+                        wm.update_budget(client_key, budget.get("daily_target"), budget.get("monthly_bills"), new_streams)
+                        st.rerun()
+        else:
+            st.info("No income streams added.")
 
         # Visualization
         if budget.get("monthly_bills"):
@@ -200,6 +258,49 @@ def main():
                     y=alt.Y('net_worth:Q', title='Net Worth ($)'),
                     tooltip=['date', 'net_worth', 'total_assets', 'total_debts']
                 ).properties(height=250).interactive()
+                st.altair_chart(chart, use_container_width=True)
+                
+                # History Management
+                st.markdown("### 🗓️ Snapshot History")
+                for snap in history:
+                    with st.expander(f"{snap['date']} - Net Worth: ${snap.get('net_worth', 0):,.2f}"):
+                        c1, c2, c3 = st.columns([2, 1, 1])
+                        with c1:
+                            st.write(f"**Assets:** ${snap.get('total_assets', 0):,.2f}")
+                            st.write(f"**Debts:** ${snap.get('total_debts', 0):,.2f}")
+                        with c2:
+                            if st.button("✏️ Edit", key=f"edit_nw_{snap['timestamp']}"):
+                                st.session_state[f"editing_nw_{snap['timestamp']}"] = True
+                        with c3:
+                            if st.button("🗑️ Delete", key=f"del_nw_{snap['timestamp']}"):
+                                wm.delete_net_worth_snapshot(client_key, snap['timestamp'])
+                                st.success("Snapshot deleted!")
+                                st.rerun()
+                        
+                        # Edit Form
+                        if st.session_state.get(f"editing_nw_{snap['timestamp']}", False):
+                            st.markdown("#### Edit Snapshot")
+                            with st.form(key=f"edit_nw_form_{snap['timestamp']}"):
+                                # Assets
+                                st.caption("Assets")
+                                nc = st.number_input("Cash", value=float(snap.get('assets', {}).get('cash', 0)), key=f"nc_{snap['timestamp']}")
+                                ni = st.number_input("Investments", value=float(snap.get('assets', {}).get('investments', 0)), key=f"ni_{snap['timestamp']}")
+                                nv = st.number_input("Vehicles", value=float(snap.get('assets', {}).get('vehicles', 0)), key=f"nv_{snap['timestamp']}")
+                                np = st.number_input("Property", value=float(snap.get('assets', {}).get('property', 0)), key=f"np_{snap['timestamp']}")
+                                
+                                # Debts
+                                st.caption("Liabilities")
+                                na = st.number_input("Auto Loans", value=float(snap.get('debts', {}).get('auto', 0)), key=f"na_{snap['timestamp']}")
+                                ncd = st.number_input("Credit Cards", value=float(snap.get('debts', {}).get('credit', 0)), key=f"ncd_{snap['timestamp']}")
+                                nod = st.number_input("Other Debt", value=float(snap.get('debts', {}).get('other', 0)), key=f"nod_{snap['timestamp']}")
+                                
+                                if st.form_submit_button("ab Update Snapshot"):
+                                    new_assets = {"cash": nc, "investments": ni, "vehicles": nv, "property": np}
+                                    new_debts = {"auto": na, "credit": ncd, "other": nod}
+                                    wm.update_net_worth_snapshot(client_key, snap['timestamp'], new_assets, new_debts)
+                                    st.session_state[f"editing_nw_{snap['timestamp']}"] = False
+                                    st.success("Updated!")
+                                    st.rerun()
                 
                 st.altair_chart(chart, use_container_width=True)
             else:

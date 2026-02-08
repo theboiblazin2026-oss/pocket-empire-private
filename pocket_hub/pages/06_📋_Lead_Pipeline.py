@@ -90,7 +90,14 @@ def main():
         # Filters
         f1, f2 = st.columns(2)
         with f1:
-            status_filter = st.selectbox("Filter by Status", ["All"] + lh.LEAD_STATUSES)
+            # Default to "New" if set in session state
+            default_ix = 0
+            if "lead_filter" in st.session_state and st.session_state["lead_filter"] in ["All"] + lh.LEAD_STATUSES:
+                default_ix = (["All"] + lh.LEAD_STATUSES).index(st.session_state["lead_filter"])
+                # Clear it after using so it doesn't stick forever
+                del st.session_state["lead_filter"]
+            
+            status_filter = st.selectbox("Filter by Status", ["All"] + lh.LEAD_STATUSES, index=default_ix)
         with f2:
             search = st.text_input("🔍 Search", placeholder="Company or contact name...")
         

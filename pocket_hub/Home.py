@@ -44,7 +44,21 @@ with col_alerts:
     except Exception:
         st.warning("⚠️ Database: **Offline** (Add Keys to Secrets)")
     
-    st.info("ℹ️ Leads: **5 New** pending review")
+    # Dynamic Lead Stats
+    try:
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_leads')))
+        from lead_history import get_lead_stats
+        stats = get_lead_stats()
+        new_leads = stats.get("New", 0)
+        
+        if new_leads > 0:
+            if st.button(f"ℹ️ Leads: {new_leads} New pending review", type="primary", use_container_width=True):
+                st.session_state["lead_filter"] = "New"
+                st.switch_page("pages/06_📋_Lead_Pipeline.py")
+        else:
+            st.info("✅ All leads reviewed")
+    except Exception as e:
+        st.info("ℹ️ Leads: Check Pipeline")
 
 with col_wealth:
     st.metric("Wealth Manager", "Active", "Mod 01")

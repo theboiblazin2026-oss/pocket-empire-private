@@ -14,7 +14,7 @@ if DIR not in sys.path:
 
 from route_manager import (
     VEHICLES, get_settings, update_settings, 
-    estimate_route, save_route, load_data
+    estimate_route, save_route, load_data, delete_route
 )
 
 # US States and Major Cities for dropdowns
@@ -265,14 +265,22 @@ def main():
             for r in reversed(routes):
                 with st.expander(f"🚛 {r['origin']} ➡️ {r['destination']} ({r['timestamp'][:10]})"):
                     d = r['details']
-                    c1, c2, c3 = st.columns(3)
-                    c1.write(f"**Vehicle:** {d['vehicle']}")
-                    c1.write(f"**Distance:** {d['distance']:,.1f} mi")
-                    c2.write(f"**Fuel Cost:** ${d['fuel_cost']:,.2f}")
-                    c2.write(f"**Drive Time:** {d['drive_time_hours']} hrs")
-                    if d.get('hos_info'):
-                        c3.write(f"**Breaks:** {d['hos_info']['breaks_needed']}")
-                        c3.write(f"**Total Time:** {d['hos_info']['total_time_hours']} hrs")
+                    c1, c2, c3, c4 = st.columns([2, 2, 2, 1])
+                    with c1:
+                        st.write(f"**Vehicle:** {d['vehicle']}")
+                        st.write(f"**Distance:** {d['distance']:,.1f} mi")
+                    with c2:
+                        st.write(f"**Fuel Cost:** ${d['fuel_cost']:,.2f}")
+                        st.write(f"**Drive Time:** {d['drive_time_hours']} hrs")
+                    with c3:
+                        if d.get('hos_info'):
+                            st.write(f"**Breaks:** {d['hos_info']['breaks_needed']}")
+                            st.write(f"**Total Time:** {d['hos_info']['total_time_hours']} hrs")
+                    with c4:
+                        if st.button("🗑️", key=f"del_route_{r['timestamp']}"):
+                            delete_route(r['timestamp'])
+                            st.success("Deleted!")
+                            st.rerun()
 
     with tab3:
         st.subheader("ℹ️ Vehicle Profiles")

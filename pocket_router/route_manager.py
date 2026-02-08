@@ -126,3 +126,9 @@ def save_route(origin, destination, details):
     }
     data["saved_routes"].append(route)
     save_data(data)
+
+def delete_route(timestamp):
+    """Delete a saved route by timestamp"""
+    data = load_data()
+    data["saved_routes"] = [r for r in data.get("saved_routes", []) if r.get("timestamp") != timestamp]
+    save_data(data)

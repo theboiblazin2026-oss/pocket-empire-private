@@ -98,6 +98,23 @@ def log_earnings(client_name, amount, source="Gig Work", notes=""):
     }
     data["daily_log"].append(entry)
     save_data(client_name, data)
+
+def delete_earning_log(client_name, timestamp):
+    """Delete an earning entry by timestamp"""
+    data = load_data(client_name)
+    data["daily_log"] = [e for e in data["daily_log"] if e.get("timestamp") != timestamp]
+    save_data(client_name, data)
+
+def update_earning_log(client_name, timestamp, amount, source, notes):
+    """Update an earning entry"""
+    data = load_data(client_name)
+    for entry in data["daily_log"]:
+        if entry.get("timestamp") == timestamp:
+            entry["amount"] = float(amount)
+            entry["source"] = source
+            entry["notes"] = notes
+            break
+    save_data(client_name, data)
     return entry
 
 def get_daily_progress(client_name):
@@ -151,6 +168,25 @@ def get_net_worth_history(client_name, limit=30):
     data = load_data(client_name)
     history = data.get("net_worth_history", [])
     return sorted(history, key=lambda x: x.get("date", ""), reverse=True)[:limit]
+
+def delete_net_worth_snapshot(client_name, timestamp):
+    """Delete a specific net worth entry"""
+    data = load_data(client_name)
+    data["net_worth_history"] = [s for s in data.get("net_worth_history", []) if s.get("timestamp") != timestamp]
+    save_data(client_name, data)
+
+def update_net_worth_snapshot(client_name, timestamp, new_assets, new_debts):
+    """Update a specific net worth entry"""
+    data = load_data(client_name)
+    for snapshot in data.get("net_worth_history", []):
+        if snapshot.get("timestamp") == timestamp:
+            snapshot["assets"] = new_assets
+            snapshot["debts"] = new_debts
+            snapshot["total_assets"] = sum(new_assets.values())
+            snapshot["total_debts"] = sum(new_debts.values())
+            snapshot["net_worth"] = snapshot["total_assets"] - snapshot["total_debts"]
+            break
+    save_data(client_name, data)
 
 def get_latest_net_worth(client_name):
     """Get the most recent net worth snapshot"""
