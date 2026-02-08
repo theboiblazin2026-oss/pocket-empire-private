@@ -37,7 +37,11 @@ with tab1:
     input_method = st.radio("📥 Input Method", ["📁 Upload File", "📸 Take Photo"], horizontal=True)
     
     if input_method == "📁 Upload File":
-        bg_image = st.file_uploader("Upload Image (BOL / Vehicle Photo)", type=["png", "jpg", "jpeg"])
+        bg_image = st.file_uploader(
+            "Upload Image or Video (BOL / Vehicle Photo / Damage Video)", 
+            type=["png", "jpg", "jpeg", "gif", "webp", "heic", "mp4", "mov", "avi", "mkv"],
+            help="Max 200MB. Supports photos and videos."
+        )
     else:
         st.info("💡 **Tip:** Use your device's native camera for zoom/flash controls, then upload the photo.")
         bg_image = st.camera_input("Take a photo", key="damage_camera")
@@ -73,78 +77,101 @@ with tab1:
             else:
                 stroke_color = st.color_picker("Custom color: ", "#FF0000")
 
-    # --- Canvas ---
+    # --- Canvas or Video ---
     if bg_image:
-        image = Image.open(bg_image)
-        w, h = image.size
-        aspect = h / w
-        canvas_width = 700
-        canvas_height = int(canvas_width * aspect)
+        # Check if it's a video file
+        file_ext = bg_image.name.lower().split('.')[-1]
+        is_video = file_ext in ['mp4', 'mov', 'avi', 'mkv']
         
-        st.markdown("### ✍️ Mark Damage & Sign Below")
-        st.caption("Use the toolbar below canvas for Undo/Redo/Clear")
-        
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 0, 0, 0.3)",
-            stroke_width=stroke_width,
-            stroke_color=stroke_color,
-            background_image=image,
-            update_streamlit=True,
-            display_toolbar=True,
-            height=canvas_height,
-            width=canvas_width,
-            drawing_mode=mode,
-            key="damage_canvas",
-        )
-        
-        st.divider()
-        
-        # --- Export ---
-        if canvas_result.image_data is not None:
-            st.subheader("📤 Save / Share")
+        if is_video:
+            st.markdown("### 🎬 Video Preview")
+            st.video(bg_image)
+            st.success("✅ Video uploaded! You can download or save it to cloud.")
             
-            result_image = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
-            bg_resized = image.resize((canvas_width, canvas_height))
-            bg_resized.paste(result_image, (0, 0), result_image)
-            
-            buf = io.BytesIO()
-            bg_resized.save(buf, format="PNG")
-            byte_im = buf.getvalue()
-            b64_img = base64.b64encode(byte_im).decode('utf-8')
-            
-            col_actions = st.columns([1, 1, 1])
-            
-            with col_actions[0]:
+            # Video actions
+            video_col1, video_col2 = st.columns(2)
+            with video_col1:
                 st.download_button(
-                    label="⬇️ Download",
-                    data=byte_im,
-                    file_name=f"damage_{datetime.now().strftime('%Y%m%d_%H%M')}.png",
-                    mime="image/png"
+                    "⬇️ Download Video",
+                    data=bg_image.getvalue(),
+                    file_name=f"damage_video_{datetime.now().strftime('%Y%m%d_%H%M')}.{file_ext}",
+                    mime=f"video/{file_ext}"
                 )
-                
-            with col_actions[1]:
+            with video_col2:
                 if st.button("☁️ Save to Cloud"):
-                    import sys
-                    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-                    from pocket_core.db import save_inspection_db
-                    
-                    inspection_data = {
-                        "title": f"Inspection {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-                        "image_data": b64_img,
-                        "annotation_data": canvas_result.json_data,
-                        "created_at": "now()"
-                    }
-                    
-                    if save_inspection_db(inspection_data):
-                        st.success("✅ Saved to Cloud!")
-                    else:
-                        st.warning("📱 Saved Locally (Offline Mode)")
+                    st.info("Video cloud storage coming soon!")
+        else:
+            # Image handling
+            image = Image.open(bg_image)
+            w, h = image.size
+            aspect = h / w
+            canvas_width = 700
+            canvas_height = int(canvas_width * aspect)
+        
+            st.markdown("### ✍️ Mark Damage & Sign Below")
+            st.caption("Use the toolbar below canvas for Undo/Redo/Clear")
             
-            with col_actions[2]:
-                if st.button("📧 Email"):
-                    st.info("Email integration coming soon!")
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 0, 0, 0.3)",
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                background_image=image,
+                update_streamlit=True,
+                display_toolbar=True,
+                height=canvas_height,
+                width=canvas_width,
+                drawing_mode=mode,
+                key="damage_canvas",
+            )
+        
+            st.divider()
+            
+            # --- Export ---
+            if canvas_result.image_data is not None:
+                st.subheader("📤 Save / Share")
+                
+                result_image = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+                bg_resized = image.resize((canvas_width, canvas_height))
+                bg_resized.paste(result_image, (0, 0), result_image)
+                
+                buf = io.BytesIO()
+                bg_resized.save(buf, format="PNG")
+                byte_im = buf.getvalue()
+                b64_img = base64.b64encode(byte_im).decode('utf-8')
+                
+                col_actions = st.columns([1, 1, 1])
+                
+                with col_actions[0]:
+                    st.download_button(
+                        label="⬇️ Download",
+                        data=byte_im,
+                        file_name=f"damage_{datetime.now().strftime('%Y%m%d_%H%M')}.png",
+                        mime="image/png"
+                    )
+                    
+                with col_actions[1]:
+                    if st.button("☁️ Save to Cloud"):
+                        import sys
+                        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+                        from pocket_core.db import save_inspection_db
+                        
+                        inspection_data = {
+                            "title": f"Inspection {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                            "image_data": b64_img,
+                            "annotation_data": canvas_result.json_data,
+                            "created_at": "now()"
+                        }
+                        
+                        if save_inspection_db(inspection_data):
+                            st.success("✅ Saved to Cloud!")
+                        else:
+                            st.warning("📱 Saved Locally (Offline Mode)")
+                
+                with col_actions[2]:
+                    if st.button("📧 Email"):
+                        st.info("Email integration coming soon!")
     else:
-        st.info("👈 Upload a Photo or use Camera to capture a BOL / Vehicle Photo.")
+        st.info("👈 Upload a Photo/Video or use Camera to capture a BOL / Vehicle.")
 
 with tab2:
     st.subheader("📝 Enter BOL Data")
