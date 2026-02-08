@@ -104,7 +104,7 @@ def main():
                     )
                 with stop_cols[2]:
                     if len(st.session_state.route_stops) > 2 and 0 < i < len(st.session_state.route_stops) - 1:
-                        if st.button("❌", key=f"remove_{i}"):
+                        if st.button("Remove", key=f"remove_{i}", type="secondary"):
                             stops_to_remove.append(i)
             
             # Remove marked stops
