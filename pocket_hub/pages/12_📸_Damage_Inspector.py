@@ -177,48 +177,120 @@ with tab2:
     st.subheader("📝 Enter BOL Data")
     st.caption("Fill in missing information from the Bill of Lading")
     
-    with st.form("bol_data_form"):
-        col1, col2 = st.columns(2)
+    # Origin/Destination section
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**📍 Origin**")
+        shipper_name = st.text_input("Shipper Name", placeholder="ABC Shipping Co.", key="bol_shipper")
+        shipper_address = st.text_area("Shipper Address", placeholder="123 Main St, City, State, ZIP", height=80, key="bol_ship_addr")
+        pickup_date = st.date_input("Pickup Date", key="bol_pickup")
         
-        with col1:
-            st.markdown("**📍 Origin**")
-            shipper_name = st.text_input("Shipper Name", placeholder="ABC Shipping Co.")
-            shipper_address = st.text_area("Shipper Address", placeholder="123 Main St, City, State, ZIP", height=80)
-            pickup_date = st.date_input("Pickup Date")
-            
-        with col2:
-            st.markdown("**📍 Destination**")
-            consignee_name = st.text_input("Consignee Name", placeholder="XYZ Receiving Inc.")
-            consignee_address = st.text_area("Consignee Address", placeholder="456 Oak Ave, City, State, ZIP", height=80)
-            delivery_date = st.date_input("Expected Delivery")
+    with col2:
+        st.markdown("**📍 Destination**")
+        consignee_name = st.text_input("Consignee Name", placeholder="XYZ Receiving Inc.", key="bol_consignee")
+        consignee_address = st.text_area("Consignee Address", placeholder="456 Oak Ave, City, State, ZIP", height=80, key="bol_cons_addr")
+        delivery_date = st.date_input("Expected Delivery", key="bol_delivery")
+    
+    st.divider()
+    st.markdown("**📦 Cargo Details**")
+    
+    # Commodity Type Selector
+    commodity_type = st.selectbox(
+        "🚗 Commodity Type",
+        ["🚗 Car", "🚚 Truck", "🚙 SUV", "📦 Freight"],
+        key="commodity_type"
+    )
+    
+    # Initialize cargo data
+    cargo_data = {"type": commodity_type}
+    
+    # Conditional fields based on commodity type
+    if commodity_type in ["🚗 Car", "🚚 Truck", "🚙 SUV"]:
+        st.markdown("##### 🚘 Vehicle Information")
         
-        st.divider()
-        st.markdown("**📦 Cargo Details**")
+        v_col1, v_col2 = st.columns(2)
+        with v_col1:
+            vehicle_year = st.text_input("Year", placeholder="2024", key="v_year")
+            vehicle_make = st.text_input("Make", placeholder="Honda", key="v_make")
+            vehicle_model = st.text_input("Model", placeholder="Accord", key="v_model")
+        with v_col2:
+            vehicle_color = st.text_input("Color", placeholder="Black", key="v_color")
+            vehicle_vin = st.text_input("VIN Number", placeholder="1HGCV1F34PA123456", key="v_vin")
         
-        cargo_col1, cargo_col2, cargo_col3 = st.columns(3)
-        with cargo_col1:
-            commodity = st.text_input("Commodity Description", placeholder="Auto Parts")
-            pieces = st.number_input("Pieces/Units", min_value=0, value=1)
-        with cargo_col2:
-            weight = st.number_input("Weight (lbs)", min_value=0, value=0)
-            vehicle_info = st.text_input("Vehicle (Y/M/M/VIN)", placeholder="2024 Honda Accord VIN...")
-        with cargo_col3:
-            hazmat = st.checkbox("⚠️ HazMat")
-            special_instructions = st.text_area("Special Instructions", placeholder="Handle with care...", height=80)
+        st.markdown("##### 🔧 Damage Checklist")
+        damage_cols = st.columns(4)
+        with damage_cols[0]:
+            dmg_front = st.checkbox("Front Damage", key="dmg_front")
+            dmg_rear = st.checkbox("Rear Damage", key="dmg_rear")
+        with damage_cols[1]:
+            dmg_left = st.checkbox("Left Side Damage", key="dmg_left")
+            dmg_right = st.checkbox("Right Side Damage", key="dmg_right")
+        with damage_cols[2]:
+            dmg_roof = st.checkbox("Roof Damage", key="dmg_roof")
+            dmg_undercarriage = st.checkbox("Undercarriage", key="dmg_under")
+        with damage_cols[3]:
+            dmg_glass = st.checkbox("Glass/Windows", key="dmg_glass")
+            dmg_interior = st.checkbox("Interior", key="dmg_interior")
         
-        submitted = st.form_submit_button("💾 Save BOL Data")
+        damage_notes = st.text_area("Damage Notes", placeholder="Describe any visible damage...", key="dmg_notes")
         
-        if submitted:
-            bol_data = {
-                "shipper": {"name": shipper_name, "address": shipper_address},
-                "consignee": {"name": consignee_name, "address": consignee_address},
-                "dates": {"pickup": str(pickup_date), "delivery": str(delivery_date)},
-                "cargo": {"commodity": commodity, "pieces": pieces, "weight": weight, "vehicle": vehicle_info, "hazmat": hazmat, "instructions": special_instructions},
-                "created": datetime.now().isoformat()
+        cargo_data.update({
+            "vehicle": {
+                "year": vehicle_year,
+                "make": vehicle_make,
+                "model": vehicle_model,
+                "color": vehicle_color,
+                "vin": vehicle_vin
+            },
+            "damage": {
+                "front": dmg_front, "rear": dmg_rear, "left": dmg_left, "right": dmg_right,
+                "roof": dmg_roof, "undercarriage": dmg_undercarriage, "glass": dmg_glass, "interior": dmg_interior,
+                "notes": damage_notes
             }
-            st.session_state['bol_data'] = bol_data
-            st.success("✅ BOL Data Saved!")
-            st.json(bol_data)
+        })
+    
+    else:  # Freight
+        st.markdown("##### 📦 Freight Information")
+        
+        f_col1, f_col2, f_col3 = st.columns(3)
+        with f_col1:
+            freight_desc = st.text_input("Description", placeholder="Palletized goods", key="f_desc")
+            freight_weight = st.number_input("Weight (lbs)", min_value=0, value=0, key="f_weight")
+        with f_col2:
+            freight_pieces = st.number_input("Piece Count", min_value=1, value=1, key="f_pieces")
+            freight_dims = st.text_input("Dimensions (LxWxH)", placeholder="48x40x48", key="f_dims")
+        with f_col3:
+            freight_tarp = st.selectbox("Tarp Status", ["Not Required", "Tarped", "Untarped (Needs Tarp)"], key="f_tarp")
+            freight_hazmat = st.checkbox("⚠️ HazMat", key="f_hazmat")
+        
+        freight_instructions = st.text_area("Special Instructions", placeholder="Keep dry, fragile...", key="f_instr")
+        
+        cargo_data.update({
+            "freight": {
+                "description": freight_desc,
+                "weight": freight_weight,
+                "pieces": freight_pieces,
+                "dimensions": freight_dims,
+                "tarp_status": freight_tarp,
+                "hazmat": freight_hazmat,
+                "instructions": freight_instructions
+            }
+        })
+    
+    st.divider()
+    
+    if st.button("💾 Save BOL Data", type="primary"):
+        bol_data = {
+            "shipper": {"name": shipper_name, "address": shipper_address},
+            "consignee": {"name": consignee_name, "address": consignee_address},
+            "dates": {"pickup": str(pickup_date), "delivery": str(delivery_date)},
+            "cargo": cargo_data,
+            "created": datetime.now().isoformat()
+        }
+        st.session_state['bol_data'] = bol_data
+        st.success("✅ BOL Data Saved!")
+        st.json(bol_data)
 
 with tab3:
     st.subheader("📄 Generate Custom BOL")
