@@ -206,16 +206,30 @@ def main():
         # List Bills
         if budget.get("monthly_bills"):
             for idx, bill in enumerate(budget["monthly_bills"]):
-                c1, c2, c3 = st.columns([3, 2, 1])
+                c1, c2, c3, c4 = st.columns([3, 2, 0.5, 0.5])
                 with c1:
                     st.write(f"**{bill['name']}**")
                 with c2:
                     st.write(f"${bill['amount']:.2f}")
                 with c3:
+                    if st.button("✏️", key=f"edit_bill_btn_{idx}"):
+                        st.session_state[f"editing_bill_{idx}"] = True
+                with c4:
                     if st.button("🗑️", key=f"del_bill_{idx}"):
                         new_bills = [b for i, b in enumerate(budget["monthly_bills"]) if i != idx]
                         wm.update_budget(client_key, budget.get("daily_target"), new_bills, budget.get("income_streams"))
                         st.rerun()
+                
+                # Edit Form
+                if st.session_state.get(f"editing_bill_{idx}", False):
+                    with st.form(key=f"edit_bill_form_{idx}"):
+                        ename = st.text_input("Name", value=bill['name'], key=f"ename_{idx}")
+                        eamt = st.number_input("Amount", value=float(bill['amount']), step=10.0, key=f"eamt_{idx}")
+                        if st.form_submit_button("💾 Update"):
+                            budget["monthly_bills"][idx] = {"name": ename, "amount": eamt}
+                            wm.update_budget(client_key, budget.get("daily_target"), budget["monthly_bills"], budget.get("income_streams"))
+                            del st.session_state[f"editing_bill_{idx}"]
+                            st.rerun()
         else:
             st.info("No bills added.")
 
@@ -238,14 +252,27 @@ def main():
         # List Streams
         if budget.get("income_streams"):
             for idx, stream in enumerate(budget["income_streams"]):
-                c1, c2 = st.columns([4, 1])
+                c1, c2, c3 = st.columns([4, 0.5, 0.5])
                 with c1:
                     st.write(f"🔹 {stream['name']}")
                 with c2:
+                    if st.button("✏️", key=f"edit_stream_btn_{idx}"):
+                        st.session_state[f"editing_stream_{idx}"] = True
+                with c3:
                     if st.button("🗑️", key=f"del_stream_{idx}"):
                         new_streams = [s for i, s in enumerate(budget["income_streams"]) if i != idx]
                         wm.update_budget(client_key, budget.get("daily_target"), budget.get("monthly_bills"), new_streams)
                         st.rerun()
+                
+                # Edit Form
+                if st.session_state.get(f"editing_stream_{idx}", False):
+                    with st.form(key=f"edit_stream_form_{idx}"):
+                        esname = st.text_input("Source Name", value=stream['name'], key=f"esname_{idx}")
+                        if st.form_submit_button("💾 Update"):
+                            budget["income_streams"][idx] = {"name": esname, "type": "variable"}
+                            wm.update_budget(client_key, budget.get("daily_target"), budget.get("monthly_bills"), budget["income_streams"])
+                            del st.session_state[f"editing_stream_{idx}"]
+                            st.rerun()
         else:
             st.info("No income streams added.")
 
