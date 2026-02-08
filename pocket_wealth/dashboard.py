@@ -193,7 +193,7 @@ def main():
         
         # Add Bill
         with st.expander("➕ Add New Bill"):
-            with st.form("add_bill"):
+            with st.form("add_bill", clear_on_submit=True):
                 bname = st.text_input("Bill Name", placeholder="Rent")
                 bamt = st.number_input("Amount", min_value=0.0, step=10.0)
                 if st.form_submit_button("Add Bill"):
@@ -226,7 +226,7 @@ def main():
         
         # Add Stream
         with st.expander("➕ Add Income Source"):
-            with st.form("add_stream"):
+            with st.form("add_stream", clear_on_submit=True):
                 sname = st.text_input("Source Name", placeholder="Uber")
                 if st.form_submit_button("Add Source"):
                     if sname:
@@ -375,7 +375,7 @@ def main():
         
         # Add Debt Form
         with st.expander("➕ Add New Debt", expanded=len(debts) == 0):
-            with st.form("add_debt_form"):
+            with st.form("add_debt_form", clear_on_submit=True):
                 debt_name = st.text_input("Debt Name", placeholder="e.g., Car Note, Credit Card")
                 d1, d2 = st.columns(2)
                 with d1:
@@ -439,7 +439,7 @@ def main():
         
         # Add Goal Form
         with st.expander("➕ Add New Goal", expanded=len(goals) == 0):
-            with st.form("add_goal_form"):
+            with st.form("add_goal_form", clear_on_submit=True):
                 goal_name = st.text_input("Goal Name", placeholder="e.g., Emergency Fund, New Truck")
                 g1, g2 = st.columns(2)
                 with g1:
@@ -492,13 +492,38 @@ def main():
             st.info("No savings goals yet. Add your first goal to start building wealth! 🚀")
 
     with tab6:
+        st.subheader("⚙️ Settings")
+        
         if selected_client_name == "My Personal Plan":
-            st.warning("Cannot delete the master profile.")
+            st.info("Master profile cannot be deleted.")
         else:
-            st.subheader("Client Settings")
             if st.button("🗑️ Delete Budget Profile"):
-                # Logic to delete file would go here
                 st.error("Delete functionality protected for safety.")
+
+        st.divider()
+        st.markdown("### 📄 Reports")
+        
+        if st.button("🖨️ Generate Wealth Report (PDF)"):
+            try:
+                import pdf_generator
+                importlib.reload(pdf_generator) # Ensure latest
+                
+                with st.spinner("Generating Report..."):
+                    report_path = pdf_generator.create_wealth_report(client_key, data, progress)
+                    st.session_state['latest_report'] = report_path
+                    st.success("Report Generated!")
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Error generating PDF: {e}")
+
+        if 'latest_report' in st.session_state and os.path.exists(st.session_state['latest_report']):
+            with open(st.session_state['latest_report'], "rb") as f:
+                st.download_button(
+                    label="⬇️ Download PDF Report",
+                    data=f,
+                    file_name=os.path.basename(st.session_state['latest_report']),
+                    mime="application/pdf"
+                )
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Wealth Manager", page_icon="💰", layout="wide")
