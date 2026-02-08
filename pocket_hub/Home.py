@@ -1,6 +1,14 @@
 import streamlit as st
 import datetime
 import os
+import sys
+
+# Ensure modules are loaded
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_wealth')))
+try:
+    import wealth_manager as wm
+except ImportError:
+    pass
 
 st.set_page_config(
     page_title="Pocket Empire Command Center",
@@ -59,6 +67,33 @@ with col_alerts:
             st.info("✅ All leads reviewed")
     except Exception as e:
         st.info("ℹ️ Leads: Check Pipeline")
+
+    # Quick Log Earnings
+    with st.expander("⚡ Quick Log Earnings"):
+        with st.form("quick_log"):
+            q_amt = st.number_input("Amount ($)", min_value=0.0, step=10.0, key="q_amt")
+            
+            # Try to load streams
+            q_sources = ["Gig Work", "Trucking Business", "Other"]
+            try:
+                if 'wm' in locals():
+                    q_data = wm.load_data("myself")
+                    loaded_streams = [s['name'] for s in q_data.get('budget', {}).get('income_streams', [])]
+                    if loaded_streams:
+                        q_sources = loaded_streams
+            except:
+                pass
+                
+            q_source = st.selectbox("Source", q_sources, key="q_src")
+            
+            if st.form_submit_button("💰 Log It"):
+                if 'wm' in locals():
+                    wm.log_earnings("myself", q_amt, q_source, "Quick Log from Home")
+                    st.success(f"Logged ${q_amt}!")
+                    time.sleep(1) # Visual feedback
+                    st.rerun()
+                else:
+                    st.error("Wealth Manager module not loaded")
 
 with col_wealth:
     st.metric("Wealth Manager", "Active", "Mod 01")

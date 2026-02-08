@@ -120,13 +120,72 @@ def main():
         st.caption("Define the daily target by listing monthly bills.")
         
         # 1. Daily Target
-        with st.form("target_form"):
-            new_target = st.number_input("Daily Income Target ($)", value=float(budget.get("daily_target", 100.0)), step=5.0)
-            if st.form_submit_button("Update Target"):
-                wm.update_budget(client_key, new_target, budget.get("monthly_bills", []), budget.get("income_streams", []))
-                st.success("Target Updated!")
+        # 1. Automated Goal Calculator
+        bills_df = pd.DataFrame(budget.get("monthly_bills", []))
+        total_monthly_bills = bills_df["amount"].sum() if not bills_df.empty else 0.0
+        
+        # Survival Mode (Breakeven)
+        daily_survival = total_monthly_bills / 30.0
+        
+        # Profit Mode
+        current_target = float(budget.get("daily_target", 100.0))
+        potential_monthly_earnings = current_target * 30.0
+        potential_savings = potential_monthly_earnings - total_monthly_bills
+        
+        # Display Math
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("🔥 Survival Mode", f"${daily_survival:.2f}/day", help="Amount needed just to pay bills")
+            if st.button("Set as Target", key="set_survival"):
+                wm.update_budget(client_key, daily_survival, budget.get("monthly_bills", []), budget.get("income_streams", []))
                 st.rerun()
+                
+        with c2:
+            st.metric("🚀 Current Target", f"${current_target:.2f}/day")
+        
+        with c3:
+            color = "normal" if potential_savings > 0 else "inverse"
+            st.metric("💰 Potential Savings", f"${potential_savings:,.2f}/mo", delta="if target hit daily", delta_color=color)
 
+        # Advanced Goal Setting
+        with st.expander("⚙️ Calculate Profit Goal"):
+            st.caption("How much do you want to save per month?")
+            desired_savings = st.number_input("Desired Monthly Savings", value=1000.0, step=100.0)
+            
+            required_daily = (total_monthly_bills + desired_savings) / 30.0
+            
+            st.write(f"To save **${desired_savings:,.0f}**, you need to earn **${required_daily:.2f}/day**.")
+            
+            if st.button(f"Set Target to ${required_daily:.2f}", key="set_profit"):
+                 wm.update_budget(client_key, required_daily, budget.get("monthly_bills", []), budget.get("income_streams", []))
+                 st.rerun()
+
+        # Manual Override
+        with st.form("target_form"):
+             new_target = st.number_input("Or Manual Override ($)", value=current_target, step=5.0)
+             if st.form_submit_button("Update Target"):
+                 wm.update_budget(client_key, new_target, budget.get("monthly_bills", []), budget.get("income_streams", []))
+                 st.success("Target Updated!")
+                 st.rerun()
+
+        st.divider()
+        
+        # Expense Breakdown Chart
+        if not bills_df.empty:
+             st.markdown("### 📊 Where's the money going?")
+             base = alt.Chart(bills_df).encode(theta=alt.Theta("amount", stack=True))
+             pie = base.mark_arc(outerRadius=120).encode(
+                 color=alt.Color("name"),
+                 order=alt.Order("amount", sort="descending"),
+                 tooltip=["name", "amount"]
+             )
+             text = base.mark_text(radius=140).encode(
+                 text=alt.Text("amount", format="$.0f"),
+                 order=alt.Order("amount", sort="descending"),
+                 color=alt.value("white")
+             )
+             st.altair_chart(pie + text, use_container_width=True)
+             
         st.divider()
 
         # 2. Monthly Bills
