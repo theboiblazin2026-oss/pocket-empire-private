@@ -121,36 +121,51 @@ else:
     content = current_note.get("content", "") if current_note else ""
     st.markdown("### ✏️ Canvas")
     
-    # Canvas Settings
-    stroke_width = st.slider("Stroke width: ", 1, 25, 3)
+    # Tool Mode Selection (including Eraser)
+    tool_col, settings_col = st.columns([1, 1])
     
-    # Color Presets
-    color_choice = st.radio("Ink Color", ["⚫ Black", "🔵 Blue", "🔴 Red", "🟢 Green", "🟡 Yellow", "🎨 Custom"], horizontal=True, index=0)
+    with tool_col:
+        drawing_mode = st.radio("🔧 Tool", ["✏️ Draw", "🧽 Eraser", "📏 Line", "⬜ Rectangle", "⭕ Circle"], horizontal=True, index=0)
+        
+        if drawing_mode == "✏️ Draw": mode = "freedraw"
+        elif drawing_mode == "🧽 Eraser": mode = "freedraw"  # Eraser uses white color
+        elif drawing_mode == "📏 Line": mode = "line"
+        elif drawing_mode == "⬜ Rectangle": mode = "rect"
+        else: mode = "circle"
     
-    if color_choice == "⚫ Black": stroke_color = "#000000"
-    elif color_choice == "🔵 Blue": stroke_color = "#0000FF"
-    elif color_choice == "🔴 Red": stroke_color = "#FF0000"
-    elif color_choice == "🟢 Green": stroke_color = "#008000"
-    elif color_choice == "🟡 Yellow": stroke_color = "#FFFF00"
+    with settings_col:
+        stroke_width = st.slider("Stroke width: ", 1, 25, 3 if drawing_mode != "🧽 Eraser" else 15)
+    
+    # Color Presets (disabled for eraser)
+    if drawing_mode == "🧽 Eraser":
+        stroke_color = "#ffffff"  # White for eraser
+        st.info("🧽 Eraser mode - draw to erase")
     else:
-        stroke_color = st.color_picker("Stroke color: ", "#000000")
+        color_choice = st.radio("Ink Color", ["⚫ Black", "🔵 Blue", "🔴 Red", "🟢 Green", "🟡 Yellow", "🎨 Custom"], horizontal=True, index=0)
+        
+        if color_choice == "⚫ Black": stroke_color = "#000000"
+        elif color_choice == "🔵 Blue": stroke_color = "#0000FF"
+        elif color_choice == "🔴 Red": stroke_color = "#FF0000"
+        elif color_choice == "🟢 Green": stroke_color = "#008000"
+        elif color_choice == "🟡 Yellow": stroke_color = "#FFFF00"
+        else:
+            stroke_color = st.color_picker("Stroke color: ", "#000000")
         
     bg_color = st.color_picker("Background color: ", "#ffffff")
     
     # Create a canvas component
-    # Handle drawing data format differences (Supabase json might differ from st_canvas)
     initial_drawing = current_note.get("drawing") if current_note else None
     
     canvas_result = st_canvas(
-        fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+        fill_color="rgba(255, 165, 0, 0.3)",
         stroke_width=stroke_width,
         stroke_color=stroke_color,
         background_color=bg_color,
         initial_drawing=initial_drawing,
         update_streamlit=True,
-        display_toolbar=True, # Added Undo/Redo toolbar
+        display_toolbar=True,
         height=500,
-        drawing_mode="freedraw",
+        drawing_mode=mode,
         key="canvas",
     )
     
