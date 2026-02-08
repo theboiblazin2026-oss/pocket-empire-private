@@ -5,6 +5,9 @@ from streamlit_drawable_canvas import st_canvas
 from PIL import Image
 import io
 from datetime import datetime
+import ollama # AI Vision
+from pocket_core.db import save_inspection_db
+
 
 st.set_page_config(page_title="Damage Inspector", page_icon="📸", layout="wide")
 
@@ -170,6 +173,50 @@ with tab1:
                 with col_actions[2]:
                     if st.button("📧 Email"):
                         st.info("Email integration coming soon!")
+
+            # --- AI Analysis ---
+            st.divider()
+            st.subheader("🤖 AI Damage Detection")
+            
+            if st.button("🧠 Analyze Image for Damage"):
+                if bg_image:
+                    with st.spinner("Asking Gemini/Llava to inspect..."):
+                        try:
+                            # Save temp file for Ollama
+                            with open("temp_inspection.jpg", "wb") as f:
+                                f.write(bg_image.getbuffer())
+                            
+                            response = ollama.chat(model='llava', messages=[
+                                {
+                                    'role': 'user',
+                                    'content': 'Describe any vehicle damage or cargo issues in this image. Be concise and professional.',
+                                    'images': ["temp_inspection.jpg"]
+                                }
+                            ])
+                            
+                            analysis = response['message']['content']
+                            st.session_state['ai_analysis'] = analysis
+                            st.success("Analysis Complete! Check the 'Damage Notes' in Tab 2.")
+                            
+                            # Auto-append to BOL data if exists
+                            if 'bol_data' not in st.session_state:
+                                st.session_state['bol_data'] = {}
+                            if 'cargo' not in st.session_state['bol_data']:
+                                st.session_state['bol_data']['cargo'] = {}
+                            if 'damage' not in st.session_state['bol_data']['cargo']:
+                                st.session_state['bol_data']['cargo']['damage'] = {}
+                                
+                            current_notes = st.session_state['bol_data']['cargo']['damage'].get('notes', '')
+                            st.session_state['bol_data']['cargo']['damage']['notes'] = f"{current_notes}\n\n[AI Observation]: {analysis}".strip()
+                                
+                        except Exception as e:
+                            st.error(f"AI Error: {e}")
+                else:
+                    st.warning("Please upload or capture an image first.")
+                            
+            if 'ai_analysis' in st.session_state:
+                st.text_area("AI Findings (Editable)", value=st.session_state['ai_analysis'], height=100)
+
     else:
         st.info("👈 Upload a Photo/Video or use Camera to capture a BOL / Vehicle.")
 
@@ -265,9 +312,14 @@ with tab2:
             dmg_rear_glass = st.checkbox("Rear Glass", key="dmg_rglass")
         with damage_cols[4]:
             dmg_interior = st.checkbox("Interior", key="dmg_interior")
-            st.write("") # Spacer
+        st.write("") # Spacer
         
-        damage_notes = st.text_area("Damage Notes", placeholder="Describe any visible damage...", key="dmg_notes")
+        # Pre-fill notes from AI if available
+        default_notes = ""
+        if 'bol_data' in st.session_state and 'cargo' in st.session_state['bol_data']:
+             default_notes = st.session_state['bol_data']['cargo'].get('damage', {}).get('notes', '')
+        
+        damage_notes = st.text_area("Damage Notes", value=default_notes, placeholder="Describe any visible damage...", key="dmg_notes")
         
         cargo_data.update({
             "vehicle": {
@@ -344,8 +396,24 @@ with tab2:
             "cargo": cargo_data,
             "created": datetime.now().isoformat()
         }
+        
+        # Attach image if available
+        if 'damage_canvas' in st.session_state and st.session_state.damage_canvas.image_data is not None:
+             # We need to regenerate the b64 or store it in session state in Tab 1
+             # For now, let's just mark that an image exists. 
+             # Ideally, we pass the base64 string we generated in Tab 1.
+             pass
+
         st.session_state['bol_data'] = bol_data
-        st.success("✅ BOL Data Saved!")
+        
+        # Save to Cloud DB
+        with st.spinner("Saving to Cloud..."):
+            if save_inspection_db(bol_data):
+                st.success("✅ BOL Data Saved to Supabase (Cloud)!")
+                st.balloons()
+            else:
+                st.error("❌ Save to Cloud Failed. Data is only local.")
+        
         st.json(bol_data)
 
 with tab3:

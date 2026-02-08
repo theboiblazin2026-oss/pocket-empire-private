@@ -1,0 +1,388 @@
+{
+  "name": "Calvin Manning",
+  "address": "6501 sw county rd 242 \nLake city , fl 32024",
+  "ssn": "1722",
+  "dob": "07/07/1988",
+  "disputes": [
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/Round1_Validation_20260206_174553.docx",
+      "items": [
+        "ATLANTIC CAP",
+        "BKSELFLENDER",
+        "FLORIDA DEPT OF",
+        "REVENUE",
+        "GLOBAL LENDING",
+        "SERVICES",
+        "VYSTAR CU",
+        "WESTLAKE",
+        "FINANCIAL SERVI",
+        "ASSETCARE LLC",
+        "JEFFERSON CAPITAL",
+        "SYSTEM",
+        "STEEL RIVER",
+        "SYSTEMS, LLC"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_ATLANTIC_CAP_20260206_175902.docx",
+      "items": [
+        "ATLANTIC CAP"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_BKSELFLENDER_20260206_175902.docx",
+      "items": [
+        "BKSELFLENDER"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_FLORIDA_DEPT_OF_20260206_175902.docx",
+      "items": [
+        "FLORIDA DEPT OF"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_REVENUE_20260206_175902.docx",
+      "items": [
+        "REVENUE"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_GLOBAL_LENDING_20260206_175902.docx",
+      "items": [
+        "GLOBAL LENDING"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_SERVICES_20260206_175902.docx",
+      "items": [
+        "SERVICES"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_VYSTAR_CU_20260206_175902.docx",
+      "items": [
+        "VYSTAR CU"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_WESTLAKE_20260206_175902.docx",
+      "items": [
+        "WESTLAKE"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_FINANCIAL_SERVI_20260206_175902.docx",
+      "items": [
+        "FINANCIAL SERVI"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_ASSETCARE_LLC_20260206_175902.docx",
+      "items": [
+        "ASSETCARE LLC"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_JEFFERSON_CAPITAL_20260206_175902.docx",
+      "items": [
+        "JEFFERSON CAPITAL"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_SYSTEM_20260206_175902.docx",
+      "items": [
+        "SYSTEM"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_STEEL_RIVER_20260206_175902.docx",
+      "items": [
+        "STEEL RIVER"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    },
+    {
+      "date_sent": "2026-02-06",
+      "letter_path": "pocket_credit/output_letters/R1_SYSTEMS_LLC_20260206_175902.docx",
+      "items": [
+        "SYSTEMS, LLC"
+      ],
+      "status": "Sent",
+      "next_action_date": "2026-03-13"
+    }
+  ],
+  "negative_items": [
+    {
+      "creditor": "ATLANTIC CAP",
+      "status": "Adverse/Derogatory",
+      "account_num": "CRD000000009",
+      "balance": "105",
+      "original_text": "ATLANTIC CAP CRD000000009 - - -",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "BKSELFLENDER",
+      "status": "Adverse/Derogatory",
+      "account_num": "8161****",
+      "balance": "0",
+      "original_text": "BKSELFLENDER 8161**** No Data",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "FLORIDA DEPT OF",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "FLORIDA DEPT OF - - -",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "REVENUE",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "REVENUE No Data",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "GLOBAL LENDING",
+      "status": "Adverse/Derogatory",
+      "account_num": "200002****",
+      "balance": "0",
+      "original_text": "GLOBAL LENDING 200002**** $0 $0",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "SERVICES",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "SERVICES",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "VYSTAR CU",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "VYSTAR CU $0",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "WESTLAKE",
+      "status": "Adverse/Derogatory",
+      "account_num": "3572****",
+      "balance": "12637",
+      "original_text": "WESTLAKE 3572**** $12,637 $440",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "FINANCIAL SERVI",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "FINANCIAL SERVI",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "ASSETCARE LLC",
+      "status": "Adverse/Derogatory",
+      "account_num": "2349****",
+      "balance": "1215",
+      "original_text": "ASSETCARE LLC 2349**** $1,215",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "JEFFERSON CAPITAL",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "JEFFERSON CAPITAL - - -",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "SYSTEM",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "SYSTEM No Data",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "STEEL RIVER",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "STEEL RIVER - - -",
+      "bureau": "transunion"
+    },
+    {
+      "creditor": "SYSTEMS, LLC",
+      "status": "Adverse/Derogatory",
+      "account_num": "See Report",
+      "balance": "0",
+      "original_text": "SYSTEMS, LLC No Data",
+      "bureau": "transunion"
+    }
+  ],
+  "bureaus": {
+    "experian": [],
+    "equifax": [],
+    "transunion": [
+      {
+        "creditor": "ATLANTIC CAP",
+        "status": "Adverse/Derogatory",
+        "account_num": "CRD000000009",
+        "balance": "105",
+        "original_text": "ATLANTIC CAP CRD000000009 - - -",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "BKSELFLENDER",
+        "status": "Adverse/Derogatory",
+        "account_num": "8161****",
+        "balance": "0",
+        "original_text": "BKSELFLENDER 8161**** No Data",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "FLORIDA DEPT OF",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "FLORIDA DEPT OF - - -",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "REVENUE",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "REVENUE No Data",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "GLOBAL LENDING",
+        "status": "Adverse/Derogatory",
+        "account_num": "200002****",
+        "balance": "0",
+        "original_text": "GLOBAL LENDING 200002**** $0 $0",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "SERVICES",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "SERVICES",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "VYSTAR CU",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "VYSTAR CU $0",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "WESTLAKE",
+        "status": "Adverse/Derogatory",
+        "account_num": "3572****",
+        "balance": "12637",
+        "original_text": "WESTLAKE 3572**** $12,637 $440",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "FINANCIAL SERVI",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "FINANCIAL SERVI",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "ASSETCARE LLC",
+        "status": "Adverse/Derogatory",
+        "account_num": "2349****",
+        "balance": "1215",
+        "original_text": "ASSETCARE LLC 2349**** $1,215",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "JEFFERSON CAPITAL",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "JEFFERSON CAPITAL - - -",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "SYSTEM",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "SYSTEM No Data",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "STEEL RIVER",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "STEEL RIVER - - -",
+        "bureau": "transunion"
+      },
+      {
+        "creditor": "SYSTEMS, LLC",
+        "status": "Adverse/Derogatory",
+        "account_num": "See Report",
+        "balance": "0",
+        "original_text": "SYSTEMS, LLC No Data",
+        "bureau": "transunion"
+      }
+    ]
+  }
+}

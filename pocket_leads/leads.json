@@ -1,0 +1,175 @@
+{
+  "scored_leads": [],
+  "score_history": [
+    {
+      "identifier": "1495785",
+      "result": {
+        "score": 35,
+        "risk_level": "MEDIUM RISK",
+        "risk_emoji": "\ud83d\udfe0",
+        "breakdown": [
+          "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
+          "dba_name": "",
+          "dot_number": "3988866",
+          "mc_number": "1495785",
+          "status": "ACTIVE",
+          "safety_rating": "None",
+          "authority_granted": null,
+          "power_units": 2,
+          "drivers": 3,
+          "mcs150_date": "2026-01-30T00:00:00",
+          "insurance_status": "Unknown"
+        },
+        "scored_at": "2026-02-06T22:53:57.818939"
+      }
+    },
+    {
+      "identifier": "1495785",
+      "result": {
+        "score": 35,
+        "risk_level": "MEDIUM RISK",
+        "risk_emoji": "\ud83d\udfe0",
+        "breakdown": [
+          "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
+          "dba_name": "",
+          "dot_number": "3988866",
+          "mc_number": "1495785",
+          "status": "ACTIVE",
+          "safety_rating": "None",
+          "authority_granted": null,
+          "power_units": 2,
+          "drivers": 3,
+          "mcs150_date": "2026-01-30T00:00:00",
+          "insurance_status": "Unknown"
+        },
+        "scored_at": "2026-02-06T22:55:14.035681"
+      }
+    },
+    {
+      "identifier": "1495785",
+      "result": {
+        "score": 35,
+        "risk_level": "MEDIUM RISK",
+        "risk_emoji": "\ud83d\udfe0",
+        "breakdown": [
+          "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
+          "dba_name": "",
+          "dot_number": "3988866",
+          "mc_number": "1495785",
+          "status": "ACTIVE",
+          "safety_rating": "None",
+          "authority_granted": null,
+          "power_units": 2,
+          "drivers": 3,
+          "mcs150_date": "2026-01-30T00:00:00",
+          "insurance_status": "Unknown"
+        },
+        "scored_at": "2026-02-06T22:57:35.544726"
+      }
+    },
+    {
+      "identifier": "1495785",
+      "result": {
+        "score": 35,
+        "risk_level": "MEDIUM RISK",
+        "risk_emoji": "\ud83d\udfe0",
+        "breakdown": [
+          "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
+          "dba_name": "",
+          "dot_number": "3988866",
+          "mc_number": "1495785",
+          "status": "ACTIVE",
+          "safety_rating": "None",
+          "authority_granted": null,
+          "power_units": 2,
+          "drivers": 3,
+          "mcs150_date": "2026-01-30T00:00:00",
+          "insurance_status": "Unknown"
+        },
+        "scored_at": "2026-02-07T00:44:07.460422"
+      }
+    },
+    {
+      "identifier": "3973577",
+      "result": {
+        "score": 50,
+        "risk_level": "LOW RISK",
+        "risk_emoji": "\ud83d\udfe1",
+        "breakdown": [
+          "Authority Age: 9mo (\ud83d\udfe0 New) -15",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "HENSON-KERR CARRIERS",
+          "dba_name": "",
+          "dot_number": "3973577",
+          "mc_number": "1485605",
+          "status": "ACTIVE",
+          "safety_rating": "None",
+          "authority_granted": null,
+          "power_units": 2,
+          "drivers": 2,
+          "mcs150_date": "2025-05-04T00:00:00",
+          "insurance_status": "Unknown"
+        },
+        "scored_at": "2026-02-07T00:47:07.090606"
+      }
+    }
+  ],
+  "scoring_weights": {
+    "authority_age_months": {
+      "0-6": -30,
+      "6-12": -15,
+      "12-24": 0,
+      "24-60": 10,
+      "60+": 20
+    },
+    "safety_rating": {
+      "Satisfactory": 25,
+      "Conditional": -10,
+      "Unsatisfactory": -50,
+      "None": -5
+    },
+    "operating_status": {
+      "ACTIVE": 20,
+      "INACTIVE": -100,
+      "OUT-OF-SERVICE": -100
+    },
+    "insurance_status": {
+      "Active": 15,
+      "Expiring Soon": -10,
+      "Expired": -50
+    }
+  },
+  "risk_thresholds": {
+    "high_risk": 30,
+    "medium_risk": 50,
+    "low_risk": 70
+  }
+}

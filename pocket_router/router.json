@@ -1,0 +1,8 @@
+{
+    "saved_routes": [],
+    "settings": {
+        "fuel_price": 4.15,
+        "default_vehicle": "semi_80k",
+        "driver_pay_rate": 0.60
+    }
+}

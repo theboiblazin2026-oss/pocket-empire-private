@@ -1,0 +1,12 @@
+{
+    "lanes": [],
+    "brokers": [],
+    "rate_history": [],
+    "negotiation_templates": {
+        "counter_low": "Thanks for the offer, but {lane} typically pays around ${avg_rate}/mile. Your offer of ${offered_rate}/mile is {diff_percent}% below market. I can do it for ${counter_rate}.",
+        "counter_standard": "I appreciate the load offer. Based on current rates for {lane}, I'm looking at ${counter_rate} (${ rate_per_mile }/mile). Can we meet there?",
+        "accept_conditional": "I can take this at ${accepted_rate}, but I'll need {condition}.",
+        "walk_away": "I'll have to pass on this one. {lane} doesn't make sense at ${offered_rate}. Let me know if you can get closer to ${min_rate}."
+    },
+    "default_rate_premium": 1.15
+}

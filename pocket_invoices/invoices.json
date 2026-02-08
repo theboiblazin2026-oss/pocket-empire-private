@@ -1,0 +1,12 @@
+{
+    "invoices": [],
+    "next_invoice_number": 1001,
+    "company_info": {
+        "name": "YOUR COMPANY NAME",
+        "address": "Your Address",
+        "city_state_zip": "City, ST 00000",
+        "phone": "(000) 000-0000",
+        "email": "email@example.com"
+    },
+    "clients": []
+}

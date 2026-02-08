@@ -103,12 +103,22 @@ def fetch_inspections():
 
 def save_inspection_db(inspection_data):
     """
-    inspection_data: {title, image_data, annotation_data, user_id (optional)}
+    inspection_data: Dictionary containing full BOL data (shipper, carrier, cargo, images, etc.)
     """
     db = get_db()
     if not db: return False
     try:
-        db.table("inspections").insert(inspection_data).execute()
+        # Extract title if present, otherwise default
+        title = inspection_data.get("title", f"Inspection {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        
+        # Payload for Supabase
+        payload = {
+            "title": title,
+            "data": inspection_data,  # Store full object in JSONB column
+            "created_at": "now()"
+        }
+        
+        db.table("inspections").insert(payload).execute()
         return True
     except Exception as e:
         print(f"Save Inspection Error: {e}")

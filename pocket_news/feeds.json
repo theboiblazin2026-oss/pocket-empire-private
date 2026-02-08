@@ -1,0 +1,31 @@
+{
+  "feeds": [
+    {
+      "name": "FreightWaves",
+      "url": "https://freightwaves.com/feed",
+      "category": "trucking"
+    },
+    {
+      "name": "Transport Topics",
+      "url": "https://www.ttnews.com/rss.xml",
+      "category": "trucking"
+    },
+    {
+      "name": "Overdrive",
+      "url": "https://www.overdriveonline.com/feed",
+      "category": "trucking"
+    },
+    {
+      "name": "CDL Life",
+      "url": "https://cdllife.com/feed/",
+      "category": "trucking"
+    },
+    {
+      "name": "TechCrunch - Logistics",
+      "url": "https://techcrunch.com/tag/logistics/feed/",
+      "category": "tech"
+    }
+  ],
+  "articles": [],
+  "last_fetch": null
+}
