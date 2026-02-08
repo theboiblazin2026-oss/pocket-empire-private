@@ -228,9 +228,9 @@ with tab2:
             dmg_right = st.checkbox("Right Side Damage", key="dmg_right")
         with damage_cols[2]:
             dmg_roof = st.checkbox("Roof Damage", key="dmg_roof")
-            dmg_undercarriage = st.checkbox("Undercarriage", key="dmg_under")
+            dmg_undercarriage = st.checkbox("Under", key="dmg_under")
         with damage_cols[3]:
-            dmg_glass = st.checkbox("Glass/Windows", key="dmg_glass")
+            dmg_glass = st.checkbox("Glass", key="dmg_glass")
             dmg_interior = st.checkbox("Interior", key="dmg_interior")
         
         damage_notes = st.text_area("Damage Notes", placeholder="Describe any visible damage...", key="dmg_notes")
