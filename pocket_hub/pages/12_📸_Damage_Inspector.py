@@ -175,21 +175,52 @@ with tab1:
 
 with tab2:
     st.subheader("📝 Enter BOL Data")
-    st.caption("Fill in missing information from the Bill of Lading")
+    st.caption("Fill in missing information from the Bill of Lading (all fields optional)")
+    
+    # --- Carrier / Broker Header ---
+    st.markdown("**🚛 Carrier Information**")
+    carrier_col1, carrier_col2, carrier_col3 = st.columns(3)
+    with carrier_col1:
+        carrier_name = st.text_input("Company Name", placeholder="Your Trucking Co.", key="bol_carrier")
+    with carrier_col2:
+        carrier_mc = st.text_input("MC #", placeholder="MC-123456", key="bol_mc")
+    with carrier_col3:
+        carrier_dot = st.text_input("DOT #", placeholder="DOT-1234567", key="bol_dot")
+    
+    with st.expander("📋 Broker Information (Optional)", expanded=False):
+        broker_col1, broker_col2 = st.columns(2)
+        with broker_col1:
+            broker_name = st.text_input("Broker Name", placeholder="ABC Logistics", key="bol_broker")
+            broker_mc = st.text_input("Broker MC #", placeholder="MC-654321", key="bol_broker_mc")
+        with broker_col2:
+            broker_contact = st.text_input("Broker Contact", placeholder="John Doe", key="bol_broker_contact")
+            broker_phone = st.text_input("Broker Phone", placeholder="(555) 123-4567", key="bol_broker_phone")
+    
+    st.divider()
     
     # Origin/Destination section
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("**📍 Origin**")
+        st.markdown("**📍 Origin (Shipper)**")
         shipper_name = st.text_input("Shipper Name", placeholder="ABC Shipping Co.", key="bol_shipper")
-        shipper_address = st.text_area("Shipper Address", placeholder="123 Main St, City, State, ZIP", height=80, key="bol_ship_addr")
+        shipper_address = st.text_area("Address", placeholder="123 Main St, City, State, ZIP", height=60, key="bol_ship_addr")
+        ship_contact_col1, ship_contact_col2 = st.columns(2)
+        with ship_contact_col1:
+            shipper_contact = st.text_input("Contact Name", placeholder="Jane Smith", key="bol_ship_contact")
+        with ship_contact_col2:
+            shipper_phone = st.text_input("Phone", placeholder="(555) 111-2222", key="bol_ship_phone")
         pickup_date = st.date_input("Pickup Date", key="bol_pickup")
         
     with col2:
-        st.markdown("**📍 Destination**")
+        st.markdown("**📍 Destination (Consignee)**")
         consignee_name = st.text_input("Consignee Name", placeholder="XYZ Receiving Inc.", key="bol_consignee")
-        consignee_address = st.text_area("Consignee Address", placeholder="456 Oak Ave, City, State, ZIP", height=80, key="bol_cons_addr")
+        consignee_address = st.text_area("Address", placeholder="456 Oak Ave, City, State, ZIP", height=60, key="bol_cons_addr")
+        cons_contact_col1, cons_contact_col2 = st.columns(2)
+        with cons_contact_col1:
+            consignee_contact = st.text_input("Contact Name", placeholder="Bob Johnson", key="bol_cons_contact")
+        with cons_contact_col2:
+            consignee_phone = st.text_input("Phone", placeholder="(555) 333-4444", key="bol_cons_phone")
         delivery_date = st.date_input("Expected Delivery", key="bol_delivery")
     
     st.divider()
@@ -282,8 +313,29 @@ with tab2:
     
     if st.button("💾 Save BOL Data", type="primary"):
         bol_data = {
-            "shipper": {"name": shipper_name, "address": shipper_address},
-            "consignee": {"name": consignee_name, "address": consignee_address},
+            "carrier": {
+                "name": carrier_name or "", 
+                "mc": carrier_mc or "", 
+                "dot": carrier_dot or ""
+            },
+            "broker": {
+                "name": broker_name or "",
+                "mc": broker_mc or "",
+                "contact": broker_contact or "",
+                "phone": broker_phone or ""
+            },
+            "shipper": {
+                "name": shipper_name or "", 
+                "address": shipper_address or "",
+                "contact": shipper_contact or "",
+                "phone": shipper_phone or ""
+            },
+            "consignee": {
+                "name": consignee_name or "", 
+                "address": consignee_address or "",
+                "contact": consignee_contact or "",
+                "phone": consignee_phone or ""
+            },
             "dates": {"pickup": str(pickup_date), "delivery": str(delivery_date)},
             "cargo": cargo_data,
             "created": datetime.now().isoformat()
@@ -319,24 +371,47 @@ with tab3:
             if freight.get('hazmat'):
                 extra_info += " | ⚠️ HAZMAT"
         
+        # Get carrier and broker info
+        carrier = bol.get('carrier', {})
+        broker = bol.get('broker', {})
+        
+        # Build carrier header line
+        carrier_line = carrier.get('name', '') or 'Carrier Not Specified'
+        if carrier.get('mc') or carrier.get('dot'):
+            carrier_line += f" | MC: {carrier.get('mc', 'N/A')} | DOT: {carrier.get('dot', 'N/A')}"
+        
+        # Build broker line (only if broker exists)
+        broker_line = ""
+        if broker.get('name'):
+            broker_line = f"<p><strong>Broker:</strong> {broker['name']}"
+            if broker.get('mc'):
+                broker_line += f" (MC: {broker['mc']})"
+            if broker.get('contact') or broker.get('phone'):
+                broker_line += f" | Contact: {broker.get('contact', '')} {broker.get('phone', '')}"
+            broker_line += "</p>"
+        
         # Preview BOL
         st.markdown("### 📋 BOL Preview")
         
         bol_html = f"""
         <div id="bol-preview" style="background: white; color: black; padding: 20px; border-radius: 8px; font-family: Arial;">
             <h2 style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px;">BILL OF LADING</h2>
+            <p style="text-align: center; font-weight: bold; font-size: 14px;">{carrier_line}</p>
+            {broker_line}
             <p><strong>Date:</strong> {bol['dates']['pickup']} | <strong>Delivery:</strong> {bol['dates']['delivery']}</p>
             
             <div style="display: flex; gap: 20px;">
                 <div style="flex: 1; border: 1px solid #ccc; padding: 10px;">
                     <h4>SHIPPER</h4>
-                    <p>{bol['shipper']['name']}</p>
+                    <p><strong>{bol['shipper']['name']}</strong></p>
                     <p>{bol['shipper']['address']}</p>
+                    <p>Contact: {bol['shipper'].get('contact', '')} {bol['shipper'].get('phone', '')}</p>
                 </div>
                 <div style="flex: 1; border: 1px solid #ccc; padding: 10px;">
                     <h4>CONSIGNEE</h4>
-                    <p>{bol['consignee']['name']}</p>
+                    <p><strong>{bol['consignee']['name']}</strong></p>
                     <p>{bol['consignee']['address']}</p>
+                    <p>Contact: {bol['consignee'].get('contact', '')} {bol['consignee'].get('phone', '')}</p>
                 </div>
             </div>
             
