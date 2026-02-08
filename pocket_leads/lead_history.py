@@ -4,6 +4,12 @@
 import json
 import os
 from datetime import datetime, timedelta
+import pandas as pd
+try:
+    import gspread
+    from oauth2client.service_account import ServiceAccountCredentials
+except ImportError:
+    gspread = None
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 if not os.path.exists(DATA_DIR):
@@ -21,6 +27,64 @@ LEAD_STATUSES = [
     "Lost",
     "No Response"
 ]
+
+def sync_from_sheet(creds_path, sheet_name="Lead Puller Master List", tab_name="Website Leads"):
+    """Sync leads from Google Sheet to local JSON"""
+    if not gspread or not os.path.exists(creds_path):
+        return 0, "Google Sheets or Creds missing"
+
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        client = gspread.authorize(creds)
+        
+        sh = client.open(sheet_name)
+        worksheet = sh.worksheet(tab_name)
+        data = worksheet.get_all_records()
+        
+        current_leads = load_leads()
+        current_companies = {l['company_name'].lower() for l in current_leads}
+        
+        added_count = 0
+        
+        for row in data:
+            company = row.get('Business Name', '').strip()
+            if not company: continue
+            
+            if company.lower() not in current_companies:
+                # Add new lead
+                email = row.get('Emails Found', '').split(',')[0].strip() if row.get('Emails Found') else ''
+                phone = str(row.get('Phone', '')).strip()
+                
+                new_lead = {
+                    "id": datetime.now().timestamp() + added_count, # Ensure unique ID
+                    "company_name": company,
+                    "mc_number": "",
+                    "contact_name": "", # Sheet doesn't have clear contact name column usually
+                    "phone": phone,
+                    "email": email,
+                    "status": "New",
+                    "notes": f"Imported from Sheet. Industry: {row.get('Industry', '')}",
+                    "history": [{
+                        "date": datetime.now().isoformat(),
+                        "action": "Import",
+                        "notes": "Synced from Prospector"
+                    }],
+                    "follow_up_date": None,
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+                current_leads.append(new_lead)
+                added_count += 1
+                current_companies.add(company.lower())
+        
+        if added_count > 0:
+            save_leads(current_leads)
+            
+        return added_count, f"Successfully synced {added_count} new leads."
+        
+    except Exception as e:
+        return 0, f"Sync Error: {str(e)}"
 
 def load_leads():
     """Load all tracked leads"""

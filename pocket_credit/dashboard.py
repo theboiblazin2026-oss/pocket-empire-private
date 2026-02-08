@@ -215,6 +215,22 @@ def main():
                                     json.dump(load_disputes(), f, indent=2)
                             st.rerun()
                     
+                    # Delete Dispute Button
+                    if c3.button("🗑️", key=f"del_disp_{d['date_sent']}"):
+                        if is_personal:
+                             personal['disputes'].remove(d)
+                             save_personal(personal)
+                        else:
+                             disputes.remove(d) # Need to reload and save strictly
+                             # Re-load to be safe
+                             all_disputes = load_disputes()
+                             # Filter out this exact one
+                             new_disputes = [x for x in all_disputes if not (x['client'] == d['client'] and x['date_sent'] == d['date_sent'] and x['letter_path'] == d['letter_path'])]
+                             with open(DISPUTES_FILE, 'w') as f:
+                                 json.dump(new_disputes, f, indent=2)
+                        st.success("Deleted!")
+                        st.rerun()
+                    
                     # Show disputed items
                     with st.expander("View Disputed Items"):
                         for item in d['items']:

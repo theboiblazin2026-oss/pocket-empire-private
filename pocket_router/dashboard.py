@@ -68,7 +68,7 @@ def main():
     tab1, tab2, tab3 = st.tabs(["🗺️ Plan Route", "💾 Saved Routes", "ℹ️ Vehicle Profiles"])
 
     with tab1:
-        col1, col2 = st.columns([1, 2])
+        col1, col2 = st.columns([1, 1]) # Widened input column (was [1, 2])
         
         with col1:
             st.subheader("Trip Details")
@@ -85,27 +85,30 @@ def main():
             
             stops_to_remove = []
             for i, stop in enumerate(st.session_state.route_stops):
-                stop_cols = st.columns([2, 1, 0.5])
-                with stop_cols[0]:
-                    city_idx = MAJOR_CITIES.index(stop['city']) if stop['city'] in MAJOR_CITIES else 0
-                    st.session_state.route_stops[i]['city'] = st.selectbox(
-                        f"{'🟢 Origin' if i == 0 else '🔴 Final' if i == len(st.session_state.route_stops)-1 else f'📍 Stop {i}'}", 
-                        MAJOR_CITIES, 
-                        index=city_idx, 
-                        key=f"city_{i}"
-                    )
-                with stop_cols[1]:
-                    state_idx = US_STATES.index(stop['state']) if stop['state'] in US_STATES else 0
-                    st.session_state.route_stops[i]['state'] = st.selectbox(
-                        "State", 
-                        US_STATES, 
-                        index=state_idx, 
-                        key=f"state_{i}"
-                    )
-                with stop_cols[2]:
-                    if len(st.session_state.route_stops) > 2 and 0 < i < len(st.session_state.route_stops) - 1:
-                        if st.button("Remove", key=f"remove_{i}", type="secondary"):
-                            stops_to_remove.append(i)
+                with st.container(border=True): # Group stop inputs
+                    stop_cols = st.columns([3, 1.2, 0.8]) # Improved ratios
+                    with stop_cols[0]:
+                        city_idx = MAJOR_CITIES.index(stop['city']) if stop['city'] in MAJOR_CITIES else 0
+                        st.session_state.route_stops[i]['city'] = st.selectbox(
+                            f"{'🟢 Origin' if i == 0 else '🔴 Final' if i == len(st.session_state.route_stops)-1 else f'📍 Stop {i}'}", 
+                            MAJOR_CITIES, 
+                            index=city_idx, 
+                            key=f"city_{i}"
+                        )
+                    with stop_cols[1]:
+                        state_idx = US_STATES.index(stop['state']) if stop['state'] in US_STATES else 0
+                        st.session_state.route_stops[i]['state'] = st.selectbox(
+                            "State", 
+                            US_STATES, 
+                            index=state_idx, 
+                            key=f"state_{i}"
+                        )
+                    with stop_cols[2]:
+                        st.write("") # Spacer
+                        st.write("") 
+                        if len(st.session_state.route_stops) > 2 and 0 < i < len(st.session_state.route_stops) - 1:
+                            if st.button("❌", key=f"remove_{i}", help="Remove Stop"):
+                                stops_to_remove.append(i)
             
             # Remove marked stops
             for idx in reversed(stops_to_remove):

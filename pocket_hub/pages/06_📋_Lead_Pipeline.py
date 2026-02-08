@@ -29,6 +29,20 @@ def main():
     # --- Top Stats ---
     stats = lh.get_lead_stats()
     
+    # Sync Button (Sidebar)
+    with st.sidebar:
+        st.header("⚙️ Settings")
+        if st.button("🔄 Sync from Prospector"):
+            with st.spinner("Syncing leads from Google Sheets..."):
+                 # Path to creds (hardcoded based on knowledge)
+                 creds_path = "/Volumes/CeeJay SSD/Projects/lead puller/service_account.json"
+                 count, msg = lh.sync_from_sheet(creds_path)
+                 if count > 0:
+                     st.success(msg)
+                     st.rerun()
+                 else:
+                     st.info(msg)
+
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
         st.metric("🔥 Due Today", stats.get("due_today", 0))

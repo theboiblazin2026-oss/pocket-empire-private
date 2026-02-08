@@ -66,9 +66,11 @@ else:
     st.title("🚀 Pocket Empire Command Center")
 
 # --- Dashboard Grid ---
-col_alerts, col_wealth, col_credit, col_law = st.columns([2, 1, 1, 1])
+# --- Dashboard Grid ---
+# Row 1: Alerts & Wealth
+r1_col1, r1_col2 = st.columns(2)
 
-with col_alerts:
+with r1_col1:
     st.subheader("🚨 Alerts")
     
     # Check if Supabase is configured
@@ -125,7 +127,7 @@ with col_alerts:
                     st.error("Wealth Manager module not loaded")
 
 # --- 2. WEALTH MANAGER ---
-with col_wealth:
+with r1_col2:
     try:
         if 'wm' not in locals():
             import wealth_manager as wm
@@ -137,13 +139,10 @@ with col_wealth:
         # Load Goal Progress (Daily Grind)
         prog = wm.get_daily_progress("myself")
         
-        st.metric("💰 Net Worth", f"${net_worth:,.0f}", delta=f"${prog['earned']:.0f} today")
-    except Exception as e:
-        st.metric("Wealth Manager", "Active", "Mod 01")
-
-# --- 3. CREDIT REPAIR ---
-with col_credit:
-    try:
+        st.subheader("💰 Wealth")
+        st.metric("Net Worth", f"${net_worth:,.0f}", delta=f"${prog['earned']:.0f} today")
+        
+        # Add Credit Score here too as it relates to financial health
         # Load Personal Credit JSON directly for speed
         credit_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_credit/personal_credit.json'))
         if os.path.exists(credit_path):
@@ -152,21 +151,22 @@ with col_credit:
                 c_data = json.load(f)
             
             dispute_count = len(c_data.get("disputes", []))
-            score = c_data.get("score", "N/A") # Assuming we might add score later, else text
             
-            lbl = f"{dispute_count} Disputes"
+            lbl = f"{dispute_count} Active Disputes"
             st.metric("💳 Credit Repair", "Active", lbl)
         else:
              st.metric("Credit Repair", "Setup", "Mod 02")
-    except:
-        st.metric("Credit Repair", "Active", "Mod 02")
 
-# --- 4. INVOICES (POCKET LAWYER Placeholder -> Invoices) ---
-# Note: The original fourth column was "Pocket Lawyer", but Invoices is more dashboard-relevant.
-# Variable name is `col_law`, but users likely want Financials. Let's make it Invoices or Law.
-# User asked for "Live Dashboard Widgets" logic. Let's start with Invoices since Law is stateless.
+    except Exception as e:
+        st.metric("Wealth Manager", "Active", "Mod 01")
 
-with col_law:
+st.divider()
+
+# Row 2: Actions & Invoices
+r2_col1, r2_col2 = st.columns(2)
+
+with r2_col1:
+    st.subheader("🧾 Invoices")
     try:
         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_invoices')))
         import invoice_manager as im
@@ -176,15 +176,21 @@ with col_law:
         pending_count = stats.get("unpaid_count", 0)
         
         if pending_count > 0:
-            st.metric("🧾 Unpaid Invoices", f"${unpaid:,.0f}", delta=f"{pending_count} pending", delta_color="inverse")
+            st.metric("Unpaid Invoices", f"${unpaid:,.0f}", delta=f"{pending_count} pending", delta_color="inverse")
         else:
-            st.metric("🧾 Invoices", "All Paid", "Nice!")
+            st.metric("Invoices", "All Paid", "Nice!")
             
     except ImportError:
         val = "Ready" 
-        st.metric("⚖️ Pocket Lawyer", val, "Mod 13")
+        st.metric("Invoice Manager", val, "Mod 13")
     except Exception as e:
-        st.metric("⚖️ Pocket Lawyer", "Ready", "Mod 13")
+        st.metric("Invoice Manager", "Ready", "Mod 13")
+
+with r2_col2:
+    st.subheader("⚖️ Legal Assist")
+    st.info("Ask legal questions in Pocket Lawyer.")
+    if st.button("Open Pocket Lawyer", use_container_width=True):
+        st.switch_page("pages/13_⚖️_Pocket_Lawyer.py")
 
 # --- Quick Actions Row ---
 st.divider()

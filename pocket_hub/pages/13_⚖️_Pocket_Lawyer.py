@@ -126,20 +126,27 @@ if prompt := st.chat_input("Ask a legal question (e.g., 'What are the HOS exempt
 
         else: # Google Gemini
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_prompt)
-            # Convert session state messages to Gemini format (history)
-            history = []
-            for m in st.session_state.messages[:-1]: 
-                role = "user" if m["role"] == "user" else "model"
-                history.append({"role": role, "parts": [m["content"]]})
             
-            chat = model.start_chat(history=history)
+            # Try 1.5 Flash (Latest) -> 1.5 Pro -> Pro (Old)
+            model_id = 'gemini-1.5-flash'
+            
             try:
+                model = genai.GenerativeModel(model_id, system_instruction=system_prompt)
+                # Convert session state messages to Gemini format (history)
+                history = []
+                for m in st.session_state.messages[:-1]: 
+                    role = "user" if m["role"] == "user" else "model"
+                    history.append({"role": role, "parts": [m["content"]]})
+                
+                chat = model.start_chat(history=history)
                 response = chat.send_message(prompt, stream=True)
                 for chunk in response:
                     full_response += chunk.text
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
             except Exception as e:
-                st.error(f"Gemini Error: {e}")
+                st.error(f"Gemini Error ({model_id}): {e}")
+                st.info("💡 Troubleshooting: Check your API Key or try a different model in settings.")
+                st.code("Available Models: " + str([m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]))

@@ -4,9 +4,10 @@ streamlit-folium>=0.18.0
 folium>=0.15.0
 polyline>=2.0.0
 requests>=2.31.0
+feedparser
 beautifulsoup4>=4.12.0
 python-docx>=1.1.0
-google-generativeai>=0.4.0
+google-generativeai>=0.7.0
 pdfplumber>=0.10.0
 pypdf>=4.0.0
 Pillow>=10.0.0

@@ -146,6 +146,9 @@ if st.session_state.client:
         with f1:
             if st.button("🔄 Refresh Data"):
                 st.rerun()
+            if st.button("🗑️ Clear Search"):
+                company_search = ""
+                st.rerun()
         
         df = load_data(worksheet)
         
