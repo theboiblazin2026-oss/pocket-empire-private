@@ -17,20 +17,35 @@ tab1, tab2, tab3 = st.tabs(["📷 Capture & Annotate", "📝 BOL Data Entry", "�
 with tab1:
     st.subheader("📷 Capture or Upload")
     
+    # CSS to make camera view larger
+    st.markdown("""
+    <style>
+    /* Make camera input larger */
+    [data-testid="stCameraInput"] > div {
+        width: 100% !important;
+    }
+    [data-testid="stCameraInput"] video,
+    [data-testid="stCameraInput"] img {
+        width: 100% !important;
+        max-width: 600px !important;
+        height: auto !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # --- Camera / Upload Options ---
-    input_col, controls_col = st.columns([1, 1])
+    input_method = st.radio("📥 Input Method", ["📁 Upload File", "📸 Take Photo"], horizontal=True)
     
-    with input_col:
-        input_method = st.radio("Input Method", ["📁 Upload File", "📸 Take Photo"], horizontal=True)
-        
-        if input_method == "📁 Upload File":
-            bg_image = st.file_uploader("Upload Image (BOL / Vehicle Photo)", type=["png", "jpg", "jpeg"])
-        else:
-            bg_image = st.camera_input("Take a photo")
+    if input_method == "📁 Upload File":
+        bg_image = st.file_uploader("Upload Image (BOL / Vehicle Photo)", type=["png", "jpg", "jpeg"])
+    else:
+        st.info("💡 **Tip:** Use your device's native camera for zoom/flash controls, then upload the photo.")
+        bg_image = st.camera_input("Take a photo", key="damage_camera")
     
-    with controls_col:
-        st.subheader("✏️ Annotation Tools")
-        
+    st.divider()
+    
+    # Annotation Tools in expander when image is loaded
+    with st.expander("✏️ Annotation Tools", expanded=True):
         # Tool Mode Selection (including Eraser)
         drawing_mode = st.radio("🔧 Tool", ["✏️ Draw", "🧽 Eraser", "📏 Line", "⬜ Rect", "⭕ Circle", "🔄 Move"], horizontal=True, index=0)
         
