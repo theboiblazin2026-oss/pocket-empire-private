@@ -5,8 +5,12 @@ import sys
 
 # Ensure modules are loaded
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_wealth')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_core')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_leads')))
+
 try:
     import wealth_manager as wm
+    import search_engine
 except ImportError:
     pass
 
@@ -15,6 +19,28 @@ st.set_page_config(
     page_icon="🚀",
     layout="wide"
 )
+
+# --- Sidebar Search ---
+st.sidebar.image(os.path.join(os.path.dirname(__file__), "logo.png"), use_column_width=True) if os.path.exists(os.path.join(os.path.dirname(__file__), "logo.png")) else None
+st.sidebar.markdown("### 🔍 Global Search")
+search_query = st.sidebar.text_input("Find Lead, Route, Client...", key="global_search_input")
+
+if search_query:
+    if 'search_engine' in locals():
+        results = search_engine.search_app(search_query)
+        if results:
+            st.sidebar.success(f"Found {len(results)} matches")
+            for idx, res in enumerate(results):
+                with st.sidebar.expander(f"{res['Type']}: {res['Name']}"):
+                    st.caption(res['Details'])
+                    if st.button("Go ➡️", key=f"go_search_{idx}"):
+                        st.switch_page(res['Page'])
+        else:
+            st.sidebar.warning("No matches found.")
+    else:
+        st.sidebar.error("Search module not loaded.")
+
+st.sidebar.divider()
 
 # --- Custom CSS ---
 st.markdown("""
