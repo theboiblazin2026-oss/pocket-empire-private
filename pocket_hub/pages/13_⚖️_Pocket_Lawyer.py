@@ -128,7 +128,7 @@ if prompt := st.chat_input("Ask a legal question (e.g., 'What are the HOS exempt
             genai.configure(api_key=api_key)
             
             # Try 1.5 Flash (Latest) -> 1.5 Pro -> Pro (Old)
-            model_id = 'gemini-1.5-flash'
+            model_id = 'gemini-2.5-flash'
             
             try:
                 model = genai.GenerativeModel(model_id, system_instruction=system_prompt)

@@ -46,3 +46,64 @@ def insert_lead(lead_dict):
     except Exception as e:
         print(f"Insert Error: {e}")
         return False
+
+# --- Notes ---
+def fetch_notes(user_id=None):
+    db = get_db()
+    if not db: return []
+    try:
+        # If user_id is provided, filter by it. For now, fetch all or implement simple RLS.
+        # Assuming RLS handles user filtering if Auth is on.
+        # Otherwise, we might want to filter by a 'demo_user' ID if we don't have real auth yet.
+        response = db.table("notes").select("*").order("created_at", desc=True).execute()
+        return response.data
+    except Exception as e:
+        print(f"Fetch Notes Error: {e}")
+        return []
+
+def save_note_db(note_data):
+    """
+    note_data: {title, content, drawing_data, user_id (optional)}
+    """
+    db = get_db()
+    if not db: return False
+    try:
+        db.table("notes").insert(note_data).execute()
+        return True
+    except Exception as e:
+        print(f"Save Note Error: {e}")
+        return False
+
+def delete_note_db(note_id):
+    db = get_db()
+    if not db: return False
+    try:
+        db.table("notes").delete().eq("id", note_id).execute()
+        return True
+    except Exception as e:
+        print(f"Delete Note Error: {e}")
+        return False
+
+# --- Inspections ---
+def fetch_inspections():
+    db = get_db()
+    if not db: return []
+    try:
+        response = db.table("inspections").select("*").order("created_at", desc=True).execute()
+        return response.data
+    except Exception as e:
+        print(f"Fetch Inspections Error: {e}")
+        return []
+
+def save_inspection_db(inspection_data):
+    """
+    inspection_data: {title, image_data, annotation_data, user_id (optional)}
+    """
+    db = get_db()
+    if not db: return False
+    try:
+        db.table("inspections").insert(inspection_data).execute()
+        return True
+    except Exception as e:
+        print(f"Save Inspection Error: {e}")
+        return False

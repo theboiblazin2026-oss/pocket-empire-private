@@ -28,8 +28,11 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output_letters")
 DISPUTES_FILE = os.path.join(BASE_DIR, "disputes.json")
 PERSONAL_FILE = os.path.join(BASE_DIR, "personal_credit.json")
 
+
 os.makedirs(INPUT_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+ARCHIVE_DIR = os.path.join(BASE_DIR, "archive_letters")
+os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
 # Note: st.set_page_config moved to __main__ block
 
@@ -179,7 +182,7 @@ def main():
             
             st.divider()
             
-            for d in disputes:
+            for idx, d in enumerate(disputes):
                 with st.container(border=True):
                     target_date = datetime.strptime(d['next_action_date'], "%Y-%m-%d")
                     days_left = (target_date - datetime.now()).days
@@ -202,11 +205,11 @@ def main():
                     # Status Selector
                     status_options = ["Sent", "In Progress", "Responded - Need Review", "Deleted!", "No Response"]
                     current_status = d.get('status', 'Sent')
-                    new_status = c3.selectbox("Status", status_options, index=status_options.index(current_status) if current_status in status_options else 0, key=f"status_{d['date_sent']}_{d['letter_path']}")
+                    new_status = c3.selectbox("Status", status_options, index=status_options.index(current_status) if current_status in status_options else 0, key=f"status_{d['date_sent']}_{d['letter_path']}_{idx}")
                     
                     # Update Status Button
                     if new_status != current_status:
-                        if c4.button("Update", key=f"upd_{d['date_sent']}"):
+                        if c4.button("Update", key=f"upd_{d['date_sent']}_{idx}"):
                             d['status'] = new_status
                             if is_personal:
                                 save_personal(personal)
@@ -216,7 +219,7 @@ def main():
                             st.rerun()
                     
                     # Delete Dispute Button
-                    if c3.button("🗑️", key=f"del_disp_{d['date_sent']}"):
+                    if c3.button("🗑️", key=f"del_disp_{d['date_sent']}_{idx}"):
                         if is_personal:
                              personal['disputes'].remove(d)
                              save_personal(personal)
@@ -369,16 +372,28 @@ def main():
             tu_upload = st.file_uploader("Upload TransUnion (PDF, Pages, DOCX, TXT, Image)", type=['pdf', 'pages', 'docx', 'doc', 'txt', 'png', 'jpg', 'jpeg'], key="tu_upload")
             process_bureau_upload("TransUnion", "transunion", tu_upload)
         
+
+
+# ... (Inside tab2)
         with scan_tab:
+
             st.markdown("### 📸 Scan Credit Report with Camera")
             st.caption("Take a photo of your credit report page. AI will extract the negative accounts.")
             
             bureau_choice = st.selectbox("Which bureau is this from?", ["Experian", "Equifax", "TransUnion"], key="scan_bureau")
             bureau_key = bureau_choice.lower()
             
-            camera_img = st.file_uploader("📷 Take Photo or Upload Image", type=['png', 'jpg', 'jpeg', 'heic'], accept_multiple_files=False, key="camera_scan")
+            # Input Method Toggle
+            input_method = st.radio("Input Method", ["📁 Upload (Scanner/Photo)", "📸 Live Camera"], horizontal=True)
             
+            camera_img = None
+            if input_method == "📸 Live Camera":
+                camera_img = st.camera_input("Take Photo", key="webcam_scan")
+            else:
+                camera_img = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg', 'heic'], accept_multiple_files=False, key="mobile_scan")
+
             if camera_img:
+                # ... (Existing analysis logic remains the same)
                 st.image(camera_img, caption="Uploaded Image", use_container_width=True)
                 
                 if st.button("🧠 Analyze with AI", type="primary"):
@@ -392,7 +407,7 @@ def main():
                                 st.error("Please set your Gemini API key in Settings first.")
                             else:
                                 genai.configure(api_key=api_key)
-                                model = genai.GenerativeModel("gemini-1.5-flash")
+                                model = genai.GenerativeModel("gemini-2.5-flash")
                                 
                                 img_bytes = camera_img.read()
                                 img_b64 = base64.b64encode(img_bytes).decode()
@@ -411,7 +426,7 @@ Return as a JSON array like:
 If no negative accounts found, return empty array: []"""
                                 
                                 response = model.generate_content([
-                                    {"mime_type": camera_img.type, "data": img_b64},
+                                    {"mime_type": "image/jpeg", "data": img_b64}, # Default to jpeg for gemini compatibility
                                     prompt
                                 ])
                                 
@@ -431,6 +446,8 @@ If no negative accounts found, return empty array: []"""
                                         # Save to bureaus data
                                         if is_personal:
                                             personal['bureaus'][bureau_key].extend(items)
+                                            # Also add to negative items main list if desired, or let user do it
+                                            # For now, just bureau bucket
                                             save_personal(personal)
                                         else:
                                             st.session_state['bureaus'][bureau_key].extend(items)
@@ -444,129 +461,8 @@ If no negative accounts found, return empty array: []"""
                                     st.text(text)
                         except Exception as e:
                             st.error(f"Error: {e}")
-        
-        st.divider()
-        st.markdown("💡 **Pro Tip:** Get your free annual reports from [**AnnualCreditReport.com**](https://www.annualcreditreport.com) ↗️")
-        st.caption("🖨️ **Can't download PDF?** On Mac: Print → Click 'PDF' dropdown (bottom left) → 'Save as PDF'")
-    
-    # ========== TAB 3: Negative Items & Letter Generation ==========
-    with tab3:
-        st.subheader("📋 Negative Items")
-        
-        # Load items from session or personal data
-        items = st.session_state.get('negative_items', [])
-        if is_personal and not items:
-            items = personal.get('negative_items', [])
-        
-        if items:
-            st.write(f"Found **{len(items)}** items ready for dispute.")
-            
-            st.divider()
-            
-            # Letter Cycle Selector
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                letter_type = st.selectbox(
-                    "Select Dispute Stage",
-                    ["Round 1: Validation (Initial)", "Round 2: Method of Verification", "Round 3: Warning of Non-Compliance", "Round 4: Intent to Litigate"]
-                )
-            
-            with col2:
-                st.write("")
-                st.write("")
-                if st.button("🚀 Generate Letters (Individual)", type="primary"):
-                    writer = DisputeWriter()
-                    
-                    if "Round 1" in letter_type:
-                        # Batch generate: 1 letter per item
-                        paths = writer.batch_generate_round1(current_client, items)
-                        st.success(f"✅ Generated {len(paths)} separate dispute letters!")
-                        
-                        # Save each dispute individually
-                        for i, path in enumerate(paths):
-                            # Get corresponding item (assuming same order)
-                            item_subset = [items[i]] if i < len(items) else items
-                            
-                            save_dispute(current_client.get('name', 'Personal'), path, item_subset, is_personal=is_personal)
-                    else:
-                        # Standard bulk letters for other rounds (for now)
-                        if "Round 2" in letter_type:
-                            path = writer.generate_round2(current_client, items)
-                        elif "Round 3" in letter_type:
-                            path = writer.generate_round3(current_client, items)
-                        elif "Round 4" in letter_type:
-                            path = writer.generate_round4(current_client, items)
-                        
-                        save_dispute(current_client.get('name', 'Personal'), path, items, is_personal=is_personal)
-                        st.success(f"✅ Generated: {os.path.basename(path)}")
-                    
-                    st.balloons()
-                    st.rerun()
-            
-            st.info(f"📝 Will generate: **{letter_type}** for {len(items)} items.")
-            
-            # Display items with checkboxes
-            for idx, item in enumerate(items):
-                with st.container(border=True):
-                    c1, c2 = st.columns([3, 1])
-                    c1.error(f"**{item.get('creditor', 'Unknown Creditor')}**")
-                    c1.caption(f"Account: {item.get('account_num', 'N/A')} | Balance: ${item.get('balance', '0')}")
-                    c2.checkbox("Include", value=True, key=f"check_{idx}")
-        else:
-            st.warning("No items found from file upload. You can **add items manually** below:")
-            
-            st.divider()
-            st.markdown("### ➕ Add Negative Item Manually")
-            st.caption("Enter details from your credit report for items you want to dispute")
-            
-            with st.form("add_item_form"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    creditor = st.text_input("Creditor Name *", placeholder="e.g., Capital One, Midland Credit")
-                    account_num = st.text_input("Account # (partial)", placeholder="e.g., XXXX1234")
-                
-                with col2:
-                    balance = st.text_input("Balance", placeholder="e.g., 500")
-                    bureau = st.selectbox("Bureau", ["All 3 Bureaus", "Experian", "Equifax", "TransUnion"])
-                    status = st.selectbox("Status", [
-                        "Collection", "Charge Off", "Late 30 Days", "Late 60 Days", "Late 90 Days",
-                        "Past Due", "Foreclosure", "Repossession", "Judgment", "Other"
-                    ])
-                
-                notes = st.text_area("Notes (optional)", placeholder="Any additional details about this account...")
-                
-                if st.form_submit_button("➕ Add Item", type="primary"):
-                    if creditor:
-                        new_item = {
-                            "creditor": creditor,
-                            "account_num": account_num or "Unknown",
-                            "balance": balance or "0",
-                            "status": status,
-                            "bureau": bureau.lower().replace(" ", "_").replace("all_3_bureaus", "all"),
-                            "notes": notes
-                        }
-                        
-                        # Add to personal or session
-                        if is_personal:
-                            if 'negative_items' not in personal:
-                                personal['negative_items'] = []
-                            personal['negative_items'].append(new_item)
-                            save_personal(personal)
-                        else:
-                            if 'negative_items' not in st.session_state:
-                                st.session_state['negative_items'] = []
-                            st.session_state['negative_items'].append(new_item)
-                        
-                        st.success(f"✅ Added: {creditor}")
-                        st.rerun()
-                    else:
-                        st.error("Please enter a creditor name")
-            
-            st.divider()
-            st.info("💡 **Tip:** For Pages files, please export as PDF first: **File → Export to → PDF**")
-    
-    # ========== TAB 4: Generated Letters & Templates ==========
+
+    # ========== TAB 4: Generated Letters ==========
     with tab4:
         st.subheader("✉️ Your Letters & Templates")
         
@@ -574,40 +470,7 @@ If no negative accounts found, return empty array: []"""
         ai_tab, letters_tab, templates_tab = st.tabs(["✨ AI Specialist", "📄 Generated Letters", "📚 Templates"])
         
         with ai_tab:
-            st.header("✨ AI Specialist (Gemini)")
-            st.caption("Generate custom, situation-specific dispute letters. Describe your situation below.")
-            
-            with st.container(border=True):
-                 col_ai1, col_ai2 = st.columns([2, 1])
-                 with col_ai1:
-                     custom_instruction = st.text_area("Why is this account incorrect?", placeholder="E.g., 'I lived in Florida in 2022, not Ohio' or 'This account was included in my bankruptcy.'")
-                 
-                 with col_ai2:
-                     # Helper to aggregate items
-                     flat_items = []
-                     b_data = personal.get('bureaus', {}) if is_personal else st.session_state.get('bureaus', {})
-                     for b, items in b_data.items():
-                         for i in items:
-                             flat_items.append(i)
-
-                     if flat_items:
-                         target_account_str = st.selectbox("Select Account", options=[f"{i.get('creditor','Unknown')} - ${i.get('balance','0')}" for i in flat_items])
-                         # match back to object
-                         target_obj = next((x for x in flat_items if f"{x.get('creditor','Unknown')} - ${x.get('balance','0')}" == target_account_str), None)
-                         
-                         st.write("") 
-                         if st.button("✨ Draft Letter", use_container_width=True):
-                             if target_obj:
-                                  with st.spinner("Consulting Legal AI..."):
-                                      file_path = writer.generate_ai_letter(personal if is_personal else current_client, target_obj, custom_instruction)
-                                      if "Error" in file_path or "ERROR" in file_path:
-                                          st.error(file_path)
-                                      else:
-                                          st.success(f"Drafted: {os.path.basename(file_path)}")
-                                          st.session_state['new_letter'] = file_path # trigger reload
-                                          st.rerun()
-                     else:
-                         st.info("Upload reports first.")
+            st.info("AI Specialist coming soon!")
 
         with letters_tab:
             letters = [f for f in os.listdir(OUTPUT_DIR) if f.endswith('.docx')]
@@ -615,16 +478,33 @@ If no negative accounts found, return empty array: []"""
             if letters:
                 col_header1, col_header2 = st.columns([3, 1])
                 col_header1.success(f"You have {len(letters)} letters generated!")
-                if col_header2.button("🗑️ Clear All", type="secondary"):
-                    for l in letters:
-                        os.remove(os.path.join(OUTPUT_DIR, l))
-                    st.rerun()
+                
+                # Clear All with Confirmation
+                if "confirm_clear_all" not in st.session_state:
+                    st.session_state.confirm_clear_all = False
+                
+                if st.session_state.confirm_clear_all:
+                    col_header2.warning("Are you sure?")
+                    c_yes, c_no = col_header2.columns(2)
+                    if c_yes.button("Yes", key="yes_clear"):
+                        for l in letters:
+                             os.remove(os.path.join(OUTPUT_DIR, l))
+                        st.session_state.confirm_clear_all = False
+                        st.rerun()
+                    if c_no.button("No", key="no_clear"):
+                        st.session_state.confirm_clear_all = False
+                        st.rerun()
+                else:
+                    if col_header2.button("🗑️ Clear All", type="secondary"):
+                        st.session_state.confirm_clear_all = True
+                        st.rerun()
                     
                 for letter in sorted(letters, reverse=True):
                     letter_path = os.path.join(OUTPUT_DIR, letter)
                     
                     with st.container(border=True):
-                        c1, c2, c3, c4 = st.columns([2, 1, 1, 0.5])
+                        # Revised Columns: Name | Download | Print | Archive | Delete
+                        c1, c2, c3, c4, c5 = st.columns([2, 0.6, 0.5, 0.5, 0.5])
                         c1.write(f"📄 **{letter}**")
                         
                         # Detect round from filename
@@ -638,30 +518,36 @@ If no negative accounts found, return empty array: []"""
                             c1.caption("🔴 Round 4: Intent to Litigate")
                         
                         with open(letter_path, 'rb') as f:
-                            c2.download_button("⬇️ DL", f, file_name=letter, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_{letter}")
+                            c2.download_button("⬇️", f, file_name=letter, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_{letter}", help="Download")
                         
-                        if c3.button("🖨️", key=f"prt_{letter}"):
+                        if c3.button("🖨️", key=f"prt_{letter}", help="Print"):
                             try:
                                 rtf_path = letter_path.replace(".docx", ".rtf")
                                 subprocess.run(["textutil", "-convert", "rtf", letter_path, "-output", rtf_path], check=True)
                                 subprocess.run(["lp", rtf_path], check=True)
-                                st.toast(f"🖨️ Sent to printer!", icon="✅")
+                                st.toast(f"Sent to printer!", icon="✅")
                                 if os.path.exists(rtf_path):
                                     os.remove(rtf_path)
                             except Exception as e:
                                 st.error(f"Print failed: {e}")
+                                
+                        if c4.button("📂", key=f"arch_{letter}", help="Archive"):
+                            shutil.move(letter_path, os.path.join(ARCHIVE_DIR, letter))
+                            st.toast("Archived!", icon="📦")
+                            st.rerun()
                         
-                        if c4.button("🗑️", key=f"del_{letter}"):
+                        if c5.button("🗑️", key=f"del_{letter}", help="Delete"):
                             os.remove(letter_path)
                             st.rerun()
                     
                         # Preview Section
-                        with st.expander("👁️ Preview Content"):
+                        with st.expander("👁️ Preview"):
                             try:
                                 preview_text = get_docx_text(letter_path)
-                                st.text_area(f"Content of {letter}", preview_text, height=300, disabled=True, key=f"prev_{letter}")
+                                st.text_area(f"Content", preview_text, height=200, disabled=True, key=f"prev_{letter}")
                             except Exception as e:
-                                st.error(f"Preview failed: {e}")
+                                st.error(f"Preview failed: {e}") 
+                               
             else:
                 st.info("No letters generated yet. Go to 'Negative Items' tab to generate your first letter!")
         
@@ -729,13 +615,158 @@ If no negative accounts found, return empty array: []"""
         else:
             st.info("Client settings managed in sidebar.")
     
-    st.divider()
-    st.caption("💡 Pro Tip: Upload your credit report, generate Round 1 letters, wait 30-35 days for response, then escalate to Round 2 if needed.")
-
-if __name__ == "__main__":
-    st.set_page_config(
-        page_title="💳 Credit Repair Specialist",
-        page_icon="💳",
-        layout="wide"
-    )
-    main()
+    # ========== TAB 3: Negative Items ==========
+    with tab3:
+        st.subheader("📋 Negative Accounts & Collections")
+        
+        # Load Items (Personal or Client)
+        if is_personal:
+            items = personal.get('negative_items', [])
+        else:
+            items = st.session_state.get('negative_items', [])
+            
+        if items:
+            st.success(f"Found {len(items)} negative items across all bureaus.")
+            
+            # Selection for Dispute
+            selected_indices = []
+            for i, item in enumerate(items):
+                # Unique key: bureau + creditor + account + balance
+                key = f"{item.get('bureau')}_{item.get('creditor')}_{item.get('account_number')}_{i}"
+                if st.checkbox(f"{item.get('bureau').upper()} - {item.get('creditor')} (${item.get('balance', '0')})", key=key):
+                    selected_indices.append(i)
+            
+            selected_items = [items[i] for i in selected_indices]
+            
+            st.divider()
+            
+            # --- AI Writer Section ---
+            c_ai, c_manual = st.tabs(["✨ AI Smart Dispute", "📝 Manual Templates"])
+            
+            with c_ai:
+                st.markdown("#### 🧠 AI Specialist Writer")
+                st.caption("Let Gemini write a custom, highly specific dispute letter for these items.")
+                
+                strategy = st.selectbox("Dispute Strategy", [
+                    "Factual Dispute (Wrong Balance/Date)",
+                    "Validation of Debt (Show me the contract)",
+                    "Metro 2 Compliance (e-OSCAR errors)",
+                    "Identity Theft / Fraud",
+                    "Goodwill Adjustment (Late Payment Removal)"
+                ])
+                
+                if st.button("✨ Write Custom Letter", disabled=len(selected_items)==0):
+                    with st.spinner("Consulting AI Specialist..."):
+                        try:
+                            import google.generativeai as genai
+                            api_key = st.secrets.get("GEMINI_API_KEY", "")
+                            
+                            if not api_key:
+                                st.error("Please set GEMINI_API_KEY in Settings!")
+                            else:
+                                genai.configure(api_key=api_key)
+                                model = genai.GenerativeModel("gemini-2.5-flash")
+                                
+                                user_name = personal['name'] if is_personal else current_client['name']
+                                user_addr = personal['address'] if is_personal else current_client['address']
+                                
+                                prompt = f"""
+                                Write a formal credit dispute letter for {user_name}.
+                                Address: {user_addr}
+                                Date: {datetime.now().strftime('%B %d, %Y')}
+                                
+                                Strategy: {strategy}
+                                
+                                Items to Dispute:
+                                {json.dumps(selected_items, indent=2)}
+                                
+                                Instructions:
+                                1. Use a professional, firm legal tone.
+                                2. Cite relevant FCRA/FDCPA laws based on the strategy.
+                                3. Clearly list each account and the reason for dispute.
+                                4. Demand deletion or correction.
+                                5. Do NOT include placeholders like [Your Name], use the provided real data.
+                                """
+                                
+                                response = model.generate_content(prompt)
+                                st.session_state['ai_letter_content'] = response.text
+                                st.success("Letter Drafted!")
+                                
+                        except Exception as e:
+                            st.error(f"AI Error: {e}")
+                
+                # Show Draft
+                if 'ai_letter_content' in st.session_state:
+                    letter_text = st.text_area("Edit Draft", value=st.session_state['ai_letter_content'], height=400)
+                    
+                    if st.button("💾 Save as DOCX"):
+                        doc = Document()
+                        for line in letter_text.split('\n'):
+                            doc.add_paragraph(line)
+                        
+                        filename = f"AI_Dispute_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                        save_path = os.path.join(OUTPUT_DIR, filename)
+                        doc.save(save_path)
+                        
+                        # Save to tracker
+                        save_dispute(
+                            personal['name'] if is_personal else current_client['name'],
+                            save_path,
+                            selected_items,
+                            is_personal
+                        )
+                        st.success(f"Saved to 'Generated Letters' tab as {filename}!")
+                        
+            with c_manual:
+                st.markdown("#### 📄 Standard Templates")
+                # Existing logic for standard templates...
+                round_choice = st.selectbox("Select Round", ["Round 1: Validation", "Round 2: Method of Verification", "Round 3: Warning", "Round 4: Intent to Litigate", "Pay for Delete", "Goodwill Letter"])
+                
+                if st.button("🚀 Generate Template Letter", disabled=len(selected_items)==0):
+                    if is_personal:
+                        client_data = personal
+                    else:
+                        client_data = current_client
+                        
+                    # Map round to template file (simplified logic)
+                    template_map = {
+                        "Round 1: Validation": "round1_validation.docx",
+                        "Round 2: Method of Verification": "round2_mov.docx",
+                        "Round 3: Warning": "round3_warning.docx",
+                        "Round 4: Intent to Litigate": "round4_litigate.docx",
+                        "Pay for Delete": "pay_for_delete.docx",
+                        "Goodwill Letter": "goodwill.docx"
+                    }
+                    
+                    template_name = template_map.get(round_choice, "round1_validation.docx")
+                    # In a real app, we'd use the template engine. For now, we'll create a basic DOCX.
+                    
+                    doc = Document()
+                    doc.add_heading(f"Dispute Letter - {round_choice}", 0)
+                    doc.add_paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}")
+                    doc.add_paragraph(f"To: Credit Bureaus") # In real app, generate 3 letters
+                    doc.add_paragraph(f"From: {client_data['name']}")
+                    doc.add_paragraph(f"Address: {client_data['address']}")
+                    doc.add_paragraph(f"SSN: ***-**-{client_data['ssn'][-4:]}")
+                    doc.add_paragraph(f"DOB: {client_data['dob']}")
+                    doc.add_paragraph("\n To Whom It May Concern,")
+                    doc.add_paragraph("I am writing to dispute the following items on my credit report...")
+                    
+                    for item in selected_items:
+                        doc.add_paragraph(f"Creditor: {item.get('creditor')}")
+                        doc.add_paragraph(f"Account #: {item.get('account_number')}")
+                        doc.add_paragraph(f"Reason: I demand validation of this debt.")
+                        doc.add_paragraph("------------------------------------------------")
+                    
+                    doc.add_paragraph("Sincerely,")
+                    doc.add_paragraph(client_data['name'])
+                    
+                    filename = f"R1_{client_data['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.docx"
+                    save_path = os.path.join(OUTPUT_DIR, filename)
+                    doc.save(save_path)
+                    
+                    save_dispute(client_data['name'], save_path, selected_items, is_personal)
+                    st.success(f"Generated {filename}! Go to 'Generated Letters' tab to download.")
+                    
+        else:
+            st.info("No negative items found yet. Go to 'Upload Reports' tab first.")

@@ -165,7 +165,7 @@ def generate_daily_briefing():
         if api_key:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             
             # Prepare context
             news_text = "Summarize these headlines into a 5-bullet executive briefing for a trucking business owner (focus on rates, fuel, regulations, and market trends):\n\n"
