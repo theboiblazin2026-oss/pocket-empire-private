@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import wealth_manager as wm
+import importlib
+importlib.reload(wm)
 import client_manager as cm
 import altair as alt
 
