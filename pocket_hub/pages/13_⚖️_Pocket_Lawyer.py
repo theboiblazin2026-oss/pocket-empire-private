@@ -21,88 +21,178 @@ with st.sidebar:
     
     provider = st.radio("Model Provider", ["OpenAI (Cloud)", "Google Gemini (Free)"], index=1)
     
+    # API Key Logic
     api_key = None
     
-    # Try loading from secrets first (System-Wide Setting)
+    # 1. Try Secrets
     if "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
     
+    # 2. Try Environment Variable
+    if not api_key:
+        api_key = os.getenv("GOOGLE_API_KEY")
+
     if provider == "OpenAI (Cloud)":
         user_key = st.text_input("OpenAI API Key", type="password", help="Required for GPT-4o")
         if user_key:
             api_key = user_key
-        elif not api_key:
+        # Check for OpenAI Env Var if needed
+        if not api_key:
              api_key = os.getenv("OPENAI_API_KEY")
              
     else: # Google Gemini
-        # If secret is set, we don't even need to show the input box, or we can show it as "configured"
         if api_key:
             st.success("✅ System API Key Active (Gemini)")
         else:
             user_key = st.text_input("Google API Key", type="password", help="Get free at aistudio.google.com")
             if user_key:
                 api_key = user_key
-            elif not api_key:
-                api_key = os.getenv("GOOGLE_API_KEY")
+    
+    # Configure Gemini if key is available
+    if api_key and provider == "Google Gemini (Free)":
+        genai.configure(api_key=api_key)
     
     st.divider()
-    mode = st.radio("Practice Area", ["🚛 FMCSA / DOT (Trucking)", "💳 Consumer Credit (FCRA/FDCPA)"])
+    mode = st.radio("Practice Area", [
+        "🚛 FMCSA / DOT (Trucking)", 
+        "💳 Consumer Credit (FCRA/FDCPA)",
+        "📝 Contract Review (Universal)"
+    ])
     
     st.info("⚠️ **Disclaimer:** I am an AI, not an attorney. This is for research purposes only. Consult a qualified lawyer for legal advice.")
 
 # --- Main Interface ---
-st.title(f"⚖️ {mode.split(' ')[1]} Legal Assistant")
-st.caption("Ask questions. Get answers backed by actual federal code.")
+st.title(f"⚖️ {mode.split('(')[0].strip()} Assistant" if "Contract" not in mode else "⚖️ Pocket Contract Lawyer")
 
-# Initialize Chat History
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "Contract" in mode:
+    st.caption("Upload any contract. I'll find the risks, money traps, and extract key contacts.")
+    
+    # --- Contract Reader Mode ---
+    
+    # Context Selector
+    contract_type = st.selectbox(
+        "📂 What type of contract is this?",
+        ["🚛 Trucking / Logistics (Broker-Carrier, Lease)", 
+         "🏢 Real Estate (Lease, Purchase)", 
+         "💻 Service / Freelance (SaaS, Retainer)", 
+         "🤝 General Business (NDA, Partnership)", 
+         "🏗️ Construction / Labor"],
+    )
+    
+    uploaded_file = st.file_uploader("Upload Contract (PDF/TXT)", type=["pdf", "txt", "docx"])
+    
+    if uploaded_file and api_key:
+        if st.button("🔍 Analyze Contract"):
+            with st.spinner("Reading legitimate fine print..."):
+                try:
+                    # Text Extraction
+                    contract_text = ""
+                    if uploaded_file.type == "application/pdf":
+                        try:
+                            import pypdf
+                            pdf_reader = pypdf.PdfReader(uploaded_file)
+                            for page in pdf_reader.pages:
+                                contract_text += page.extract_text()
+                        except ImportError:
+                            st.error("PYPDF not installed. Please install it or upload TXT.")
+                            st.stop()
+                    else:
+                        contract_text = uploaded_file.getvalue().decode("utf-8")
+                    
+                    # AI Analysis
+                    if provider == "Google Gemini (Free)":
+                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        
+                        prompt = f"""
+                        You are a ruthlessly efficient contract attorney. Review this {contract_type} contract.
+                        
+                        Valid types of analysis for {contract_type}:
+                        - Trucking: Look for Right to Offset, Pay terms, Detention, Fuel Surcharge, Cargo Claims.
+                        - Real Estate: CAM charges, Subletting, Repair responsibilities, Renewal options.
+                        - General/Service: IP Ownership, Non-compete, Termination for convenience, Indemnification.
+                        
+                        Task 1: EXTRACT CONTACTS
+                        Identify all parties, names, emails, phones, and addresses mentioned.
+                        
+                        Task 2: RISK ANALYSIS
+                        Identify the top 5 biggest risks or "gotchas". Rate the risk 1-10 (10=Bad).
+                        
+                        Task 3: MONEY CLAUSES
+                        Summarize payment terms, penalties, and how money moves.
+                        
+                        CONTRACT TEXT:
+                        {contract_text[:15000]}
+                        """
+                        
+                        response = model.generate_content(prompt)
+                        st.markdown(response.text)
+                        
+                    else:
+                        st.warning("OpenAI implementation pending. Please use Gemini.")
+                        
+                except Exception as e:
+                    st.error(f"Error analyzing contract: {e}")
 
-# Display History
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+else:
+    # --- Chat Mode (Existing) ---
+    st.caption("Ask questions. Get answers backed by actual federal code.")
 
-# Chat Input
-if prompt := st.chat_input("Ask a legal question (e.g., 'What are the HOS exemptions for ag haulers?')..."):
-    if provider == "OpenAI (Cloud)" and not api_key:
-        st.error("❌ Please enter an OpenAI API Key in the sidebar or switch to Gemini.")
-        st.stop()
-    if provider == "Google Gemini (Free)" and not api_key:
-         st.error("❌ Please enter a Google API Key in the sidebar. Get one free at [aistudio.google.com](https://aistudio.google.com).")
-         st.stop()
-        
-    # User Message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-        
-    # AI Response
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        
-        # System Prompt Selection
-        if "Trucking" in mode:
-            system_prompt = """You are an expert Transportation Attorney specializing in FMCSA and DOT regulations.
-            Your goal is to provide accurate, legally-backed answers to trucking questions.
+    # Initialize Chat History
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display History
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat Input
+    if prompt := st.chat_input("Ask a legal question..."):
+        if not api_key:
+            st.error("❌ API Key Required. Configure in sidebar.")
+            st.stop()
             
-            RULES:
-            1. CITATION REQUIRED: You MUST cite the specific regulation (e.g., "49 CFR § 395.1(k)") for every claim.
-            2. BE PRECISE: Distinguish between "Guidance" and "Regulation".
-            3. CONTEXT: If a rule has exceptions (like Ag Exemptions, 150 air-mile radius), mention them.
-            4. TONE: Professional, authoritative, but accessible.
-            """
-        else:
-            system_prompt = """You are an expert Consumer Protection Attorney specializing in Credit Reporting (FCRA) and Debt Collection (FDCPA).
-            Your goal is to help consumers repair their credit using the law.
+        # User Message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
             
-            RULES:
-            1. CITATION REQUIRED: You MUST cite the specific US Code (e.g., "15 U.S. Code § 1681i") for every claim.
-            2. BE AGGRESSIVE: Focus on consumer rights and leverage.
-            3. TACTICS: Suggest specific legal disputes (e.g., "Method of Verification", "Failure to Reinvestigate").
-            4. TONE: Empowering, aggressive, strategic.
-            """
+        # AI Response
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            
+            # System Prompt Selection
+            if "Trucking" in mode:
+                system_prompt = """You are an expert Transportation Attorney specializing in FMCSA and DOT regulations.
+                Your goal is to provide accurate, legally-backed answers to trucking questions.
+                
+                RULES:
+                1. CITATION REQUIRED: You MUST cite the specific regulation (e.g., "49 CFR § 395.1(k)") for every claim.
+                2. BE PRECISE: Distinguish between "Guidance" and "Regulation".
+                3. CONTEXT: If a rule has exceptions (like Ag Exemptions, 150 air-mile radius), mention them.
+                4. TONE: Professional, authoritative, but accessible.
+                """
+            else:
+                system_prompt = """You are an expert Consumer Protection Attorney specializing in Credit Reporting (FCRA) and Debt Collection (FDCPA).
+                Your goal is to help consumers repair their credit using the law.
+                
+                RULES:
+                1. Cite § 1681 (FCRA) and § 1692 (FDCPA) sections.
+                2. Be aggressive but legal.
+                """
+            
+            try:
+                if provider == "Google Gemini (Free)":
+                    genai.configure(api_key=api_key)
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    chat = model.start_chat(history=[])
+                    response = chat.send_message(f"System: {system_prompt}\nUser: {prompt}")
+                    message_placeholder.markdown(response.text)
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"AI Error: {str(e)}")
+
+
             
         if provider == "OpenAI (Cloud)":
             client = OpenAI(api_key=api_key)
