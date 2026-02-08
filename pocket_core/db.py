@@ -8,9 +8,15 @@ _supabase_client = None
 def get_db():
     global _supabase_client
     
+    url = None
+    key = None
+    
     # Try getting from Streamlit secrets (Cloud)
-    url = st.secrets.get("SUPABASE_URL")
-    key = st.secrets.get("SUPABASE_KEY")
+    try:
+        url = st.secrets.get("SUPABASE_URL")
+        key = st.secrets.get("SUPABASE_KEY")
+    except Exception:
+        pass
     
     # Fallback to env vars (Local)
     if not url: url = os.getenv("SUPABASE_URL")
