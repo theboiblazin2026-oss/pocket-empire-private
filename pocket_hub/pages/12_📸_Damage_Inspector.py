@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import base64
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image
 import io
