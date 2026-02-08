@@ -133,7 +133,9 @@ def main():
     st.markdown("[👉 Get your FREE Key from Google AI Studio](https://aistudio.google.com/app/apikey)")
     
     # Path to secrets
-    secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
+    # Use absolute path relative to this file to be robust
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    secrets_path = os.path.join(project_root, ".streamlit", "secrets.toml")
     
     # Load existing
     current_key = ""
@@ -169,16 +171,7 @@ def main():
                 with open(secrets_path, "w") as f:
                     toml.dump(data, f)
                 
-                # Apply immediately to runtime
-                os.environ["GOOGLE_API_KEY"] = new_key
-                os.environ["SUPABASE_URL"] = new_supa_url
-                os.environ["SUPABASE_KEY"] = new_supa_key
-                
-                if "GOOGLE_API_KEY" not in st.session_state: st.session_state["GOOGLE_API_KEY"] = new_key
-                st.session_state["SUPABASE_URL"] = new_supa_url
-                st.session_state["SUPABASE_KEY"] = new_supa_key
-                
-                st.success("✅ Keys Saved!")
+                st.success("✅ Keys Saved! Streamlit will now reload.")
                 st.balloons()
                 
             except Exception as e:

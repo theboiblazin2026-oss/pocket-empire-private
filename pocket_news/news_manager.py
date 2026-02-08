@@ -156,11 +156,8 @@ def generate_daily_briefing():
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             try:
-                import streamlit as st
                 if "GOOGLE_API_KEY" in st.secrets:
                     api_key = st.secrets["GOOGLE_API_KEY"]
-                if not api_key and "GOOGLE_API_KEY" in st.session_state:
-                     api_key = st.session_state["GOOGLE_API_KEY"]
             except:
                 pass
 
