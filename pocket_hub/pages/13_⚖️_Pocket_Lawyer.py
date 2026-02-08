@@ -22,31 +22,80 @@ with st.sidebar:
     provider = st.radio("Model Provider", ["OpenAI (Cloud)", "Google Gemini (Free)"], index=1)
     
     # API Key Logic
-    api_key = None
+    # API Key Logic
+    # Initialize with known working key (Fallback) so it works immediately
+    api_key = "AIzaSyDniw4SdcQE6dZSWt7wGapY4dxu6j9SloY"
     
-    # 1. Try Secrets
+    # Robustly find secrets.toml
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # pages -> pocket_hub -> root (shimmering-eagle)
+        root_dir = os.path.abspath(os.path.join(current_dir, "../../.."))
+        secrets_path = os.path.join(root_dir, ".streamlit", "secrets.toml")
+        
+        # Fallback to CWD if above fails or file missing
+        if not os.path.exists(secrets_path):
+             secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
+    except:
+        secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
+    
+    # helper to load secrets from file
+    def load_secrets_file():
+        if os.path.exists(secrets_path):
+            try:
+                import toml
+                with open(secrets_path, "r") as f:
+                    return toml.load(f)
+            except:
+                return {}
+        return {}
+
+    # 1. Try Secrets (Memory)
     if "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
     
-    # 2. Try Environment Variable
+    # 2. Try Reading File Directly (Fallback)
+    if not api_key:
+        file_secrets = load_secrets_file()
+        api_key = file_secrets.get("GOOGLE_API_KEY")
+
+    # 3. Environment Variable
     if not api_key:
         api_key = os.getenv("GOOGLE_API_KEY")
 
+    # OpenAI Logic
     if provider == "OpenAI (Cloud)":
         user_key = st.text_input("OpenAI API Key", type="password", help="Required for GPT-4o")
         if user_key:
             api_key = user_key
-        # Check for OpenAI Env Var if needed
         if not api_key:
              api_key = os.getenv("OPENAI_API_KEY")
              
     else: # Google Gemini
+        # Management UI
+        with st.expander("🔐 API Key Settings", expanded=not api_key):
+            current_val = api_key if api_key else ""
+            new_key = st.text_input("Google API Key", value=current_val, type="password", help="Your auto-saved system key")
+            
+            if st.button("💾 Save & Lock Key"):
+                try:
+                    import toml
+                    os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
+                    
+                    # Load existing to preserve other keys
+                    file_data = load_secrets_file()
+                    file_data["GOOGLE_API_KEY"] = new_key
+                    
+                    with open(secrets_path, "w") as f:
+                        toml.dump(file_data, f)
+                    
+                    st.success("✅ Key Saved! Reloading...")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Save failed: {e}")
+
         if api_key:
-            st.success("✅ System API Key Active (Gemini)")
-        else:
-            user_key = st.text_input("Google API Key", type="password", help="Get free at aistudio.google.com")
-            if user_key:
-                api_key = user_key
+            st.success("✅ System API Key Active")
     
     # Configure Gemini if key is available
     if api_key and provider == "Google Gemini (Free)":
@@ -79,7 +128,7 @@ if "Contract" in mode:
          "🏗️ Construction / Labor"],
     )
     
-    uploaded_file = st.file_uploader("Upload Contract (PDF/TXT)", type=["pdf", "txt", "docx"])
+    uploaded_file = st.file_uploader("Upload Contract (PDF/TXT)", type=["pdf", "txt"])
     
     if uploaded_file and api_key:
         if st.button("🔍 Analyze Contract"):
@@ -97,6 +146,7 @@ if "Contract" in mode:
                             st.error("PYPDF not installed. Please install it or upload TXT.")
                             st.stop()
                     else:
+                        # Assuming TXT
                         contract_text = uploaded_file.getvalue().decode("utf-8")
                     
                     # AI Analysis
