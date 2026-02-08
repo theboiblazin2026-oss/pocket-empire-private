@@ -112,6 +112,7 @@ with st.sidebar:
 
 # --- Main Interface ---
 st.title(f"⚖️ {mode.split('(')[0].strip()} Assistant" if "Contract" not in mode else "⚖️ Pocket Contract Lawyer")
+st.caption("✅ Version 2.1 - Models Updated")
 
 if "Contract" in mode:
     st.caption("Upload any contract. I'll find the risks, money traps, and extract key contacts.")
@@ -151,7 +152,8 @@ if "Contract" in mode:
                     
                     # AI Analysis
                     if provider == "Google Gemini (Free)":
-                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        # Updated to 2.5 Flash
+                        model = genai.GenerativeModel('gemini-2.5-flash')
                         
                         prompt = f"""
                         You are a ruthlessly efficient contract attorney. Review this {contract_type} contract.
@@ -231,62 +233,52 @@ else:
                 2. Be aggressive but legal.
                 """
             
-            try:
-                if provider == "Google Gemini (Free)":
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    chat = model.start_chat(history=[])
-                    response = chat.send_message(f"System: {system_prompt}\nUser: {prompt}")
-                    message_placeholder.markdown(response.text)
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
-            except Exception as e:
-                st.error(f"AI Error: {str(e)}")
-
-
+            # Model Logic
+            full_response = ""
             
-        if provider == "OpenAI (Cloud)":
-            client = OpenAI(api_key=api_key)
-            try:
-                stream = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        *st.session_state.messages
-                    ],
-                    stream=True
-                )
-                for chunk in stream:
-                    if chunk.choices[0].delta.content is not None:
-                        full_response += chunk.choices[0].delta.content
+            if provider == "OpenAI (Cloud)":
+                client = OpenAI(api_key=api_key)
+                try:
+                    stream = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            *st.session_state.messages
+                        ],
+                        stream=True
+                    )
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content is not None:
+                            full_response += chunk.choices[0].delta.content
+                            message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response)
+                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+                except Exception as e:
+                    st.error(f"OpenAI Error: {e}")
+
+            else: # Google Gemini
+                full_response = "" # Explicit Init
+                genai.configure(api_key=api_key)
+                
+                # Use 2.5 Flash as requested by environment
+                model_id = 'gemini-2.5-flash'
+                
+                try:
+                    model = genai.GenerativeModel(model_id, system_instruction=system_prompt)
+                    # Convert history
+                    history = []
+                    for m in st.session_state.messages[:-1]: 
+                        role = "user" if m["role"] == "user" else "model"
+                        history.append({"role": role, "parts": [m["content"]]})
+                    
+                    chat = model.start_chat(history=history)
+                    response = chat.send_message(prompt, stream=True)
+                    for chunk in response:
+                        full_response += chunk.text
                         message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response)
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-            except Exception as e:
-                st.error(f"OpenAI Error: {e}")
-
-        else: # Google Gemini
-            genai.configure(api_key=api_key)
-            
-            # Try 1.5 Flash (Latest) -> 1.5 Pro -> Pro (Old)
-            model_id = 'gemini-2.5-flash'
-            
-            try:
-                model = genai.GenerativeModel(model_id, system_instruction=system_prompt)
-                # Convert session state messages to Gemini format (history)
-                history = []
-                for m in st.session_state.messages[:-1]: 
-                    role = "user" if m["role"] == "user" else "model"
-                    history.append({"role": role, "parts": [m["content"]]})
-                
-                chat = model.start_chat(history=history)
-                response = chat.send_message(prompt, stream=True)
-                for chunk in response:
-                    full_response += chunk.text
-                    message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response)
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-                
-            except Exception as e:
-                st.error(f"Gemini Error ({model_id}): {e}")
-                st.info("💡 Troubleshooting: Check your API Key or try a different model in settings.")
-                st.code("Available Models: " + str([m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]))
+                    message_placeholder.markdown(full_response)
+                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+                    
+                except Exception as e:
+                    st.error(f"Gemini 2.5 Error ({model_id}): {e}") # Changed message to verify update
+                    st.info("💡 Troubleshooting: Check your API Key in sidebar.")
