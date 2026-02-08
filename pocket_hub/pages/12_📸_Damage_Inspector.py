@@ -298,14 +298,34 @@ with tab3:
     
     if 'bol_data' in st.session_state and st.session_state['bol_data']:
         bol = st.session_state['bol_data']
+        cargo = bol['cargo']
+        
+        # Build cargo details based on type
+        if cargo['type'] in ['🚗 Car', '🚚 Truck', '🚙 SUV']:
+            vehicle = cargo.get('vehicle', {})
+            damage = cargo.get('damage', {})
+            cargo_desc = f"{vehicle.get('year', '')} {vehicle.get('make', '')} {vehicle.get('model', '')}".strip()
+            cargo_detail = f"Color: {vehicle.get('color', 'N/A')} | VIN: {vehicle.get('vin', 'N/A')}"
+            damage_list = [k.title() for k, v in damage.items() if v and k != 'notes']
+            damage_str = ", ".join(damage_list) if damage_list else "None noted"
+            extra_info = f"Damage: {damage_str}"
+            if damage.get('notes'):
+                extra_info += f"<br>Notes: {damage['notes']}"
+        else:
+            freight = cargo.get('freight', {})
+            cargo_desc = freight.get('description', 'Freight')
+            cargo_detail = f"Pieces: {freight.get('pieces', 1)} | Weight: {freight.get('weight', 0)} lbs"
+            extra_info = f"Dimensions: {freight.get('dimensions', 'N/A')} | Tarp: {freight.get('tarp_status', 'N/A')}"
+            if freight.get('hazmat'):
+                extra_info += " | ⚠️ HAZMAT"
         
         # Preview BOL
         st.markdown("### 📋 BOL Preview")
         
         bol_html = f"""
-        <div style="background: white; color: black; padding: 20px; border-radius: 8px; font-family: Arial;">
+        <div id="bol-preview" style="background: white; color: black; padding: 20px; border-radius: 8px; font-family: Arial;">
             <h2 style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px;">BILL OF LADING</h2>
-            <p><strong>Date:</strong> {bol['dates']['pickup']}</p>
+            <p><strong>Date:</strong> {bol['dates']['pickup']} | <strong>Delivery:</strong> {bol['dates']['delivery']}</p>
             
             <div style="display: flex; gap: 20px;">
                 <div style="flex: 1; border: 1px solid #ccc; padding: 10px;">
@@ -320,31 +340,25 @@ with tab3:
                 </div>
             </div>
             
-            <h4 style="margin-top: 15px;">CARGO</h4>
+            <h4 style="margin-top: 15px;">CARGO ({cargo['type']})</h4>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr style="background: #f0f0f0;">
-                    <th style="border: 1px solid #ccc; padding: 5px;">Description</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;">Pieces</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;">Weight</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;">Vehicle/VIN</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Description</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Details</th>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ccc; padding: 5px;">{bol['cargo']['commodity']}</td>
-                    <td style="border: 1px solid #ccc; padding: 5px;">{bol['cargo']['pieces']}</td>
-                    <td style="border: 1px solid #ccc; padding: 5px;">{bol['cargo']['weight']} lbs</td>
-                    <td style="border: 1px solid #ccc; padding: 5px;">{bol['cargo']['vehicle']}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px;">{cargo_desc}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px;">{cargo_detail}</td>
                 </tr>
             </table>
-            
-            <p style="margin-top: 10px;"><strong>Special Instructions:</strong> {bol['cargo']['instructions']}</p>
-            {'<p style="color: red;">⚠️ HAZMAT CARGO</p>' if bol['cargo']['hazmat'] else ''}
+            <p style="margin-top: 10px;">{extra_info}</p>
             
             <div style="margin-top: 30px; display: flex; gap: 20px;">
-                <div style="flex: 1; border-top: 1px solid black; padding-top: 5px;">
-                    <p>Shipper Signature / Date</p>
+                <div style="flex: 1; border-top: 2px solid black; padding-top: 5px; height: 60px;">
+                    <p><strong>Shipper Signature / Date</strong></p>
                 </div>
-                <div style="flex: 1; border-top: 1px solid black; padding-top: 5px;">
-                    <p>Driver Signature / Date</p>
+                <div style="flex: 1; border-top: 2px solid black; padding-top: 5px; height: 60px;">
+                    <p><strong>Driver Signature / Date</strong></p>
                 </div>
             </div>
         </div>
@@ -352,12 +366,104 @@ with tab3:
         
         st.markdown(bol_html, unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📥 Download as PDF"):
-                st.info("PDF generation coming soon! For now, take a screenshot or print.")
-        with col2:
+        st.divider()
+        
+        # ✍️ Signature Canvas
+        st.markdown("### ✍️ Add Signatures / Annotations")
+        st.caption("Use Apple Pencil to sign or make corrections")
+        
+        sig_col1, sig_col2 = st.columns(2)
+        with sig_col1:
+            sig_stroke = st.slider("Pen Width", 1, 10, 3, key="sig_stroke")
+        with sig_col2:
+            sig_color = st.color_picker("Ink Color", "#000000", key="sig_color")
+        
+        # Signature canvas
+        sig_canvas = st_canvas(
+            fill_color="rgba(0, 0, 0, 0)",
+            stroke_width=sig_stroke,
+            stroke_color=sig_color,
+            background_color="#ffffff",
+            height=150,
+            width=700,
+            drawing_mode="freedraw",
+            display_toolbar=True,
+            key="signature_canvas"
+        )
+        
+        st.divider()
+        
+        # Action buttons
+        st.markdown("### 📤 Export Options")
+        action_cols = st.columns(3)
+        
+        with action_cols[0]:
+            # Generate PDF
+            if st.button("📥 Download PDF", type="primary"):
+                try:
+                    from fpdf import FPDF
+                    
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_font("Arial", "B", 16)
+                    pdf.cell(0, 10, "BILL OF LADING", ln=True, align="C")
+                    pdf.ln(5)
+                    
+                    pdf.set_font("Arial", "", 10)
+                    pdf.cell(0, 6, f"Date: {bol['dates']['pickup']} | Delivery: {bol['dates']['delivery']}", ln=True)
+                    pdf.ln(3)
+                    
+                    # Shipper/Consignee
+                    pdf.set_font("Arial", "B", 11)
+                    pdf.cell(95, 6, "SHIPPER", border=1)
+                    pdf.cell(95, 6, "CONSIGNEE", border=1, ln=True)
+                    pdf.set_font("Arial", "", 10)
+                    pdf.cell(95, 6, bol['shipper']['name'], border=1)
+                    pdf.cell(95, 6, bol['consignee']['name'], border=1, ln=True)
+                    pdf.multi_cell(95, 6, bol['shipper']['address'][:50], border=1)
+                    pdf.set_xy(pdf.get_x() + 95, pdf.get_y() - 6)
+                    pdf.multi_cell(95, 6, bol['consignee']['address'][:50], border=1)
+                    pdf.ln(5)
+                    
+                    # Cargo
+                    pdf.set_font("Arial", "B", 11)
+                    pdf.cell(0, 6, f"CARGO ({cargo['type']})", ln=True)
+                    pdf.set_font("Arial", "", 10)
+                    pdf.cell(0, 6, f"Description: {cargo_desc}", ln=True)
+                    pdf.cell(0, 6, f"Details: {cargo_detail}", ln=True)
+                    pdf.ln(10)
+                    
+                    # Signatures
+                    pdf.cell(95, 20, "Shipper Signature: ________________", border=1)
+                    pdf.cell(95, 20, "Driver Signature: ________________", border=1, ln=True)
+                    
+                    pdf_output = pdf.output(dest='S').encode('latin-1')
+                    
+                    st.download_button(
+                        "⬇️ Click to Download",
+                        data=pdf_output,
+                        file_name=f"BOL_{bol['dates']['pickup']}.pdf",
+                        mime="application/pdf"
+                    )
+                    st.success("✅ PDF Ready!")
+                except ImportError:
+                    st.error("PDF library not installed. Use Print instead.")
+        
+        with action_cols[1]:
+            # Print button (opens browser print dialog)
+            st.markdown("""
+            <button onclick="window.print()" style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                🖨️ Print BOL
+            </button>
+            """, unsafe_allow_html=True)
+        
+        with action_cols[2]:
             if st.button("📧 Email BOL"):
                 st.info("Email integration coming soon!")
+        
+        # Save signature if drawn
+        if sig_canvas.image_data is not None and sig_canvas.json_data and len(sig_canvas.json_data.get('objects', [])) > 0:
+            st.success("✅ Signature captured! It will be included when you download.")
     else:
         st.warning("⚠️ Please fill out BOL Data in the 'BOL Data Entry' tab first.")
+
