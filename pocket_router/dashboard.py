@@ -73,21 +73,54 @@ def main():
         with col1:
             st.subheader("Trip Details")
             
-            # Origin with dropdowns
-            st.markdown("**Origin**")
-            o_col1, o_col2 = st.columns([2, 1])
-            origin_city = o_col1.selectbox("City", MAJOR_CITIES, index=MAJOR_CITIES.index("Chicago"), key="origin_city")
-            origin_state = o_col2.selectbox("State", US_STATES, index=US_STATES.index("IL"), key="origin_state")
-            origin = f"{origin_city}, {origin_state}"
+            # Initialize stops in session state
+            if 'route_stops' not in st.session_state:
+                st.session_state.route_stops = [
+                    {"city": "Chicago", "state": "IL"},
+                    {"city": "Miami", "state": "FL"}
+                ]
             
-            # Destination with dropdowns
-            st.markdown("**Destination**")
-            d_col1, d_col2 = st.columns([2, 1])
-            dest_city = d_col1.selectbox("City", MAJOR_CITIES, index=MAJOR_CITIES.index("Miami"), key="dest_city")
-            dest_state = d_col2.selectbox("State", US_STATES, index=US_STATES.index("FL"), key="dest_state")
-            destination = f"{dest_city}, {dest_state}"
+            # Display all stops
+            st.markdown("**🚏 Route Stops**")
+            
+            stops_to_remove = []
+            for i, stop in enumerate(st.session_state.route_stops):
+                stop_cols = st.columns([2, 1, 0.5])
+                with stop_cols[0]:
+                    city_idx = MAJOR_CITIES.index(stop['city']) if stop['city'] in MAJOR_CITIES else 0
+                    st.session_state.route_stops[i]['city'] = st.selectbox(
+                        f"{'🟢 Origin' if i == 0 else '🔴 Final' if i == len(st.session_state.route_stops)-1 else f'📍 Stop {i}'}", 
+                        MAJOR_CITIES, 
+                        index=city_idx, 
+                        key=f"city_{i}"
+                    )
+                with stop_cols[1]:
+                    state_idx = US_STATES.index(stop['state']) if stop['state'] in US_STATES else 0
+                    st.session_state.route_stops[i]['state'] = st.selectbox(
+                        "State", 
+                        US_STATES, 
+                        index=state_idx, 
+                        key=f"state_{i}"
+                    )
+                with stop_cols[2]:
+                    if len(st.session_state.route_stops) > 2 and 0 < i < len(st.session_state.route_stops) - 1:
+                        if st.button("❌", key=f"remove_{i}"):
+                            stops_to_remove.append(i)
+            
+            # Remove marked stops
+            for idx in reversed(stops_to_remove):
+                st.session_state.route_stops.pop(idx)
+                st.rerun()
+            
+            # Add Stop button
+            st.markdown("---")
+            if st.button("➕ Add Waypoint"):
+                # Insert before final destination
+                st.session_state.route_stops.insert(-1, {"city": "Nashville", "state": "TN"})
+                st.rerun()
             
             # Vehicle Selector
+            st.markdown("---")
             selected_veh_key = st.selectbox(
                 "Vehicle Type", 
                 list(VEHICLES.keys()), 
@@ -105,23 +138,37 @@ def main():
                 st.warning("⏱️ HOS Rules Apply (11/14 rule)")
             
             if st.button("🚀 Calculate Route", type="primary"):
-                # Geocoding and Routing (OSRM Public API)
+                # Geocoding and Routing (OSRM Public API) for multi-stop
                 try:
-                    with st.spinner("Optimizing route..."):
-                        # 1. Geocode Origin
+                    with st.spinner("Optimizing multi-stop route..."):
                         url_base = "https://nominatim.openstreetmap.org/search"
                         headers = {'User-Agent': 'AntigravityAgent/1.0'}
-                        r_o = requests.get(f"{url_base}?q={urllib.parse.quote(origin)}&format=json&limit=1", headers=headers)
-                        r_d = requests.get(f"{url_base}?q={urllib.parse.quote(destination)}&format=json&limit=1", headers=headers)
                         
-                        if not r_o.json() or not r_d.json():
-                            st.error("Could not find origin or destination!")
-                        else:
-                            o_lat, o_lon = r_o.json()[0]['lat'], r_o.json()[0]['lon']
-                            d_lat, d_lon = r_d.json()[0]['lat'], r_d.json()[0]['lon']
+                        # 1. Geocode ALL stops
+                        waypoints = []
+                        waypoint_names = []
+                        geocode_failed = False
+                        
+                        for stop in st.session_state.route_stops:
+                            location = f"{stop['city']}, {stop['state']}"
+                            waypoint_names.append(location)
                             
-                            # 2. Get Route (OSRM)
-                            osrm_url = f"http://router.project-osrm.org/route/v1/driving/{o_lon},{o_lat};{d_lon},{d_lat}?overview=full"
+                            r = requests.get(f"{url_base}?q={urllib.parse.quote(location)}&format=json&limit=1", headers=headers)
+                            if r.json():
+                                waypoints.append({
+                                    "lat": float(r.json()[0]['lat']),
+                                    "lon": float(r.json()[0]['lon']),
+                                    "name": location
+                                })
+                            else:
+                                st.error(f"Could not geocode: {location}")
+                                geocode_failed = True
+                                break
+                        
+                        if not geocode_failed and len(waypoints) >= 2:
+                            # 2. Build OSRM waypoints string (lon,lat;lon,lat;...)
+                            coords = ";".join([f"{w['lon']},{w['lat']}" for w in waypoints])
+                            osrm_url = f"http://router.project-osrm.org/route/v1/driving/{coords}?overview=full"
                             r_route = requests.get(osrm_url)
                             route_data = r_route.json()
                             
@@ -137,10 +184,10 @@ def main():
                                 
                                 st.session_state['last_route'] = {
                                     "geometry": route_data['routes'][0]['geometry'],
-                                    "origin": [float(o_lat), float(o_lon)],
-                                    "dest": [float(d_lat), float(d_lon)],
+                                    "waypoints": waypoints,
                                     "estimates": estimates,
-                                    "names": (origin, destination)
+                                    "names": waypoint_names,
+                                    "legs": route_data['routes'][0].get('legs', [])
                                 }
                 except Exception as e:
                     st.error(f"Error connecting to routing service: {e}")
@@ -159,11 +206,30 @@ def main():
                 points = polyline.decode(res['geometry'])
                 folium.PolyLine(points, color="blue", weight=5, opacity=0.7).add_to(m)
                 
-                # Markers
-                folium.Marker(res['origin'], tooltip="Origin", icon=folium.Icon(color="green", icon="play")).add_to(m)
-                folium.Marker(res['dest'], tooltip="Destination", icon=folium.Icon(color="red", icon="stop")).add_to(m)
+                # Waypoint Markers (green=start, orange=stops, red=end)
+                waypoints = res.get('waypoints', [])
+                for i, wp in enumerate(waypoints):
+                    if i == 0:
+                        color, icon = "green", "play"
+                        tooltip = "🟢 Origin"
+                    elif i == len(waypoints) - 1:
+                        color, icon = "red", "stop"
+                        tooltip = "🔴 Destination"
+                    else:
+                        color, icon = "orange", "pause"
+                        tooltip = f"📍 Stop {i}"
+                    
+                    folium.Marker(
+                        [wp['lat'], wp['lon']], 
+                        tooltip=f"{tooltip}: {wp.get('name', 'Unknown')}",
+                        icon=folium.Icon(color=color, icon=icon)
+                    ).add_to(m)
                 
                 st_folium(m, width=800, height=500)
+                
+                # Stops Summary
+                if len(res.get('names', [])) > 2:
+                    st.info(f"🚏 **Multi-stop route:** {' → '.join(res['names'])}")
                 
                 # Metrics Row
                 m1, m2, m3, m4 = st.columns(4)
