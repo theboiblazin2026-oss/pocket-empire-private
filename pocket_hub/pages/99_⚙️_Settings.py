@@ -169,6 +169,15 @@ def main():
                 with open(secrets_path, "w") as f:
                     toml.dump(data, f)
                 
+                # Apply immediately to runtime
+                os.environ["GOOGLE_API_KEY"] = new_key
+                os.environ["SUPABASE_URL"] = new_supa_url
+                os.environ["SUPABASE_KEY"] = new_supa_key
+                
+                if "GOOGLE_API_KEY" not in st.session_state: st.session_state["GOOGLE_API_KEY"] = new_key
+                st.session_state["SUPABASE_URL"] = new_supa_url
+                st.session_state["SUPABASE_KEY"] = new_supa_key
+                
                 st.success("✅ Keys Saved!")
                 st.balloons()
                 

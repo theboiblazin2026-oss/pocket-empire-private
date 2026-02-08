@@ -115,7 +115,7 @@ with c2:
     mode = st.radio("Mode", ["Text", "Draw/Handwrite"], horizontal=True)
 
 if mode == "Text":
-    content = st.text_area("Content", value=current_note.get("content", "") if current_note else "", height=400)
+    content = st.text_area("Content", value=current_note.get("content", "") if current_note else "", height=800)
     drawing_data = current_note.get("drawing") if current_note else None
 else:
     content = current_note.get("content", "") if current_note else ""
@@ -164,7 +164,7 @@ else:
         initial_drawing=initial_drawing,
         update_streamlit=True,
         display_toolbar=True,
-        height=500,
+        height=800,
         drawing_mode=mode,
         key="canvas",
     )
