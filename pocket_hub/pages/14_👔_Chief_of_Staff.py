@@ -42,7 +42,6 @@ with col1:
 with col2:
     fin = metrics['finance']
     st.metric("💰 Total Revenue", fin.get('revenue', '$0.00'))
-    st.metric("💰 Total Revenue", fin.get('revenue', '$0.00'))
     st.caption(f"Pending: {fin.get('pending', '$0.00')}")
     
     with st.expander("⚡ Quick Invoice"):
