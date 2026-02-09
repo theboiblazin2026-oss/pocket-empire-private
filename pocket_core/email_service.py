@@ -8,13 +8,21 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
 def get_email_credentials():
-    """Retrieve email credentials from environment or known locations."""
-    # Priority: Env Var > Project .env > Lead Puller .env
+    """Retrieve email credentials from secrets.toml, environment, or known locations."""
+    email = os.getenv("GMAIL_USER", "Theboiblazin2026@gmail.com") 
     password = os.getenv("GMAIL_APP_PASSWORD")
-    email = os.getenv("GMAIL_USER", "Theboiblazin2026@gmail.com") # Default sender
+
+    # 1. Try Streamlit Secrets (Best for App)
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "email" in st.secrets:
+            email = st.secrets["email"].get("gmail_user", email)
+            password = st.secrets["email"].get("gmail_app_password", password)
+    except:
+        pass
 
     if not password:
-        # Check standard locations
+        # 2. Check standard locations (.env)
         possible_envs = [
             os.path.join(os.path.dirname(__file__), '../.env'),
             "/Volumes/CeeJay SSD/Projects/lead puller/.env", 
