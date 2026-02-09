@@ -5,23 +5,52 @@ import os
 # Singleton pattern for DB connection
 _supabase_client = None
 
+def reset_db():
+    """Force re-initialization of the DB client (e.g. after settings change)."""
+    global _supabase_client
+    _supabase_client = None
+
 def get_db():
     global _supabase_client
     
     url = None
     key = None
+
+    # 1. Try Session State (Immediate Update)
+    if "SUPABASE_URL" in st.session_state:
+        url = st.session_state["SUPABASE_URL"]
+    if "SUPABASE_KEY" in st.session_state:
+        key = st.session_state["SUPABASE_KEY"]
     
-    # Try getting from Streamlit secrets (Cloud)
-    try:
-        url = st.secrets.get("SUPABASE_URL")
-        key = st.secrets.get("SUPABASE_KEY")
-    except Exception:
-        pass
+    # 2. Try Secrets (Cloud)
+    if not url:
+        try:
+            url = st.secrets.get("SUPABASE_URL")
+        except Exception: pass
+    if not key:
+        try:
+            key = st.secrets.get("SUPABASE_KEY")
+        except Exception: pass
     
-    # Fallback to env vars (Local)
+    # 3. Fallback to Env (Local)
     if not url: url = os.getenv("SUPABASE_URL")
     if not key: key = os.getenv("SUPABASE_KEY")
     
+    # 3b. Fallback to Manual TOML Load (for CLI scripts)
+    if not url or not key:
+        try:
+            import toml
+            # Calculate path relative to pocket_core/db.py
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            secrets_path = os.path.abspath(os.path.join(current_dir, '..', '.streamlit', 'secrets.toml'))
+            
+            if os.path.exists(secrets_path):
+                data = toml.load(secrets_path)
+                if not url: url = data.get("SUPABASE_URL")
+                if not key: key = data.get("SUPABASE_KEY")
+        except Exception:
+            pass
+
     if not url or not key:
         return None
 

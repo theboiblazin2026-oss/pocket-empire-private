@@ -50,8 +50,12 @@ with st.sidebar:
                 return {}
         return {}
 
-    # 1. Try Secrets (Memory)
-    if "GOOGLE_API_KEY" in st.secrets:
+    # 1. Try Session State (Immediate)
+    if "GOOGLE_API_KEY" in st.session_state:
+        api_key = st.session_state["GOOGLE_API_KEY"]
+
+    # 2. Try Secrets (Memory)
+    elif "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
     
     # 2. Try Reading File Directly (Fallback)

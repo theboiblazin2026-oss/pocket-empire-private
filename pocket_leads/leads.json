@@ -2,174 +2,202 @@
   "scored_leads": [],
   "score_history": [
     {
-      "identifier": "1495785",
       "result": {
         "score": 35,
-        "risk_level": "MEDIUM RISK",
-        "risk_emoji": "\ud83d\udfe0",
         "breakdown": [
           "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
           "Safety Rating: None (\ud83d\udfe1) -5",
           "Operating Status: ACTIVE (\u2705) +20",
           "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
         ],
+        "scored_at": "2026-02-06T22:53:57.818939",
+        "risk_emoji": "\ud83d\udfe0",
+        "risk_level": "MEDIUM RISK",
         "carrier_data": {
-          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
-          "dba_name": "",
-          "dot_number": "3988866",
-          "mc_number": "1495785",
           "status": "ACTIVE",
-          "safety_rating": "None",
-          "authority_granted": null,
-          "power_units": 2,
           "drivers": 3,
+          "dba_name": "",
+          "mc_number": "1495785",
+          "dot_number": "3988866",
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
           "mcs150_date": "2026-01-30T00:00:00",
-          "insurance_status": "Unknown"
-        },
-        "scored_at": "2026-02-06T22:53:57.818939"
-      }
+          "power_units": 2,
+          "safety_rating": "None",
+          "insurance_status": "Unknown",
+          "authority_granted": null
+        }
+      },
+      "identifier": "1495785"
     },
     {
-      "identifier": "1495785",
       "result": {
         "score": 35,
-        "risk_level": "MEDIUM RISK",
-        "risk_emoji": "\ud83d\udfe0",
         "breakdown": [
           "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
           "Safety Rating: None (\ud83d\udfe1) -5",
           "Operating Status: ACTIVE (\u2705) +20",
           "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
         ],
+        "scored_at": "2026-02-06T22:55:14.035681",
+        "risk_emoji": "\ud83d\udfe0",
+        "risk_level": "MEDIUM RISK",
         "carrier_data": {
-          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
-          "dba_name": "",
-          "dot_number": "3988866",
-          "mc_number": "1495785",
           "status": "ACTIVE",
-          "safety_rating": "None",
-          "authority_granted": null,
-          "power_units": 2,
           "drivers": 3,
+          "dba_name": "",
+          "mc_number": "1495785",
+          "dot_number": "3988866",
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
           "mcs150_date": "2026-01-30T00:00:00",
-          "insurance_status": "Unknown"
-        },
-        "scored_at": "2026-02-06T22:55:14.035681"
-      }
+          "power_units": 2,
+          "safety_rating": "None",
+          "insurance_status": "Unknown",
+          "authority_granted": null
+        }
+      },
+      "identifier": "1495785"
     },
     {
-      "identifier": "1495785",
       "result": {
         "score": 35,
-        "risk_level": "MEDIUM RISK",
-        "risk_emoji": "\ud83d\udfe0",
         "breakdown": [
           "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
           "Safety Rating: None (\ud83d\udfe1) -5",
           "Operating Status: ACTIVE (\u2705) +20",
           "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
         ],
+        "scored_at": "2026-02-06T22:57:35.544726",
+        "risk_emoji": "\ud83d\udfe0",
+        "risk_level": "MEDIUM RISK",
         "carrier_data": {
-          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
-          "dba_name": "",
-          "dot_number": "3988866",
-          "mc_number": "1495785",
           "status": "ACTIVE",
-          "safety_rating": "None",
-          "authority_granted": null,
-          "power_units": 2,
           "drivers": 3,
+          "dba_name": "",
+          "mc_number": "1495785",
+          "dot_number": "3988866",
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
           "mcs150_date": "2026-01-30T00:00:00",
-          "insurance_status": "Unknown"
-        },
-        "scored_at": "2026-02-06T22:57:35.544726"
-      }
+          "power_units": 2,
+          "safety_rating": "None",
+          "insurance_status": "Unknown",
+          "authority_granted": null
+        }
+      },
+      "identifier": "1495785"
     },
     {
-      "identifier": "1495785",
       "result": {
         "score": 35,
-        "risk_level": "MEDIUM RISK",
-        "risk_emoji": "\ud83d\udfe0",
         "breakdown": [
           "Authority Age: 0mo (\ud83d\udd34 Very New) -30",
           "Safety Rating: None (\ud83d\udfe1) -5",
           "Operating Status: ACTIVE (\u2705) +20",
           "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
         ],
+        "scored_at": "2026-02-07T00:44:07.460422",
+        "risk_emoji": "\ud83d\udfe0",
+        "risk_level": "MEDIUM RISK",
         "carrier_data": {
-          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
-          "dba_name": "",
-          "dot_number": "3988866",
-          "mc_number": "1495785",
           "status": "ACTIVE",
-          "safety_rating": "None",
-          "authority_granted": null,
-          "power_units": 2,
           "drivers": 3,
+          "dba_name": "",
+          "mc_number": "1495785",
+          "dot_number": "3988866",
+          "legal_name": "ACTIVE TRUCKING COMPANY LLC",
           "mcs150_date": "2026-01-30T00:00:00",
-          "insurance_status": "Unknown"
-        },
-        "scored_at": "2026-02-07T00:44:07.460422"
-      }
+          "power_units": 2,
+          "safety_rating": "None",
+          "insurance_status": "Unknown",
+          "authority_granted": null
+        }
+      },
+      "identifier": "1495785"
     },
     {
-      "identifier": "3973577",
       "result": {
         "score": 50,
-        "risk_level": "LOW RISK",
-        "risk_emoji": "\ud83d\udfe1",
         "breakdown": [
           "Authority Age: 9mo (\ud83d\udfe0 New) -15",
           "Safety Rating: None (\ud83d\udfe1) -5",
           "Operating Status: ACTIVE (\u2705) +20",
           "Fleet Size: 2 trucks (\ud83d\udfe0 Owner-Op) +0"
         ],
+        "scored_at": "2026-02-07T00:47:07.090606",
+        "risk_emoji": "\ud83d\udfe1",
+        "risk_level": "LOW RISK",
         "carrier_data": {
-          "legal_name": "HENSON-KERR CARRIERS",
+          "status": "ACTIVE",
+          "drivers": 2,
           "dba_name": "",
-          "dot_number": "3973577",
           "mc_number": "1485605",
+          "dot_number": "3973577",
+          "legal_name": "HENSON-KERR CARRIERS",
+          "mcs150_date": "2025-05-04T00:00:00",
+          "power_units": 2,
+          "safety_rating": "None",
+          "insurance_status": "Unknown",
+          "authority_granted": null
+        }
+      },
+      "identifier": "3973577"
+    },
+    {
+      "identifier": "MC123456",
+      "result": {
+        "score": 75,
+        "risk_level": "EXCELLENT",
+        "risk_emoji": "\u2705",
+        "breakdown": [
+          "Authority Age: 26mo (\ud83d\udfe2 Established) +10",
+          "Safety Rating: None (\ud83d\udfe1) -5",
+          "Operating Status: ACTIVE (\u2705) +20",
+          "Fleet Size: 1 trucks (\ud83d\udfe0 Owner-Op) +0"
+        ],
+        "carrier_data": {
+          "legal_name": "B MARRON LOGISTICS LLC",
+          "dba_name": "",
+          "dot_number": "3177404",
+          "mc_number": "123456",
           "status": "ACTIVE",
           "safety_rating": "None",
           "authority_granted": null,
-          "power_units": 2,
-          "drivers": 2,
-          "mcs150_date": "2025-05-04T00:00:00",
+          "power_units": 1,
+          "drivers": 1,
+          "mcs150_date": "2023-12-19T00:00:00",
           "insurance_status": "Unknown"
         },
-        "scored_at": "2026-02-07T00:47:07.090606"
+        "scored_at": "2026-02-08T12:44:25.752574"
       }
     }
   ],
+  "risk_thresholds": {
+    "low_risk": 70,
+    "high_risk": 30,
+    "medium_risk": 50
+  },
   "scoring_weights": {
-    "authority_age_months": {
-      "0-6": -30,
-      "6-12": -15,
-      "12-24": 0,
-      "24-60": 10,
-      "60+": 20
-    },
     "safety_rating": {
-      "Satisfactory": 25,
+      "None": -5,
       "Conditional": -10,
-      "Unsatisfactory": -50,
-      "None": -5
+      "Satisfactory": 25,
+      "Unsatisfactory": -50
+    },
+    "insurance_status": {
+      "Active": 15,
+      "Expired": -50,
+      "Expiring Soon": -10
     },
     "operating_status": {
       "ACTIVE": 20,
       "INACTIVE": -100,
       "OUT-OF-SERVICE": -100
     },
-    "insurance_status": {
-      "Active": 15,
-      "Expiring Soon": -10,
-      "Expired": -50
+    "authority_age_months": {
+      "0-6": -30,
+      "60+": 20,
+      "6-12": -15,
+      "12-24": 0,
+      "24-60": 10
     }
-  },
-  "risk_thresholds": {
-    "high_risk": 30,
-    "medium_risk": 50,
-    "low_risk": 70
   }
 }

@@ -153,7 +153,13 @@ def generate_daily_briefing():
     
     # Gemini Summarization
     try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
+        # 1. Try Session State
+        api_key = st.session_state.get("GOOGLE_API_KEY")
+
+        # 2. Try Env / Secrets
+        if not api_key:
+            api_key = os.environ.get("GOOGLE_API_KEY")
+        
         if not api_key:
             try:
                 if "GOOGLE_API_KEY" in st.secrets:

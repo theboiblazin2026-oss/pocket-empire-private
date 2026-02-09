@@ -1,6 +1,15 @@
 import streamlit as st
 import os
 import toml
+import subprocess
+import sys
+
+# Add parent dir to path to find pocket_core
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from pocket_core import db
 
 # Theme configurations
 THEMES = {
@@ -170,8 +179,30 @@ def main():
                 os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
                 with open(secrets_path, "w") as f:
                     toml.dump(data, f)
+                    
+                # --- UPDATE SESSION STATE (IMMEDIATE EFFECT) ---
+                if "GOOGLE_API_KEY" not in st.session_state: st.session_state.GOOGLE_API_KEY = ""
+                st.session_state.GOOGLE_API_KEY = new_key
                 
-                st.success("✅ Keys Saved! Streamlit will now reload.")
+                if "SUPABASE_URL" not in st.session_state: st.session_state.SUPABASE_URL = ""
+                st.session_state.SUPABASE_URL = new_supa_url
+                
+                if "SUPABASE_KEY" not in st.session_state: st.session_state.SUPABASE_KEY = ""
+                st.session_state.SUPABASE_KEY = new_supa_key
+                
+                # Try to reset DB connection
+                try:
+                    import sys
+                    # Add parent dir to path to find pocket_core
+                    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+                    if project_root not in sys.path:
+                        sys.path.append(project_root)
+                    from pocket_core.db import reset_db
+                    reset_db()
+                except Exception as e:
+                    print(f"Could not reset DB client: {e}")
+                
+                st.success("✅ Keys Saved! Session updated immediately.")
                 st.balloons()
                 
             except Exception as e:
@@ -192,6 +223,55 @@ def main():
     st.divider()
     st.caption(f"Config Path: `{get_config_path()}`")
 
+    # --- System Health Check ---
+    st.divider()
+    st.subheader("🏥 System Health Check")
+    st.info("Run this to verify your Database connection and check for updates.")
+    
+    if st.button("🩺 Run Health Check", type="primary"):
+        st.write("---")
+        
+        # 1. Database Check
+        st.write("### 🔌 Database Connection")
+        try:
+            # Force reset to ensure we test fresh
+            db.reset_db()
+            client = db.get_db()
+            if client:
+                # Try a simple read
+                res = client.table("company_settings").select("*").limit(1).execute()
+                st.success(f"✅ Connection Successful!")
+                st.json(res.data) # Show a bit of data to prove it
+            else:
+                st.error("❌ Could not initialize Supabase client.")
+        except Exception as e:
+            st.error(f"❌ Database Connection Failed: {e}")
+            
+        # 2. Git Status Check
+        st.write("### ☁️ Cloud Update Status")
+        try:
+            # Run git status -sb
+            result = subprocess.run(
+                ["git", "status", "-sb"], 
+                cwd=project_root, 
+                capture_output=True, 
+                text=True
+            )
+            
+            if result.returncode == 0:
+                st.code(result.stdout, language="bash")
+                
+                if "[ahead" in result.stdout:
+                    st.warning("⬆️ You have local changes to push.")
+                elif "[behind" in result.stdout:
+                    st.warning("⬇️ You have updates waiting to be pulled.")
+                else:
+                    st.success("✅ Your system is up to date.")
+            else:
+                st.error("❌ Failed to run git status.")
+                st.code(result.stderr)
+        except Exception as e:
+            st.error(f"❌ Git Check Failed: {e}")
+
 if __name__ == "__main__":
     main()
-

@@ -1,12 +1,47 @@
 {
-    "invoices": [],
-    "next_invoice_number": 1001,
-    "company_info": {
-        "name": "YOUR COMPANY NAME",
-        "address": "Your Address",
-        "city_state_zip": "City, ST 00000",
-        "phone": "(000) 000-0000",
-        "email": "email@example.com"
-    },
-    "clients": []
+  "invoices": [
+    {
+      "invoice_number": 1001,
+      "client": {
+        "id": 1,
+        "name": "Acme Logistics",
+        "address": "123 Freight Way",
+        "city_state_zip": "Chicago, IL 60601",
+        "email": "ap@acme.com",
+        "phone": "555-0199"
+      },
+      "date": "2026-02-08T13:08:51.896625",
+      "due_date": "2026-03-10T13:08:51.896635",
+      "line_items": [
+        {
+          "description": "Freight Haul: ORD to MIA (Ref #998877)",
+          "quantity": 1,
+          "rate": 3500.0
+        }
+      ],
+      "subtotal": 3500.0,
+      "total": 3500.0,
+      "notes": "Thank you for your business.",
+      "status": "unpaid",
+      "created_at": "2026-02-08T13:08:51.896640"
+    }
+  ],
+  "next_invoice_number": 1002,
+  "company_info": {
+    "name": "YOUR COMPANY NAME",
+    "address": "Your Address",
+    "city_state_zip": "City, ST 00000",
+    "phone": "(000) 000-0000",
+    "email": "email@example.com"
+  },
+  "clients": [
+    {
+      "id": 1,
+      "name": "Acme Logistics",
+      "address": "123 Freight Way",
+      "city_state_zip": "Chicago, IL 60601",
+      "email": "ap@acme.com",
+      "phone": "555-0199"
+    }
+  ]
 }

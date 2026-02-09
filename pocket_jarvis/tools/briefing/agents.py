@@ -27,8 +27,10 @@ def get_agent_stats():
                 lines = f.readlines()[-300:]
             
             content = "".join(lines)
-            if "Execution Successful" in content:
+            if "Execution Successful" in content or "Enrichment Complete" in content:
                 stats['enricher_status'] = "🟢 Active"
+            elif "Execution Failed" in content:
+                stats['enricher_status'] = "🔴 Failed"
             
             # Regex for "Sent X emails" or similar. 
             # From log check: "Sent 49 emails."

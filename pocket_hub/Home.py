@@ -24,7 +24,7 @@ st.set_page_config(
 # --- Sidebar Search ---
 logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
 if os.path.exists(logo_path):
-    st.sidebar.image(logo_path, use_column_width=True)
+    st.sidebar.image(logo_path, use_container_width=True)
 st.sidebar.markdown("### 🔍 Global Search")
 search_query = st.sidebar.text_input("Find Lead, Route, Client...", key="global_search_input")
 
