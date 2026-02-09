@@ -14,6 +14,17 @@ try:
 except ImportError:
     pass
 
+import socket
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
+
 st.set_page_config(
     page_title="Pocket Empire Command Center",
     page_icon="🚀",
@@ -25,6 +36,9 @@ st.set_page_config(
 logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path, use_container_width=True)
+
+st.sidebar.info(f"📱 **Road Mode**\n Connect: `http://{get_local_ip()}:8501`")
+
 st.sidebar.markdown("### 🔍 Global Search")
 search_query = st.sidebar.text_input("Find Lead, Route, Client...", key="global_search_input")
 

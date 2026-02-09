@@ -7,6 +7,10 @@ import io
 from datetime import datetime
 import ollama # AI Vision
 from pocket_core.db import save_inspection_db
+try:
+    from pocket_core.email_service import send_email
+except ImportError:
+    def send_email(*args, **kwargs): return {'success': False, 'message': "Email Service Not Found"}
 
 
 st.set_page_config(page_title="Damage Inspector", page_icon="📸", layout="wide")
@@ -605,8 +609,66 @@ with tab3:
             """, unsafe_allow_html=True)
         
         with action_cols[2]:
+            email_recipient = st.text_input("Recipient Email", placeholder="broker@example.com", label_visibility="collapsed")
             if st.button("📧 Email BOL"):
-                st.info("Email integration coming soon!")
+                if not email_recipient:
+                    st.error("Enter an email address.")
+                else:
+                    try:
+                        from fpdf import FPDF
+                        # Generate PDF for Email (Same logic as above)
+                        pdf = FPDF()
+                        pdf.add_page()
+                        pdf.set_font("Arial", "B", 16)
+                        pdf.cell(0, 10, "BILL OF LADING", ln=True, align="C")
+                        pdf.ln(5)
+                        
+                        pdf.set_font("Arial", "", 10)
+                        pdf.cell(0, 6, f"Date: {bol['dates']['pickup']} | Delivery: {bol['dates']['delivery']}", ln=True)
+                        pdf.ln(3)
+                        
+                        pdf.set_font("Arial", "B", 11)
+                        pdf.cell(95, 6, "SHIPPER", border=1)
+                        pdf.cell(95, 6, "CONSIGNEE", border=1, ln=True)
+                        pdf.set_font("Arial", "", 10)
+                        pdf.cell(95, 6, bol['shipper']['name'], border=1)
+                        pdf.cell(95, 6, bol['consignee']['name'], border=1, ln=True)
+                        pdf.multi_cell(95, 6, bol['shipper']['address'][:50], border=1)
+                        pdf.set_xy(pdf.get_x() + 95, pdf.get_y() - 6)
+                        pdf.multi_cell(95, 6, bol['consignee']['address'][:50], border=1)
+                        pdf.ln(5)
+                        
+                        pdf.set_font("Arial", "B", 11)
+                        pdf.cell(0, 6, f"CARGO ({cargo['type']})", ln=True)
+                        pdf.set_font("Arial", "", 10)
+                        pdf.cell(0, 6, f"Description: {cargo_desc}", ln=True)
+                        pdf.cell(0, 6, f"Details: {cargo_detail}", ln=True)
+                        pdf.ln(10)
+                        
+                        pdf.cell(95, 20, "Shipper Signature: ________________", border=1)
+                        pdf.cell(95, 20, "Driver Signature: ________________", border=1, ln=True)
+                        
+                        pdf_bytes = pdf.output(dest='S').encode('latin-1')
+                        
+                        # Send
+                        with st.spinner("Sending Email..."):
+                            res = send_email(
+                                to_email=email_recipient, 
+                                subject=f"BOL: {bol['dates']['pickup']} - {cargo_desc}", 
+                                body=f"Attached is the Bill of Lading for the {cargo_desc}.\n\nPickup: {bol['dates']['pickup']}\nDelivery: {bol['dates']['delivery']}",
+                                attachments=[(f"BOL_{bol['dates']['pickup']}.pdf", pdf_bytes)]
+                            )
+                            
+                        if res['success']:
+                            st.toast("Email Sent!", icon="🚀")
+                            st.success(f"✅ Sent to {email_recipient}")
+                        else:
+                            st.error(f"Failed: {res['message']}")
+                            
+                    except ImportError:
+                        st.error("PDF library missing.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
         
         # Save signature if drawn
         if sig_canvas.image_data is not None and sig_canvas.json_data and len(sig_canvas.json_data.get('objects', [])) > 0:
