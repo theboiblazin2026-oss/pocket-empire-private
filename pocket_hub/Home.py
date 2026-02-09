@@ -1,5 +1,6 @@
 import streamlit as st
 import datetime
+import time
 import os
 import sys
 
@@ -32,36 +33,11 @@ st.set_page_config(
 )
 
 # --- SECURITY CHECK ---
-def check_password():
-    """Returns `True` if the user had the correct password."""
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets["app_password"]:
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # don't store password
-        else:
-            st.session_state["password_correct"] = False
-
-    if "password_correct" not in st.session_state:
-        # First run, show input
-        st.text_input(
-            "🔑 Security Check", type="password", on_change=password_entered, key="password"
-        )
-        st.error("🔒 App is Locked. Enter Password.")
-        return False
-    elif not st.session_state["password_correct"]:
-        # Password incorrect, show input again
-        st.text_input(
-            "🔑 Security Check", type="password", on_change=password_entered, key="password"
-        )
-        st.error("😕 Password Incorrect")
-        return False
-    else:
-        # Password correct.
-        return True
-
-if not check_password():
+try:
+    import auth_utils
+    auth_utils.require_auth()
+except ImportError:
+    st.error("Authentication module missing.")
     st.stop()
 # ----------------------
 

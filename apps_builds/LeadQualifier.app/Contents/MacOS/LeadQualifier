@@ -1,0 +1,8 @@
+#!/bin/bash
+# Lead Qualifier Launcher
+cd /Users/newguy/.gemini/antigravity/playground/shimmering-eagle
+if ! lsof -i :8507 > /dev/null 2>&1; then
+    .venv_fresh/bin/streamlit run pocket_leads/dashboard.py --server.port 8507 --server.headless true &
+    sleep 3
+fi
+open http://localhost:8507

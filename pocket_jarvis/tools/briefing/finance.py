@@ -12,11 +12,32 @@ def get_finance_brief():
     
     # 1. Market Data (S&P 500, BTC)
     try:
-        tickers = ["^GSPC", "BTC-USD"]
-        prices = yf.download(tickers, period="1d", progress=False)['Close'].iloc[-1]
+        import yfinance as yf
+        import math
         
-        data['sp500'] = f"${prices['^GSPC']:.2f}"
-        data['btc'] = f"${prices['BTC-USD']:.2f}"
+        # Fetch S&P 500
+        sp500 = yf.Ticker("^GSPC")
+        sp_info = sp500.fast_info
+        sp_price = sp_info.get('lastPrice') or sp_info.get('regularMarketPrice')
+        if sp_price and not math.isnan(sp_price):
+            data['sp500'] = f"${sp_price:,.2f}"
+        else:
+            # Try history as fallback
+            hist = sp500.history(period="5d")
+            if not hist.empty:
+                data['sp500'] = f"${hist['Close'].iloc[-1]:,.2f}"
+            else:
+                data['sp500'] = "Market Closed"
+        
+        # Fetch BTC
+        btc = yf.Ticker("BTC-USD")
+        btc_info = btc.fast_info
+        btc_price = btc_info.get('lastPrice') or btc_info.get('regularMarketPrice')
+        if btc_price and not math.isnan(btc_price):
+            data['btc'] = f"${btc_price:,.2f}"
+        else:
+            data['btc'] = "N/A"
+            
     except Exception as e:
         data['error'] = str(e)
         data['sp500'] = "N/A"

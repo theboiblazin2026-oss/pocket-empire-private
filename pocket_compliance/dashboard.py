@@ -9,7 +9,25 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 if DIR not in sys.path:
     sys.path.insert(0, DIR)
 
+TOOLS_DIR = os.path.join(DIR, "tools")
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)
+
 from vault_manager import save_document, list_documents, get_document_path
+from monitor import get_monitored_mcs, add_mc, remove_mc, get_carrier_status
+
+# History file for caching status data
+HISTORY_FILE = os.path.join(DIR, "history.json")
+
+def load_history():
+    """Load cached carrier status history."""
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
 
 def main():
     # Page Config (Guarded)

@@ -1,11 +1,32 @@
 import streamlit as st
+
+# --- SECURITY CHECK ---
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    import auth_utils
+    auth_utils.require_auth()
+except ImportError:
+    import streamlit as st
+    st.error("Authentication module missing. Please contact administrator.")
+    st.stop()
+# ----------------------
+
 import os
 import base64
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image
 import io
 from datetime import datetime
-import ollama # AI Vision
+
+# AI Vision - optional (requires Ollama running locally)
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
+
 from pocket_core.db import save_inspection_db
 try:
     from pocket_core.email_service import send_email
@@ -675,4 +696,3 @@ with tab3:
             st.success("✅ Signature captured! It will be included when you download.")
     else:
         st.warning("⚠️ Please fill out BOL Data in the 'BOL Data Entry' tab first.")
-

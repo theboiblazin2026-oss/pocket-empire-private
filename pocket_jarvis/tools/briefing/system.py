@@ -40,30 +40,51 @@ def get_system_health():
     except ImportError:
         pass # Fallback to above
 
-    # 3. WiFi Status (macOS specific)
+    # 3. WiFi Status (macOS specific - modern approach)
     try:
-        # The 'airport' utility is hidden in macOS
-        airport_cmd = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I"
-        result = subprocess.run(airport_cmd, shell=True, capture_output=True, text=True)
+        # Method 1: Use networksetup (works on all macOS)
+        result = subprocess.run(
+            ["networksetup", "-getairportnetwork", "en0"], 
+            capture_output=True, text=True, timeout=5
+        )
+        output = result.stdout.strip()
         
-        if "AirPort: Off" in result.stdout:
-            health['wifi_status'] = "🔴 OFF"
-            health['wifi_ssid'] = "N/A"
-        elif "SSID: " in result.stdout:
-            # Extract SSID
-            match = re.search(r"SSID: (.+)", result.stdout)
-            if match:
-                health['wifi_status'] = "🟢 Connected"
-                health['wifi_ssid'] = match.group(1).strip()
-            else:
-                health['wifi_status'] = "🟢 Online"
-                health['wifi_ssid'] = "Unknown"
+        if "You are not associated" in output or result.returncode != 0:
+            # Try en1 (some Macs use different interface)
+            result = subprocess.run(
+                ["networksetup", "-getairportnetwork", "en1"], 
+                capture_output=True, text=True, timeout=5
+            )
+            output = result.stdout.strip()
+        
+        if "Current Wi-Fi Network:" in output:
+            # Extract network name
+            ssid = output.split("Current Wi-Fi Network:")[-1].strip()
+            health['wifi_status'] = "🟢 Connected"
+            health['wifi_ssid'] = ssid
+        elif "You are not associated" in output:
+            health['wifi_status'] = "🟡 Disconnected"
+            health['wifi_ssid'] = "None"
         else:
-             health['wifi_status'] = "🟡 Disconnected"
-             health['wifi_ssid'] = "None"
+            # Fallback: Check if we have internet
+            try:
+                ping = subprocess.run(
+                    ["ping", "-c", "1", "-t", "2", "8.8.8.8"],
+                    capture_output=True, timeout=3
+                )
+                if ping.returncode == 0:
+                    health['wifi_status'] = "🟢 Online"
+                    health['wifi_ssid'] = "Connected"
+                else:
+                    health['wifi_status'] = "🟡 Offline"
+                    health['wifi_ssid'] = "None"
+            except:
+                health['wifi_status'] = "Unknown"
+                health['wifi_ssid'] = "N/A"
              
     except Exception as e:
         health['wifi_status'] = "Unknown"
+        health['wifi_ssid'] = str(e)[:20]
 
     # 4. Bluetooth Status (macOS specific - FASTER CHECK)
     try:

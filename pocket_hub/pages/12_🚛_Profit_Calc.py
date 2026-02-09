@@ -1,4 +1,18 @@
 import streamlit as st
+
+# --- SECURITY CHECK ---
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    import auth_utils
+    auth_utils.require_auth()
+except ImportError:
+    import streamlit as st
+    st.error("Authentication module missing. Please contact administrator.")
+    st.stop()
+# ----------------------
+
 import random
 import sys
 import os

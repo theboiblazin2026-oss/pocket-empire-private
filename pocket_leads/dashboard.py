@@ -105,8 +105,49 @@ def main():
             import pandas as pd
             try:
                 df = pd.read_csv(uploaded_file)
-                            progress_bar.progress((i + 1) / total)
+                
+                # Find the column with identifiers
+                id_col = None
+                for col in df.columns:
+                    if col.upper() in ['MC', 'DOT', 'MC_NUMBER', 'DOT_NUMBER', 'IDENTIFIER']:
+                        id_col = col
+                        break
+                
+                if not id_col:
+                    st.error("Could not find MC or DOT column. Please ensure your CSV has a column named 'MC' or 'DOT'.")
+                else:
+                    st.info(f"Found identifier column: **{id_col}**")
+                    
+                    if st.button("🚀 Start Batch Processing", use_container_width=True):
+                        results = []
+                        total = len(df)
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        
+                        for i, row in df.iterrows():
+                            identifier = str(row[id_col])
+                            status_text.text(f"Processing {i+1}/{total}: {identifier}")
                             
+                            result = score_by_identifier(identifier)
+                            
+                            if "error" not in result:
+                                carrier = result.get('carrier_data', {})
+                                results.append({
+                                    "Identifier": identifier,
+                                    "Company": carrier.get('legal_name', 'Unknown'),
+                                    "Score": result.get('score'),
+                                    "Risk Level": result.get('risk_level')
+                                })
+                            else:
+                                results.append({
+                                    "Identifier": identifier,
+                                    "Company": "Error",
+                                    "Score": 0,
+                                    "Risk Level": result.get('error', 'Unknown Error')
+                                })
+                            
+                            progress_bar.progress((i + 1) / total)
+                        
                         result_df = pd.DataFrame(results)
                         st.success("Processing Complete!")
                         st.dataframe(result_df)

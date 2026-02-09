@@ -1,5 +1,19 @@
 
 import streamlit as st
+
+# --- SECURITY CHECK ---
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    import auth_utils
+    auth_utils.require_auth()
+except ImportError:
+    import streamlit as st
+    st.error("Authentication module missing. Please contact administrator.")
+    st.stop()
+# ----------------------
+
 import pandas as pd
 import os
 import sys
@@ -35,7 +49,10 @@ def scan_receipt_with_ai(file_bytes):
     """Scan receipt using local LLM."""
     try:
         import ollama
-        
+    except ImportError:
+        return None  # Ollama not installed
+    
+    try:
         # Save temp file
         temp_path = "temp_receipt.jpg"
         with open(temp_path, "wb") as f:

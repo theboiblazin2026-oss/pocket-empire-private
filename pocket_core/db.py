@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client, Client
 import os
+from datetime import datetime
 
 # Singleton pattern for DB connection
 _supabase_client = None

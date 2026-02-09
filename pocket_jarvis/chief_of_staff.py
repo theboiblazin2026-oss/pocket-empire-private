@@ -10,7 +10,7 @@ sys.path.append(PROJECT_ROOT)
 
 # Import tools individually to prevent cascading failures
 try:
-    from tools.briefing.finance import get_market_data
+    from tools.briefing.finance import get_finance_brief as get_market_data
 except ImportError:
     def get_market_data(): return {"sp500": "N/A", "btc": "N/A"}
 
