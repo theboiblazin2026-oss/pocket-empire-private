@@ -81,10 +81,10 @@ def get_web_client():
 
 @st.cache_resource(ttl=300)
 def get_fleet_client():
-    """Connect to Fleet Manager Google Sheet (same service account, different sheet)."""
+    """Connect to Fleet Manager Google Sheet (using its own service account)."""
     try:
-        if "web_hunter" in st.secrets and "gcp_service_account" in st.secrets["web_hunter"]:
-            creds_dict = dict(st.secrets["web_hunter"]["gcp_service_account"])
+        if "fleet_manager" in st.secrets and "gcp_service_account" in st.secrets["fleet_manager"]:
+            creds_dict = dict(st.secrets["fleet_manager"]["gcp_service_account"])
             creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         elif IS_LOCAL:
             creds_file = os.path.join(TRUCK_SCRAPER_DIR, "service_account.json")
@@ -429,7 +429,7 @@ with tab_fleet:
         st.error(f"🔴 {fleet_health}")
 
     st.header("🚛 Fleet Manager")
-    fleet_sub_data, fleet_sub_studio, fleet_sub_campaign = st.tabs(["📊 FMCSA Data", "🎨 HTML Editor", "🚀 Auto-Blast"])
+    fleet_sub_data, fleet_sub_studio, fleet_sub_campaign = st.tabs(["📊 Data", "📧 Email Studio", "🚀 Campaign"])
     
     if fleet_worksheet is not None:
         # --- FLEET DATA ---
