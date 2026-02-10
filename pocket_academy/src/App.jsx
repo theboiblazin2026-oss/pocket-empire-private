@@ -9,7 +9,7 @@ import AuthGate from './components/AuthGate';
 import PomodoroTimer from './components/PomodoroTimer';
 import Certificate from './components/Certificate';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { BookOpen, FileText, Truck, Code, ArrowLeft, ArrowRight, Award, Sun, Moon } from 'lucide-react';
+import { BookOpen, FileText, Truck, Code, ArrowLeft, ArrowRight, Award, Sun, Moon, Lock } from 'lucide-react';
 
 function ThemeToggle() {
   const { darkMode, toggleTheme } = useTheme();
@@ -211,8 +211,21 @@ function AppContent() {
   return (
     <AuthGate>
       <div className={`min-h-screen pb-20 pt-20 font-sans transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-50 to-indigo-50/20 text-gray-900'}`}>
-        <ProgressBar progress={progressPercentage}>
-          <ThemeToggle />
+        <ProgressBar progress={progressPercentage} onGoHome={() => setActiveTrack(null)}>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('curriculum_auth');
+                window.location.reload();
+              }}
+              className={`p-2 rounded-full transition-all duration-300 hover:scale-110 shrink-0 ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-red-400/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                }`}
+              title="Lock App"
+            >
+              <Lock size={16} />
+            </button>
+          </div>
         </ProgressBar>
 
         {/* Back Button */}

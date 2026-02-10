@@ -1,13 +1,25 @@
 
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { House } from 'lucide-react';
 
-const ProgressBar = ({ progress, children }) => {
+const ProgressBar = ({ progress, children, onGoHome }) => {
     const { darkMode } = useTheme();
 
     return (
         <div className={`fixed top-0 left-0 w-full z-50 glass border-b px-4 py-3 shadow-sm ${darkMode ? 'border-white/10' : 'border-gray-200/80'}`}>
-            <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+            <div className="max-w-3xl mx-auto flex items-center gap-4">
+                <button
+                    onClick={onGoHome}
+                    className={`p-2 rounded-full transition-all duration-200 hover:scale-110 shrink-0 ${darkMode
+                        ? 'text-slate-400 hover:text-white hover:bg-white/10'
+                        : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                        }`}
+                    title="Back to Home"
+                >
+                    <House size={20} />
+                </button>
+
                 <div className="flex-1 flex flex-col gap-1.5">
                     <div className={`flex justify-between text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                         <span>Progress</span>

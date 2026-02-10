@@ -35,20 +35,7 @@ const AuthGate = ({ children }) => {
     }
 
     if (isAuthenticated) {
-        return (
-            <>
-                <div className="fixed top-4 right-4 z-[60]">
-                    <button
-                        onClick={handleLogout}
-                        className="p-2 rounded-full text-gray-400 hover:text-red-400 transition-all duration-200 hover:scale-110 hover:bg-red-400/10"
-                        title="Lock App"
-                    >
-                        <Lock size={16} />
-                    </button>
-                </div>
-                {children}
-            </>
-        );
+        return <>{children}</>;
     }
 
     return (
