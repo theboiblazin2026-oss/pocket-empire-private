@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Navigate to project root
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.."
 
 echo "🛑 Stopping existing dashboards..."
-# Kill ports 8500-8509
-for port in {8500..8509}; do
+# Kill ports 8500-8510
+for port in {8500..8510}; do
     lsof -ti:$port | xargs kill -9 2>/dev/null
 done
 sleep 1
@@ -49,6 +49,11 @@ nohup $STREAMLIT_EXEC run pocket_rates/dashboard.py --server.port 8508 --server.
 # 9. Compliance (8509)
 echo "   - Compliance Officer..."
 nohup $STREAMLIT_EXEC run pocket_compliance/dashboard.py --server.port 8509 --server.headless true > /dev/null 2>&1 &
+
+# 10. Pocket Academy (8510)
+echo "   - Pocket Academy (React)..."
+cd pocket_academy && npm run dev > /dev/null 2>&1 &
+cd ..
 
 # 0. THE HUB (8500)
 echo "   - THE HUB (Command Center)..."

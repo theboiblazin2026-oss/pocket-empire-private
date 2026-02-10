@@ -10,3 +10,5 @@ duplicates_report.txt
 
 # SDKs and Large Directories
 google-cloud-sdk/
+pocket_academy/node_modules/
+pocket_academy/dist/

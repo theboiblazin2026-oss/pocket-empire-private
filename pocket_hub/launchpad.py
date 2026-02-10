@@ -38,6 +38,15 @@ with col4:
     st.link_button("🚀 Launch (8504)", "http://localhost:8504", use_container_width=True)
 
 st.divider()
+st.header("🎓 Education & Growth")
+col_edu1, col_edu2 = st.columns(2)
+
+with col_edu1:
+    st.info("**🎓 Pocket Academy**")
+    st.caption("Tech & Fleet Curriculum")
+    st.link_button("🚀 Launch (8510)", "http://localhost:8510", use_container_width=True)
+
+st.divider()
 st.header("🛡️ Finance & Compliance")
 col5, col6, col7, col8 = st.columns(4)
 
