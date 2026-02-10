@@ -68,6 +68,8 @@ if search_query:
         st.sidebar.error("Search module not loaded.")
 
 st.sidebar.divider()
+st.sidebar.header("🎓 Academy")
+st.sidebar.link_button("🚀 Launch Curriculum", "https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app")
 
 # --- Custom CSS ---
 st.markdown("""
@@ -233,9 +235,5 @@ with c4:
         st.switch_page("pages/04_📋_Compliance.py")
 
 st.divider()
-if st.button("🎓 Launch Pocket Academy (Curriculum)", use_container_width=True):
-    import webbrowser
-    webbrowser.open_new_tab("https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app")
-
 # --- Footer ---
 st.caption(f"System Online | {datetime.datetime.now().strftime('%A, %B %d')} | Pocket Empire Cloud v1.0")
