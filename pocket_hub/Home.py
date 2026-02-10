@@ -69,7 +69,7 @@ if search_query:
 
 st.sidebar.divider()
 st.sidebar.header("🎓 Academy")
-st.sidebar.link_button("🚀 Launch Curriculum", "https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app")
+st.sidebar.link_button("🚀 Launch Curriculum", "https://pocket-empire-private.vercel.app")
 
 # --- Custom CSS ---
 st.markdown("""

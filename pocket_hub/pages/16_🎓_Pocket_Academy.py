@@ -12,7 +12,7 @@ st.success("**Ready to Launch!**")
 st.write("The Academy is hosted on a separate secure cloud server.")
 
 # The Link
-url = "https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app"
+url = "https://pocket-empire-private.vercel.app"
 
 st.info("Click below to open the curriculum in a new tab.")
 
