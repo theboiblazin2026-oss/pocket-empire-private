@@ -128,10 +128,10 @@ function AppContent() {
           <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
 
-          <h1 className={`text-5xl md:text-6xl font-black tracking-tight mb-3 animate-fade-in ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-3 animate-fade-in ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             Choose Your Path
           </h1>
-          <p className={`text-xl mb-14 text-center max-w-md animate-fade-in ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+          <p className={`text-lg font-light mb-14 text-center max-w-md animate-fade-in ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
             What empire do you want to build today?
           </p>
 
@@ -148,8 +148,8 @@ function AppContent() {
                 }`} style={{ width: '72px', height: '72px' }}>
                 <Code size={36} />
               </div>
-              <h2 className={`text-3xl font-extrabold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Tech Mogul</h2>
-              <p className={`text-lg leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+              <h2 className={`text-2xl font-bold tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Tech Mogul</h2>
+              <p className={`text-base font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                 Master Web Development. Build apps, SaaS businesses, and digital empires. From HTML to React.
               </p>
             </button>
@@ -167,8 +167,8 @@ function AppContent() {
                 }`} style={{ width: '72px', height: '72px' }}>
                 <Truck size={36} />
               </div>
-              <h2 className={`text-3xl font-extrabold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Fleet Mogul</h2>
-              <p className={`text-lg leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+              <h2 className={`text-2xl font-bold tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Fleet Mogul</h2>
+              <p className={`text-base font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                 Master Compliance & Safety. Build a trucking company, manage drivers, and conquer the road.
               </p>
             </button>
@@ -197,25 +197,25 @@ function AppContent() {
 
         <main className="max-w-3xl mx-auto px-4">
           <header className="mb-14 text-center animate-fade-in">
-            <div className={`inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full text-sm font-bold tracking-wide uppercase ${darkMode ? 'bg-slate-800 text-slate-400' : 'bg-gray-100 text-gray-600'
+            <div className={`inline-flex items-center gap-2 mb-5 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase ${darkMode ? 'bg-white/[0.05] text-slate-500' : 'bg-gray-100 text-gray-500'
               }`}>
-              {activeTrack === 'trucking' ? <Truck size={16} /> : <Code size={16} />}
+              {activeTrack === 'trucking' ? <Truck size={13} /> : <Code size={13} />}
               {activeTrack === 'trucking' ? 'Fleet Empire Track' : 'Tech Empire Track'}
             </div>
-            <h1 className={`text-5xl md:text-6xl font-black tracking-tight mb-5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Zero to{' '}
               <span className={`gradient-text bg-gradient-to-r ${activeTrack === 'trucking' ? 'from-green-400 to-emerald-600' : 'from-indigo-400 to-purple-500'}`}>
                 {activeTrack === 'trucking' ? 'Fleet Mogul' : 'Tech Mogul'}
               </span>
             </h1>
-            <p className={`text-xl max-w-2xl mx-auto leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+            <p className={`text-base font-light max-w-lg mx-auto leading-relaxed ${darkMode ? 'text-slate-500' : 'text-gray-500'}`}>
               {activeTrack === 'trucking'
                 ? "Setup your authority, ace your audits, and build a safety-first logistics back office."
                 : "From your first line of code to your first million. Interactive lessons to build real apps."}
             </p>
 
             {/* Passing info */}
-            <div className={`mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${darkMode ? 'bg-indigo-900/20 text-indigo-400' : 'bg-indigo-50 text-indigo-700'
+            <div className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium ${darkMode ? 'bg-indigo-900/15 text-indigo-400/80' : 'bg-indigo-50/80 text-indigo-600'
               }`}>
               🎯 Score 80% or higher on each exam to unlock the next level
             </div>

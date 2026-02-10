@@ -7,26 +7,26 @@ const TaskItem = ({ task, isCompleted, onToggle, locked }) => {
 
     return (
         <div
-            className={`group flex items-start gap-4 p-5 rounded-2xl transition-all duration-200 ${locked
+            className={`group flex items-start gap-4 py-4 px-4 rounded-xl transition-all duration-200 ${locked
                     ? 'opacity-40 pointer-events-none'
                     : isCompleted
-                        ? darkMode ? 'bg-green-900/10' : 'bg-green-50/50'
-                        : darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'
+                        ? darkMode ? 'bg-green-900/5' : 'bg-green-50/30'
+                        : darkMode ? 'hover:bg-white/[0.03]' : 'hover:bg-slate-50/60'
                 }`}
         >
             {/* Custom Checkbox */}
             <button
                 onClick={onToggle}
                 disabled={locked}
-                className={`mt-0.5 shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${isCompleted
-                        ? 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-md shadow-green-500/30 scale-110'
+                className={`mt-0.5 shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-300 ${isCompleted
+                        ? 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-sm shadow-green-500/25 scale-105'
                         : darkMode
-                            ? 'bg-slate-700/50 group-hover:bg-slate-600/50'
-                            : 'bg-gray-200/70 group-hover:bg-gray-300/70'
+                            ? 'bg-white/[0.06] group-hover:bg-white/10'
+                            : 'bg-slate-100 group-hover:bg-slate-200/80'
                     }`}
             >
                 {isCompleted && (
-                    <svg className="w-4 h-4 animate-scale-in" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <svg className="w-3.5 h-3.5 animate-scale-in" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 )}
@@ -34,9 +34,9 @@ const TaskItem = ({ task, isCompleted, onToggle, locked }) => {
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-                <p className={`text-base leading-relaxed font-medium transition-all duration-200 ${isCompleted
-                        ? darkMode ? 'text-green-400/70 line-through' : 'text-green-700/70 line-through'
-                        : darkMode ? 'text-slate-200' : 'text-gray-700'
+                <p className={`text-[15px] leading-relaxed transition-all duration-200 ${isCompleted
+                        ? darkMode ? 'text-green-400/50 line-through decoration-green-400/20' : 'text-green-700/50 line-through decoration-green-700/20'
+                        : darkMode ? 'text-slate-300 font-light' : 'text-slate-600'
                     }`}>
                     {task.text}
                 </p>
@@ -45,13 +45,13 @@ const TaskItem = ({ task, isCompleted, onToggle, locked }) => {
                         href={task.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors ${darkMode
-                                ? 'text-indigo-400 hover:text-indigo-300'
-                                : 'text-indigo-600 hover:text-indigo-700'
+                        className={`inline-flex items-center gap-1 mt-1.5 text-xs font-medium tracking-wide transition-colors ${darkMode
+                                ? 'text-indigo-400/70 hover:text-indigo-300'
+                                : 'text-indigo-500 hover:text-indigo-700'
                             }`}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        Open Resource <ExternalLink size={14} />
+                        Open Resource <ExternalLink size={11} />
                     </a>
                 )}
             </div>

@@ -13,27 +13,30 @@ const ScratchPad = () => {
     };
 
     return (
-        <div className={`w-full h-80 rounded-2xl overflow-hidden border-2 shadow-sm mt-4 ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'
+        <div className={`w-full h-80 rounded-2xl overflow-hidden shadow-sm mt-4 ${darkMode ? 'bg-slate-900/80' : 'bg-white'
             }`}>
-            <div className={`border-b p-3 flex justify-between items-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200'
+            <div className={`p-3 flex justify-between items-center ${darkMode ? 'bg-slate-800/60' : 'bg-gray-50/80'
                 }`}>
-                <span className={`text-sm font-bold uppercase flex items-center gap-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                    <PenTool size={14} /> Scratchpad (Apple Pencil Ready)
+                <span className={`text-xs font-semibold tracking-wide flex items-center gap-2 ${darkMode ? 'text-slate-500' : 'text-gray-400'
+                    }`}>
+                    <PenTool size={12} /> Scratchpad · Apple Pencil Ready
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                     <button
                         onClick={() => canvasRef.current.undo()}
-                        className={`p-2 rounded-xl transition-colors ${darkMode ? 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-900/30' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'}`}
+                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
                         title="Undo"
                     >
-                        <Undo size={18} />
+                        <Undo size={15} />
                     </button>
                     <button
                         onClick={() => canvasRef.current.clearCanvas()}
-                        className={`p-2 rounded-xl transition-colors ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/30' : 'text-gray-600 hover:text-red-600 hover:bg-red-50'}`}
+                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                            }`}
                         title="Clear"
                     >
-                        <Trash2 size={18} />
+                        <Trash2 size={15} />
                     </button>
                 </div>
             </div>
@@ -41,8 +44,8 @@ const ScratchPad = () => {
                 ref={canvasRef}
                 style={styles}
                 strokeWidth={3}
-                strokeColor={darkMode ? '#818cf8' : 'black'}
-                canvasColor={darkMode ? '#0f172a' : 'transparent'}
+                strokeColor={darkMode ? '#818cf8' : '#1e293b'}
+                canvasColor={darkMode ? '#0a0f1e' : 'transparent'}
             />
         </div>
     );

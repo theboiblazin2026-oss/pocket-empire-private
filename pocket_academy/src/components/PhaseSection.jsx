@@ -41,9 +41,7 @@ const PhaseSection = ({
 
     return (
         <div
-            className={`rounded-3xl overflow-hidden transition-all duration-300 ${locked
-                    ? darkMode ? 'opacity-40' : 'opacity-50'
-                    : ''
+            className={`rounded-3xl overflow-hidden transition-all duration-300 ${locked ? 'opacity-35 saturate-50' : ''
                 }`}
             style={{ animationDelay: `${index * 0.1}s` }}
         >
@@ -51,35 +49,35 @@ const PhaseSection = ({
             <button
                 onClick={() => !locked && setIsOpen(!isOpen)}
                 disabled={locked}
-                className={`w-full text-left p-6 bg-gradient-to-r ${gradients[index % gradients.length]} text-white rounded-3xl transition-all duration-200 ${locked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'
+                className={`w-full text-left p-6 bg-gradient-to-r ${gradients[index % gradients.length]} text-white rounded-3xl transition-all duration-200 ${locked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg hover:shadow-black/20'
                     } ${isOpen ? 'rounded-b-none' : ''}`}
             >
                 <div className="flex items-center justify-between">
                     <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            {locked && <Lock size={20} className="text-white/60" />}
-                            {hasPassed && <Award size={20} className="text-yellow-300" />}
-                            <h3 className="text-2xl font-extrabold tracking-tight">
+                        <div className="flex items-center gap-3 mb-1.5">
+                            {locked && <Lock size={18} className="text-white/40" />}
+                            {hasPassed && <Award size={18} className="text-yellow-300" />}
+                            <h3 className="text-xl font-bold tracking-tight">
                                 {phase.title}
                             </h3>
                         </div>
-                        <p className="text-white/70 text-base">
+                        <p className="text-white/60 text-sm font-light leading-relaxed">
                             {phase.description}
                         </p>
                     </div>
-                    <div className="flex items-center gap-4 ml-4">
+                    <div className="flex items-center gap-3 ml-4">
                         {hasPassed && (
-                            <span className="bg-green-400/20 text-green-300 px-3 py-1 rounded-full text-sm font-bold">
+                            <span className="bg-green-400/20 text-green-300 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide">
                                 {examScore}%
                             </span>
                         )}
-                        <span className="bg-white/20 text-white/90 px-3 py-1 rounded-full text-sm font-bold">
-                            {completedCount} / {phase.tasks.length}
+                        <span className="bg-white/15 text-white/80 px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums">
+                            {completedCount}/{phase.tasks.length}
                         </span>
                         {!locked && (
                             <ChevronDown
-                                size={24}
-                                className={`text-white/70 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                                size={20}
+                                className={`text-white/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
                                     }`}
                             />
                         )}
@@ -89,7 +87,7 @@ const PhaseSection = ({
 
             {/* Body */}
             {isOpen && !locked && (
-                <div className={`p-6 space-y-6 rounded-b-3xl ${darkMode ? 'bg-slate-800/30' : 'bg-white/80'
+                <div className={`p-6 space-y-6 rounded-b-3xl ${darkMode ? 'bg-slate-800/20' : 'bg-white/90'
                     }`}>
                     {/* Audio + Scratchpad toolbar */}
                     <div className="flex gap-2">
@@ -100,21 +98,22 @@ const PhaseSection = ({
                     {/* Insider Lingo */}
                     {phase.lingo && phase.lingo.length > 0 && (
                         <div>
-                            <h4 className={`text-lg font-bold mb-3 flex items-center gap-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'
+                            <h4 className={`text-sm font-semibold uppercase tracking-widest mb-4 flex items-center gap-2 ${darkMode ? 'text-indigo-400/70' : 'text-indigo-500/80'
                                 }`}>
-                                🗣️ Insider Lingo
+                                <span className="w-5 h-px bg-current opacity-40"></span>
+                                Insider Lingo
                             </h4>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2.5">
                                 {phase.lingo.map((item, i) => (
                                     <div
                                         key={i}
-                                        className={`p-4 rounded-2xl ${darkMode ? 'bg-indigo-900/15' : 'bg-indigo-50/50'
+                                        className={`p-4 rounded-xl ${darkMode ? 'bg-white/[0.03]' : 'bg-slate-50'
                                             }`}
                                     >
-                                        <span className={`font-bold ${darkMode ? 'text-indigo-300' : 'text-indigo-700'
+                                        <span className={`font-semibold text-sm ${darkMode ? 'text-indigo-300' : 'text-indigo-700'
                                             }`}>{item.term}</span>
-                                        <span className={`${darkMode ? 'text-slate-400' : 'text-gray-600'
-                                            }`}> — {item.def}</span>
+                                        <span className={`text-sm font-light ml-1.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'
+                                            }`}>— {item.def}</span>
                                     </div>
                                 ))}
                             </div>
@@ -122,7 +121,7 @@ const PhaseSection = ({
                     )}
 
                     {/* Tasks */}
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                         {phase.tasks.map((task) => (
                             <TaskItem
                                 key={task.id}
@@ -140,11 +139,11 @@ const PhaseSection = ({
                             {!showExam ? (
                                 <button
                                     onClick={() => setShowExam(true)}
-                                    className="w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/30 animate-fade-in"
+                                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-base font-semibold rounded-2xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/20 animate-fade-in"
                                 >
                                     📝 Take Section Exam
-                                    <span className="bg-white/20 px-3 py-0.5 rounded-full text-sm">
-                                        Need 80% to pass
+                                    <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                        80% to pass
                                     </span>
                                 </button>
                             ) : (
@@ -158,14 +157,14 @@ const PhaseSection = ({
                     )}
 
                     {hasPassed && (
-                        <div className={`flex items-center gap-3 p-5 rounded-2xl ${darkMode ? 'bg-green-900/15' : 'bg-green-50'
+                        <div className={`flex items-center gap-3 p-4 rounded-xl ${darkMode ? 'bg-green-900/10' : 'bg-green-50/80'
                             }`}>
-                            <CheckCircle size={24} className="text-green-500" />
+                            <CheckCircle size={20} className="text-green-500" />
                             <div>
-                                <p className={`font-bold text-lg ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
-                                    Section Passed! Score: {examScore}%
+                                <p className={`font-semibold text-sm ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                                    Section passed · {examScore}%
                                 </p>
-                                <p className={`text-sm ${darkMode ? 'text-green-400/60' : 'text-green-600/60'}`}>
+                                <p className={`text-xs font-light ${darkMode ? 'text-green-400/50' : 'text-green-600/50'}`}>
                                     Next section unlocked
                                 </p>
                             </div>
@@ -173,9 +172,9 @@ const PhaseSection = ({
                     )}
 
                     {!allTasksDone && (
-                        <p className={`text-center text-sm py-3 ${darkMode ? 'text-slate-500' : 'text-gray-400'
+                        <p className={`text-center text-xs font-light tracking-wide py-3 ${darkMode ? 'text-slate-600' : 'text-gray-300'
                             }`}>
-                            Complete all tasks above to unlock the section exam
+                            Complete all tasks to unlock the section exam
                         </p>
                     )}
                 </div>

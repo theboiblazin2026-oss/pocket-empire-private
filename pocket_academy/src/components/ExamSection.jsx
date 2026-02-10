@@ -67,31 +67,31 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
     // RESULTS SCREEN
     if (showResults) {
         return (
-            <div className={`mt-8 rounded-3xl p-8 text-center animate-scale-in ${darkMode ? 'bg-slate-800/60' : 'bg-white shadow-lg'
+            <div className={`mt-8 rounded-3xl p-8 text-center animate-scale-in ${darkMode ? 'bg-slate-800/40' : 'bg-white shadow-lg'
                 }`}>
-                <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 ${passed
-                        ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white'
-                        : 'bg-gradient-to-br from-red-400 to-rose-600 text-white'
+                <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 ${passed
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white'
+                    : 'bg-gradient-to-br from-red-400 to-rose-600 text-white'
                     }`}>
-                    {passed ? <Award size={48} /> : <XCircle size={48} />}
+                    {passed ? <Award size={40} /> : <XCircle size={40} />}
                 </div>
 
-                <h3 className={`text-3xl font-black mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-2xl font-bold tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {passed ? '🎉 You Passed!' : '📚 Keep Studying!'}
                 </h3>
 
-                <div className={`text-6xl font-black my-6 ${passed
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 gradient-text'
-                        : 'bg-gradient-to-r from-red-400 to-rose-500 gradient-text'
+                <div className={`text-5xl font-bold tracking-tight my-6 tabular-nums ${passed
+                    ? 'bg-gradient-to-r from-green-400 to-emerald-500 gradient-text'
+                    : 'bg-gradient-to-r from-red-400 to-rose-500 gradient-text'
                     }`}>
                     {score}%
                 </div>
 
-                <p className={`text-lg mb-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                <p className={`text-sm font-medium mb-1.5 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                     {correctCount} of {totalQuestions} correct
                 </p>
 
-                <p className={`text-base mb-8 ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                <p className={`text-sm font-light mb-8 ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     {passed
                         ? 'Great work! The next section is now unlocked.'
                         : `You need ${PASS_THRESHOLD}% to pass. Review the material and try again!`
@@ -104,21 +104,21 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                         const userAnswer = answers[idx];
                         const isCorrect = userAnswer === q.correctAnswer;
                         return (
-                            <div key={idx} className={`p-4 rounded-2xl ${isCorrect
-                                    ? darkMode ? 'bg-green-900/20' : 'bg-green-50'
-                                    : darkMode ? 'bg-red-900/20' : 'bg-red-50'
+                            <div key={idx} className={`p-3.5 rounded-xl ${isCorrect
+                                ? darkMode ? 'bg-green-900/10' : 'bg-green-50/80'
+                                : darkMode ? 'bg-red-900/10' : 'bg-red-50/80'
                                 }`}>
-                                <div className="flex items-start gap-3">
+                                <div className="flex items-start gap-2.5">
                                     {isCorrect
-                                        ? <CheckCircle size={20} className="text-green-500 mt-0.5 shrink-0" />
-                                        : <XCircle size={20} className="text-red-500 mt-0.5 shrink-0" />
+                                        ? <CheckCircle size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                        : <XCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
                                     }
                                     <div>
-                                        <p className={`font-medium text-base ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
+                                        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                                             {q.question}
                                         </p>
                                         {!isCorrect && (
-                                            <p className={`text-sm mt-1 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                                            <p className={`text-xs font-light mt-1 ${darkMode ? 'text-green-400/80' : 'text-green-600'}`}>
                                                 ✓ Correct: {q.options[q.correctAnswer]}
                                             </p>
                                         )}
@@ -132,9 +132,9 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                 {!passed && (
                     <button
                         onClick={handleRetake}
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg shadow-indigo-500/30"
+                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/20"
                     >
-                        <RotateCcw size={20} /> Retake Exam
+                        <RotateCcw size={16} /> Retake Exam
                     </button>
                 )}
             </div>
@@ -143,26 +143,26 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
 
     // QUESTION SCREEN
     return (
-        <div className={`mt-8 rounded-3xl overflow-hidden animate-fade-in ${darkMode ? 'bg-slate-800/60' : 'bg-white shadow-lg'
+        <div className={`mt-8 rounded-2xl overflow-hidden animate-fade-in ${darkMode ? 'bg-slate-800/40' : 'bg-white shadow-lg'
             }`}>
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-extrabold flex items-center gap-2">
+                    <h3 className="text-base font-semibold flex items-center gap-2 tracking-tight">
                         📝 Section Exam
                     </h3>
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums">
                         {currentQuestion + 1} / {totalQuestions}
                     </span>
                 </div>
                 {/* Progress dots */}
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                     {exam.map((_, idx) => (
                         <div
                             key={idx}
-                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${idx < currentQuestion
-                                    ? answers[idx] === exam[idx].correctAnswer ? 'bg-green-400' : 'bg-red-400'
-                                    : idx === currentQuestion ? 'bg-white' : 'bg-white/20'
+                            className={`h-1 flex-1 rounded-full transition-all duration-300 ${idx < currentQuestion
+                                ? answers[idx] === exam[idx].correctAnswer ? 'bg-green-400' : 'bg-red-400'
+                                : idx === currentQuestion ? 'bg-white' : 'bg-white/20'
                                 }`}
                         />
                     ))}
@@ -171,13 +171,13 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
 
             {/* Question */}
             <div className="p-6">
-                <p className={`text-xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                <p className={`text-lg font-medium tracking-tight mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                     {currentQ.question}
                 </p>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                     {currentQ.options.map((option, idx) => {
-                        let classes = `w-full text-left p-5 rounded-2xl transition-all duration-200 text-lg font-medium cursor-pointer `;
+                        let classes = `w-full text-left p-4 rounded-xl transition-all duration-200 text-[15px] cursor-pointer `;
 
                         if (!showFeedback) {
                             classes += darkMode
@@ -221,12 +221,12 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                 {showFeedback && (
                     <button
                         onClick={handleNext}
-                        className="mt-6 w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 animate-fade-in"
+                        className="mt-5 w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 animate-fade-in"
                     >
                         {currentQuestion < totalQuestions - 1 ? (
-                            <>Next Question <ChevronRight size={20} /></>
+                            <>Next Question <ChevronRight size={16} /></>
                         ) : (
-                            <>See Results <Award size={20} /></>
+                            <>See Results <Award size={16} /></>
                         )}
                     </button>
                 )}
