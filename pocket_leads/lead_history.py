@@ -29,9 +29,9 @@ LEAD_STATUSES = [
 ]
 
 def sync_from_sheet(creds_path, sheet_name="Lead Puller Master List", tab_name="Website Leads"):
-    """Sync leads from Google Sheet to local JSON"""
+    """Sync 'Replied' leads from Web Hunter Sheet to local JSON"""
     if not gspread or not os.path.exists(creds_path):
-        return 0, "Google Sheets or Creds missing"
+        return [], "Google Sheets or Creds missing"
 
     try:
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -45,46 +45,110 @@ def sync_from_sheet(creds_path, sheet_name="Lead Puller Master List", tab_name="
         current_leads = load_leads()
         current_companies = {l['company_name'].lower() for l in current_leads}
         
-        added_count = 0
+        added_leads = []
         
         for row in data:
             company = row.get('Business Name', '').strip()
-            if not company: continue
+            status = row.get('Lead Status', '').strip()
+            
+            # ONLY SYNC REPLIED LEADS
+            if not company or "Replied" not in status: 
+                continue
             
             if company.lower() not in current_companies:
-                # Add new lead
                 email = row.get('Emails Found', '').split(',')[0].strip() if row.get('Emails Found') else ''
                 phone = str(row.get('Phone', '')).strip()
                 
                 new_lead = {
-                    "id": datetime.now().timestamp() + added_count, # Ensure unique ID
-                    "company_name": company,
+                    "id": datetime.now().timestamp() + len(added_leads),
+                    "company_name": company + " (Web)",
                     "mc_number": "",
-                    "contact_name": "", # Sheet doesn't have clear contact name column usually
+                    "contact_name": "",
                     "phone": phone,
                     "email": email,
-                    "status": "New",
-                    "notes": f"Imported from Sheet. Industry: {row.get('Industry', '')}",
+                    "status": "New", # In Pipeline it's "New", but source was "Replied"
+                    "notes": f"Imported from Web Hunter. Industry: {row.get('Industry', '')}",
                     "history": [{
                         "date": datetime.now().isoformat(),
                         "action": "Import",
-                        "notes": "Synced from Prospector"
+                        "notes": "Synced from Web Hunter (Replied)"
                     }],
-                    "follow_up_date": None,
+                    "follow_up_date": datetime.now().strftime("%Y-%m-%d"), # Set immediate follow-up
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat()
                 }
                 current_leads.append(new_lead)
-                added_count += 1
+                added_leads.append(new_lead)
                 current_companies.add(company.lower())
         
-        if added_count > 0:
+        if added_leads:
             save_leads(current_leads)
             
-        return added_count, f"Successfully synced {added_count} new leads."
+        return added_leads, f"Synced {len(added_leads)} web leads."
         
     except Exception as e:
-        return 0, f"Sync Error: {str(e)}"
+        return [], f"Web Sync Error: {str(e)}"
+
+def sync_fleet_manager(creds_path, sheet_id):
+    """Sync 'Replied' leads from Fleet Manager Sheet"""
+    if not gspread or not os.path.exists(creds_path):
+        return [], "Google Sheets or Creds missing"
+
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        client = gspread.authorize(creds)
+        
+        sh = client.open_by_key(sheet_id)
+        worksheet = sh.sheet1
+        data = worksheet.get_all_records()
+        
+        current_leads = load_leads()
+        current_companies = {l['company_name'].lower().replace(" (fleet)", "") for l in current_leads}
+        
+        added_leads = []
+        
+        for row in data:
+            company = row.get('Legal Name', '').strip()
+            status = row.get('Status', '').strip()
+            
+            # ONLY SYNC REPLIED LEADS
+            if not company or "Replied" not in status:
+                continue
+                
+            if company.lower() not in current_companies:
+                email = row.get('Email', '').strip()
+                dot = str(row.get('DOT#', ''))
+                
+                new_lead = {
+                    "id": datetime.now().timestamp() + len(added_leads) + 0.5, # Offset ID
+                    "company_name": company + " (Fleet)",
+                    "mc_number": dot,
+                    "contact_name": "Fleet Manager",
+                    "phone": str(row.get('Phone', '')),
+                    "email": email,
+                    "status": "New",
+                    "notes": f"Imported from Fleet Manager. DOT#: {dot}",
+                    "history": [{
+                        "date": datetime.now().isoformat(),
+                        "action": "Import",
+                        "notes": "Synced from Fleet Manager (Replied)"
+                    }],
+                    "follow_up_date": datetime.now().strftime("%Y-%m-%d"),
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+                current_leads.append(new_lead)
+                added_leads.append(new_lead)
+                current_companies.add(company.lower())
+        
+        if added_leads:
+            save_leads(current_leads)
+            
+        return added_leads, f"Synced {len(added_leads)} fleet leads."
+
+    except Exception as e:
+        return [], f"Fleet Sync Error: {str(e)}"
 
 def load_leads():
     """Load all tracked leads"""

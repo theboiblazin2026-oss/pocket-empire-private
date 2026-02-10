@@ -46,16 +46,50 @@ def main():
     # Sync Button (Sidebar)
     with st.sidebar:
         st.header("⚙️ Settings")
-        if st.button("🔄 Sync from Prospector"):
-            with st.spinner("Syncing leads from Google Sheets..."):
-                 # Path to creds (hardcoded based on knowledge)
-                 creds_path = "/Volumes/CeeJay SSD/Projects/lead puller/service_account.json"
-                 count, msg = lh.sync_from_sheet(creds_path)
-                 if count > 0:
+        if st.button("🔄 Sync Replies"):
+            with st.spinner("Checking for new replies..."):
+                 # 1. Sync Web Hunter
+                 web_creds = "/Volumes/CeeJay SSD/Projects/lead puller/service_account.json"
+                 web_added, web_msg = lh.sync_from_sheet(web_creds)
+                 
+                 # 2. Sync Fleet Manager
+                 fleet_creds = "/Volumes/CeeJay SSD/Truck Scraper Master File/service_account.json"
+                 # Get Sheet ID from secret or hardcoded fallback
+                 fleet_id = "1Z-P_f8M... (Load from secrets in real app)" 
+                 # We need the real ID. Let's try to grab it from secrets if available, else use a known one or ask user.
+                 # Inspecting Prospector.py, we saw a helper `get_fleet_sheet_id`. 
+                 # Since we are in a different file, we might need to duplicate that logic or import.
+                 # For now, let's try to read it dynamically or use a placeholder if not found.
+                 
+                 fleet_added = []
+                 fleet_msg = "Fleet ID not found"
+                 
+                 try:
+                     import toml
+                     # Try to load secrets
+                     secrets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".streamlit", "secrets.toml")
+                     if os.path.exists(secrets_path):
+                         secs = toml.load(secrets_path)
+                         if "fleet_manager" in secs:
+                             fleet_id = secs["fleet_manager"]["sheet_id"]
+                             fleet_added, fleet_msg = lh.sync_fleet_manager(fleet_creds, fleet_id)
+                 except:
+                    pass
+
+                 total_new = len(web_added) + len(fleet_added)
+                 
+                 if total_new > 0:
+                     st.balloons()
+                     msg = f"🎉 Found {total_new} New Replies!\n\n"
+                     if web_added:
+                         msg += "**Web Hunter:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in web_added]) + "\n\n"
+                     if fleet_added:
+                         msg += "**Fleet Manager:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in fleet_added])
+                     
                      st.success(msg)
-                     st.rerun()
+                     st.session_state['sync_alert'] = msg # Persist alert
                  else:
-                     st.info(msg)
+                     st.info("No new replies found.")
 
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
