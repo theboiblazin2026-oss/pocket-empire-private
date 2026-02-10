@@ -58,21 +58,6 @@ DEFAULT_WEB_TEMPLATES = {
   }
 }
 
-# ... (Helper functions remain unchanged) ...
-
-# ... Inside Fleet Manager Tab ...
-
-        # --- FLEET EMAIL STUDIO ---
-        with fleet_sub_studio:
-            st.subheader("Fleet Email Template")
-            
-            # Load current HTML or default
-            current_html = load_fleet_html_template()
-            
-            # Try to extract existing body text if it's a simple template
-            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe provide comprehensive compliance services to keep you on the road and making money.\n\nLet us handle the paperwork so you can focus on driving.\n\nBest,\nJayboi Services LLC\n\"Your Compliance Company\""
-            
-            with st.form("fleet_email_form"):
 
 # ==========================================
 # HELPER FUNCTIONS
