@@ -87,7 +87,7 @@ const PhaseSection = ({
 
             {/* Body */}
             {isOpen && !locked && (
-                <div className={`p-6 space-y-6 rounded-b-3xl ${darkMode ? 'bg-slate-800/20' : 'bg-white/90'
+                <div className={`p-6 space-y-6 rounded-b-3xl animate-reveal ${darkMode ? 'bg-slate-800/20' : 'bg-white/90'
                     }`}>
                     {/* Audio + Scratchpad toolbar */}
                     <div className="flex gap-2">
@@ -103,11 +103,11 @@ const PhaseSection = ({
                                 <span className="w-5 h-px bg-current opacity-40"></span>
                                 Insider Lingo
                             </h4>
-                            <div className="grid gap-2.5">
+                            <div className="grid gap-2.5 stagger-children">
                                 {phase.lingo.map((item, i) => (
                                     <div
                                         key={i}
-                                        className={`p-4 rounded-xl ${darkMode ? 'bg-white/[0.03]' : 'bg-slate-50'
+                                        className={`p-4 rounded-xl hover-lift transition-colors duration-200 ${darkMode ? 'bg-white/[0.03] hover:bg-white/[0.05]' : 'bg-slate-50 hover:bg-slate-100/60'
                                             }`}
                                     >
                                         <span className={`font-semibold text-sm ${darkMode ? 'text-indigo-300' : 'text-indigo-700'
@@ -121,7 +121,7 @@ const PhaseSection = ({
                     )}
 
                     {/* Tasks */}
-                    <div className="space-y-0.5">
+                    <div className="space-y-0.5 stagger-children">
                         {phase.tasks.map((task) => (
                             <TaskItem
                                 key={task.id}

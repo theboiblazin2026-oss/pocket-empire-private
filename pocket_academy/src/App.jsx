@@ -9,7 +9,7 @@ import AuthGate from './components/AuthGate';
 import PomodoroTimer from './components/PomodoroTimer';
 import Certificate from './components/Certificate';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { BookOpen, FileText, Truck, Code, ArrowLeft, Award, Sun, Moon } from 'lucide-react';
+import { BookOpen, FileText, Truck, Code, ArrowLeft, ArrowRight, Award, Sun, Moon } from 'lucide-react';
 
 function ThemeToggle() {
   const { darkMode, toggleTheme } = useTheme();
@@ -120,63 +120,92 @@ function AppContent() {
 
   // -- TRACK SELECTION SCREEN --
   if (!activeTrack) {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const emoji = hour < 12 ? '☀️' : hour < 17 ? '🌤️' : '🌙';
+
     return (
       <AuthGate>
-        <ThemeToggle />
-        <div className={`min-h-screen flex flex-col items-center justify-center px-4 transition-colors duration-300 ${darkMode ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 to-indigo-50/30'}`}>
-          {/* Background decorations */}
-          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className={`min-h-screen flex flex-col items-center justify-center px-4 transition-colors duration-300 relative overflow-hidden ${darkMode ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-indigo-50/20 to-violet-50/10'}`}>
 
-          <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-3 animate-fade-in ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Choose Your Path
-          </h1>
-          <p className={`text-lg font-light mb-14 text-center max-w-md animate-fade-in ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-            What empire do you want to build today?
-          </p>
+          {/* Ambient background */}
+          <div className={`absolute top-[-10%] right-[-5%] w-[400px] h-[400px] rounded-full blur-[120px] ${darkMode ? 'opacity-15' : 'opacity-10'}`}
+            style={{ background: 'radial-gradient(circle, #8b5cf6, transparent 70%)' }}></div>
+          <div className={`absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full blur-[140px] ${darkMode ? 'opacity-10' : 'opacity-8'}`}
+            style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }}></div>
 
-          <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+          {/* Greeting */}
+          <div className="animate-fade-in text-center mb-12">
+            <p className={`text-sm font-medium tracking-wide mb-3 ${darkMode ? 'text-white/30' : 'text-gray-400'}`}>
+              {emoji} {greeting}
+            </p>
+            <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              What are we building?
+            </h1>
+            <p className={`text-base font-light max-w-sm mx-auto leading-relaxed ${darkMode ? 'text-white/30' : 'text-gray-400'}`}>
+              Pick your vibe. Learn at your pace. No pressure.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 w-full max-w-3xl animate-fade-in" style={{ animationDelay: '0.15s' }}>
+            {/* Tech Mogul Card */}
             <button
               onClick={() => setActiveTrack('web')}
-              className={`group relative p-10 rounded-3xl shadow-lg transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
-                ? 'bg-slate-800/80 hover:bg-slate-800'
-                : 'bg-white hover:shadow-xl'
+              className={`group relative p-8 rounded-3xl transition-all duration-300 text-left overflow-hidden ${darkMode
+                ? 'bg-white/[0.03] hover:bg-white/[0.06] ring-1 ring-white/[0.06] hover:ring-white/[0.1]'
+                : 'bg-white hover:shadow-xl hover:shadow-indigo-500/5 ring-1 ring-gray-200/50 hover:ring-indigo-200'
                 }`}
             >
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
-              <div className={`mb-6 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-indigo-500/20 text-indigo-400 shadow-indigo-500/10' : 'bg-blue-50 text-blue-600 shadow-blue-500/10'
-                }`} style={{ width: '72px', height: '72px' }}>
-                <Code size={36} />
+              {/* Glow on hover */}
+              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] transition-opacity duration-500 opacity-0 group-hover:opacity-100 ${darkMode ? 'bg-indigo-500/10' : 'bg-indigo-100/60'}`}></div>
+
+              <div className="relative">
+                <div className="text-4xl mb-5">💻</div>
+                <h2 className={`text-xl font-bold tracking-tight mb-1.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Tech Mogul
+                </h2>
+                <p className={`text-sm font-light leading-relaxed mb-5 ${darkMode ? 'text-white/35' : 'text-gray-400'}`}>
+                  Build apps, launch SaaS products, and code your way to the top. From HTML to React.
+                </p>
+                <div className={`inline-flex items-center gap-1.5 text-xs font-medium tracking-wide ${darkMode ? 'text-indigo-400/60' : 'text-indigo-500/70'}`}>
+                  Start learning <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-              <h2 className={`text-2xl font-bold tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Tech Mogul</h2>
-              <p className={`text-base font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                Master Web Development. Build apps, SaaS businesses, and digital empires. From HTML to React.
-              </p>
             </button>
 
+            {/* Fleet Mogul Card */}
             <button
               onClick={() => setActiveTrack('trucking')}
-              className={`group relative p-10 rounded-3xl shadow-lg transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
-                ? 'bg-slate-800/80 hover:bg-slate-800'
-                : 'bg-white hover:shadow-xl'
+              className={`group relative p-8 rounded-3xl transition-all duration-300 text-left overflow-hidden ${darkMode
+                ? 'bg-white/[0.03] hover:bg-white/[0.06] ring-1 ring-white/[0.06] hover:ring-white/[0.1]'
+                : 'bg-white hover:shadow-xl hover:shadow-emerald-500/5 ring-1 ring-gray-200/50 hover:ring-emerald-200'
                 }`}
-              style={{ animationDelay: '0.1s' }}
             >
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
-              <div className={`mb-6 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/10' : 'bg-green-50 text-green-600 shadow-green-500/10'
-                }`} style={{ width: '72px', height: '72px' }}>
-                <Truck size={36} />
+              {/* Glow on hover */}
+              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] transition-opacity duration-500 opacity-0 group-hover:opacity-100 ${darkMode ? 'bg-emerald-500/10' : 'bg-emerald-100/60'}`}></div>
+
+              <div className="relative">
+                <div className="text-4xl mb-5">🚛</div>
+                <h2 className={`text-xl font-bold tracking-tight mb-1.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Fleet Mogul
+                </h2>
+                <p className={`text-sm font-light leading-relaxed mb-5 ${darkMode ? 'text-white/35' : 'text-gray-400'}`}>
+                  Master compliance, manage drivers, and build a trucking empire from the ground up.
+                </p>
+                <div className={`inline-flex items-center gap-1.5 text-xs font-medium tracking-wide ${darkMode ? 'text-emerald-400/60' : 'text-emerald-500/70'}`}>
+                  Start learning <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-              <h2 className={`text-2xl font-bold tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Fleet Mogul</h2>
-              <p className={`text-base font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                Master Compliance & Safety. Build a trucking company, manage drivers, and conquer the road.
-              </p>
             </button>
           </div>
+
+          {/* Subtle footer */}
+          <p className={`mt-12 text-xs font-light animate-fade-in ${darkMode ? 'text-white/10' : 'text-gray-300'}`} style={{ animationDelay: '0.3s' }}>
+            Pocket Academy · Learn by doing
+          </p>
         </div>
-        <PomodoroTimer />
       </AuthGate>
-    )
+    );
   }
 
   return (

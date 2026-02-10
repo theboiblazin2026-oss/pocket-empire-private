@@ -132,9 +132,9 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                 {!passed && (
                     <button
                         onClick={handleRetake}
-                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/20"
+                        className="inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-base font-bold rounded-2xl transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98]"
                     >
-                        <RotateCcw size={16} /> Retake Exam
+                        <RotateCcw size={18} /> Retake Exam
                     </button>
                 )}
             </div>
@@ -143,15 +143,15 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
 
     // QUESTION SCREEN
     return (
-        <div className={`mt-8 rounded-2xl overflow-hidden animate-fade-in ${darkMode ? 'bg-slate-800/40' : 'bg-white shadow-lg'
+        <div className={`mt-8 rounded-3xl overflow-hidden animate-scale-in ${darkMode ? 'bg-slate-800/40' : 'bg-white shadow-xl'
             }`}>
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base font-semibold flex items-center gap-2 tracking-tight">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2 tracking-tight">
                         📝 Section Exam
                     </h3>
-                    <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums">
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold tabular-nums">
                         {currentQuestion + 1} / {totalQuestions}
                     </span>
                 </div>
@@ -160,7 +160,7 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                     {exam.map((_, idx) => (
                         <div
                             key={idx}
-                            className={`h-1 flex-1 rounded-full transition-all duration-300 ${idx < currentQuestion
+                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${idx < currentQuestion
                                 ? answers[idx] === exam[idx].correctAnswer ? 'bg-green-400' : 'bg-red-400'
                                 : idx === currentQuestion ? 'bg-white' : 'bg-white/20'
                                 }`}
@@ -170,14 +170,14 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
             </div>
 
             {/* Question */}
-            <div className="p-6">
-                <p className={`text-lg font-medium tracking-tight mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            <div className="p-6 md:p-8">
+                <p className={`text-xl font-semibold tracking-tight mb-8 leading-snug ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                     {currentQ.question}
                 </p>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                     {currentQ.options.map((option, idx) => {
-                        let classes = `w-full text-left p-4 rounded-xl transition-all duration-200 text-[15px] cursor-pointer `;
+                        let classes = `w-full text-left py-5 px-5 rounded-2xl transition-all duration-200 text-base cursor-pointer font-medium `;
 
                         if (!showFeedback) {
                             classes += darkMode
@@ -221,12 +221,12 @@ const ExamSection = ({ exam, phaseId, onPass }) => {
                 {showFeedback && (
                     <button
                         onClick={handleNext}
-                        className="mt-5 w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 animate-fade-in"
+                        className="mt-8 w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/30 animate-scale-in active:scale-[0.98]"
                     >
                         {currentQuestion < totalQuestions - 1 ? (
-                            <>Next Question <ChevronRight size={16} /></>
+                            <>Next Question <ChevronRight size={20} /></>
                         ) : (
-                            <>See Results <Award size={16} /></>
+                            <>See Results <Award size={20} /></>
                         )}
                     </button>
                 )}

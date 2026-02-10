@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, ArrowRight, Sparkles } from 'lucide-react';
+import { Lock, ArrowRight, Fingerprint } from 'lucide-react';
 
 const AuthGate = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,10 +40,10 @@ const AuthGate = ({ children }) => {
                 <div className="fixed top-4 right-4 z-[60]">
                     <button
                         onClick={handleLogout}
-                        className="p-2.5 glass rounded-full text-gray-400 hover:text-red-400 transition-all duration-200 hover:scale-110 shadow-lg"
+                        className="p-2 rounded-full text-gray-400 hover:text-red-400 transition-all duration-200 hover:scale-110 hover:bg-red-400/10"
                         title="Lock App"
                     >
-                        <Lock size={18} />
+                        <Lock size={16} />
                     </button>
                 </div>
                 {children}
@@ -52,62 +52,85 @@ const AuthGate = ({ children }) => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-4 relative overflow-hidden">
-            {/* Animated background orbs */}
-            <div className="absolute top-20 left-20 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
-            <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }}></div>
+        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
+            style={{
+                background: 'linear-gradient(135deg, #0f0c29 0%, #1a1145 30%, #24243e 60%, #0f0c29 100%)'
+            }}>
 
-            <div className={`w-full max-w-lg animate-scale-in ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
-                <div className="glass rounded-3xl shadow-2xl overflow-hidden border border-white/10">
-                    <div className="p-10 text-center">
-                        {/* Icon */}
-                        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-indigo-500/30 animate-float">
-                            <Lock size={36} className="text-white" />
-                        </div>
+            {/* Ambient glow orbs — soft and dreamy */}
+            <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full blur-[120px] opacity-30"
+                style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)' }}></div>
+            <div className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[140px] opacity-25"
+                style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }}></div>
+            <div className="absolute top-[40%] left-[60%] w-[300px] h-[300px] rounded-full blur-[100px] opacity-15"
+                style={{ background: 'radial-gradient(circle, #a78bfa, transparent 70%)' }}></div>
 
-                        <h2 className="text-4xl font-extrabold text-white mb-3 tracking-tight">
-                            Private Learning Station
-                        </h2>
-                        <p className="text-xl text-slate-400 mb-10">
-                            Enter your passkey to unlock the curriculum
-                        </p>
+            {/* Floating particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(6)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+                        style={{
+                            left: `${15 + i * 15}%`,
+                            top: `${20 + (i % 3) * 25}%`,
+                            animationDelay: `${i * 0.7}s`,
+                            animationDuration: `${4 + i * 0.5}s`
+                        }}
+                    />
+                ))}
+            </div>
 
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            <div>
-                                <input
-                                    type="password"
-                                    value={passkey}
-                                    onChange={(e) => { setPasskey(e.target.value); setError(false); }}
-                                    placeholder="● ● ● ●"
-                                    className={`w-full px-6 py-5 rounded-2xl border-2 text-xl tracking-[0.3em] text-center font-bold transition-all duration-300 bg-white/5 text-white placeholder-slate-500 focus:outline-none focus:ring-4 ${error
-                                        ? 'border-red-400/60 focus:ring-red-400/20 bg-red-500/5'
-                                        : 'border-white/10 focus:ring-indigo-400/30 focus:border-indigo-400/50'
-                                        }`}
-                                    autoFocus
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xl font-bold rounded-2xl transition-all duration-300 transform active:scale-95 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-3"
-                            >
-                                <Sparkles size={22} />
-                                Unlock Academy
-                                <ArrowRight size={22} />
-                            </button>
-                        </form>
-
-                        {error && (
-                            <p className="mt-5 text-red-400 text-lg font-medium animate-fade-in">
-                                ❌ Incorrect passkey. Try again.
-                            </p>
-                        )}
+            <div className={`w-full max-w-md animate-scale-in ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
+                {/* Main card */}
+                <div className="text-center mb-10">
+                    {/* Avatar/Logo */}
+                    <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-violet-500/25 animate-float"
+                        style={{ animationDuration: '5s' }}>
+                        <Fingerprint size={28} className="text-white/90" />
                     </div>
-                    <div className="bg-white/5 p-4 text-center text-sm text-slate-500 border-t border-white/5">
-                        Default Passkey: <span className="font-mono font-bold text-slate-400">1234</span>
-                    </div>
+
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2">
+                        Welcome back 👋
+                    </h2>
+                    <p className="text-base font-light text-white/40 leading-relaxed">
+                        Your learning space is ready. Enter your code to jump in.
+                    </p>
                 </div>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="relative">
+                        <input
+                            type="password"
+                            value={passkey}
+                            onChange={(e) => { setPasskey(e.target.value); setError(false); }}
+                            placeholder="Enter passkey"
+                            className={`w-full px-5 py-4 rounded-2xl text-base tracking-widest text-center font-medium transition-all duration-300 bg-white/[0.06] text-white placeholder-white/20 focus:outline-none focus:bg-white/[0.09] backdrop-blur-sm ${error
+                                ? 'ring-2 ring-red-400/40 bg-red-500/5'
+                                : 'ring-1 ring-white/[0.08] focus:ring-violet-400/30'
+                                }`}
+                            autoFocus
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-2xl transition-all duration-300 active:scale-[0.98] hover:shadow-lg hover:shadow-violet-500/20 flex items-center justify-center gap-2"
+                    >
+                        Let's Go
+                        <ArrowRight size={16} />
+                    </button>
+                </form>
+
+                {error && (
+                    <p className="mt-4 text-red-400/80 text-sm font-medium text-center animate-fade-in">
+                        Hmm, that doesn't match. Try again!
+                    </p>
+                )}
+
+                <p className="mt-8 text-center text-xs text-white/15 font-light">
+                    Hint: <span className="font-mono text-white/25">1234</span>
+                </p>
             </div>
         </div>
     );
