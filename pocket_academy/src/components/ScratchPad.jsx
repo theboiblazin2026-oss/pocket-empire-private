@@ -13,9 +13,9 @@ const ScratchPad = () => {
     };
 
     return (
-        <div className={`w-full h-80 rounded-2xl overflow-hidden shadow-sm mt-4 ${darkMode ? 'bg-slate-900/80' : 'bg-white'
+        <div className={`w-full h-80 rounded-2xl overflow-hidden mt-4 transition-all duration-300 ${darkMode ? 'bg-slate-950 border-2 border-indigo-500/20 shadow-lg shadow-indigo-900/20' : 'bg-white border-2 border-indigo-100 shadow-md'
             }`}>
-            <div className={`p-3 flex justify-between items-center ${darkMode ? 'bg-slate-800/60' : 'bg-gray-50/80'
+            <div className={`p-3 flex justify-between items-center border-b ${darkMode ? 'bg-slate-900 border-indigo-500/20' : 'bg-gray-50 border-indigo-100'
                 }`}>
                 <span className={`text-xs font-semibold tracking-wide flex items-center gap-2 ${darkMode ? 'text-slate-500' : 'text-gray-400'
                     }`}>

@@ -90,8 +90,10 @@ const PhaseSection = ({
                 <div className={`p-6 space-y-6 rounded-b-3xl animate-reveal backdrop-blur-md border px-6 py-6 ${darkMode ? 'bg-slate-900/40 border-white/5 border-t-0' : 'bg-white/60 border-white/40 border-t-0'
                     }`}>
                     {/* Audio + Scratchpad toolbar */}
-                    <div className="flex gap-2">
-                        <AudioPlayer text={`${phase.title}. ${phase.description}`} />
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-start">
+                            <AudioPlayer text={`${phase.title}. ${phase.description}`} />
+                        </div>
                         <ScratchPad challenge={phase.sketchChallenge} />
                     </div>
 
