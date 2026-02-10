@@ -455,27 +455,39 @@ with tab_fleet:
             st.dataframe(filtered_fleet, use_container_width=True, height=500)
             st.caption(f"Showing {len(filtered_fleet)} of {fleet_total}")
 
-        # --- FLEET STUDIO (HTML EDITOR) ---
+        # --- FLEET EMAIL STUDIO ---
         with fleet_sub_studio:
-            st.subheader("HTML Email Editor")
+            st.subheader("Fleet Email Template")
+            
+            # Load current HTML or default
             current_html = load_fleet_html_template()
             
-            col_edit, col_prev = st.columns(2)
-            with col_edit:
-                new_html = st.text_area("HTML Code", value=current_html, height=600, key="fleet_html_editor")
-                if st.button("💾 Save HTML Template"):
+            # Try to extract existing body text if it's a simple template
+            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe help new carriers get set up with compliance and load booking.\n\nBest,\nTech Trap Solutions"
+            
+            with st.form("fleet_email_form"):
+                st.write("Edit your email content below. It will be automatically formatted nicely.")
+                subject = st.text_input("Subject Line", "Welcome to the Industry: Essential Setup for {company_name}")
+                body = st.text_area("Email Body", value=default_body, height=300)
+                st.caption("Variables: `{contact_name}`, `{company_name}`, `{dot_number}`")
+                
+                if st.form_submit_button("💾 Save Template"):
+                    # Wrap the plain text in the HTML structure
+                    new_html = f"""<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto;">
+        <p>{body.replace(chr(10), '<br>')}</p>
+    </div>
+</body>
+</html>"""
                     save_fleet_html_template(new_html)
-                    st.success("Saved!")
+                    st.success("Template Saved!")
                     st.rerun()
-            with col_prev:
-                st.caption("Live Preview")
-                try:
-                    preview = new_html.format(contact_name="John Doe", company_name="Acme Trucking", dot_number="1234567")
-                except:
-                    preview = new_html
-                preview = preview.replace("cid:logo_image", "https://placehold.co/200x80?text=LOGO")
-                preview = preview.replace("cid:flyer_image", "https://placehold.co/400x300?text=FLYER")
-                components.html(preview, height=600, scrolling=True)
+
+            st.divider()
+            st.subheader("Preview")
+            # Simple preview of the body text
+            st.info(body.format(contact_name="John Doe", company_name="Acme Trucking", dot_number="1234567"))
 
         # --- FLEET CAMPAIGN ---
         with fleet_sub_campaign:
