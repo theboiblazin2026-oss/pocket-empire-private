@@ -257,6 +257,45 @@ else:
     fleet_health = "❌ Not Configured"
 
 # ==========================================
+# SIDEBAR: GLOBAL SETTINGS
+# ==========================================
+with st.sidebar:
+    st.title("⚙️ Settings")
+    
+    # Automation Toggle (using Sheet as DB)
+    if "web_worksheet" in locals() and web_worksheet:
+        try:
+            # Try to get/create Config sheet
+            client = get_web_client()
+            sheet_id = get_web_sheet_id()
+            if client and sheet_id:
+                try:
+                    config_ws = client.open_by_key(sheet_id).worksheet("Config")
+                except:
+                    config_ws = client.open_by_key(sheet_id).add_worksheet("Config", 10, 2)
+                    config_ws.update([["Automation Status", "Value"], ["Global", "ACTIVE"]], "A1")
+                
+                # Read Status
+                current_status = config_ws.acell("B2").value
+                is_active = (str(current_status).strip().upper() != "PAUSED")
+                
+                # Toggle
+                new_state = st.toggle("🟢 Automation Active", value=is_active)
+                
+                # Update if changed
+                if new_state != is_active:
+                    new_val = "ACTIVE" if new_state else "PAUSED"
+                    config_ws.update_acell("B2", new_val)
+                    st.toast(f"Automation set to {new_val}")
+                    time.sleep(1)
+                    st.rerun()
+                    
+                if not is_active:
+                    st.error("🛑 Automation PAUSED")
+        except Exception as e:
+            st.caption(f"Config Sync: {str(e)[:20]}...")
+
+# ==========================================
 # APP LAYOUT (TABS)
 # ==========================================
 tab_dash, tab_web, tab_fleet = st.tabs(["📊 Dashboard", "🌐 Web Hunter", "🚛 Fleet Manager"])
