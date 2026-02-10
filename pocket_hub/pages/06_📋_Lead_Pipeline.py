@@ -46,50 +46,83 @@ def main():
     # Sync Button (Sidebar)
     with st.sidebar:
         st.header("⚙️ Settings")
+        
+        # --- SMART AUTO-SYNC ---
+        # Initialize last sync time if not present
+        if 'last_sync_time' not in st.session_state:
+            st.session_state['last_sync_time'] = None
+
+        def run_sync(silent=False):
+            """Core logic to sync 'Replied' leads from both bots"""
+            new_leads_found = False
+            msg = ""
+            
+            # 1. Sync Web Hunter
+            web_creds = "/Volumes/CeeJay SSD/Projects/lead puller/service_account.json"
+            web_added, web_msg = lh.sync_from_sheet(web_creds)
+            
+            # 2. Sync Fleet Manager
+            fleet_creds = "/Volumes/CeeJay SSD/Truck Scraper Master File/service_account.json"
+            fleet_id = "1Z-P_f8M... (Load from secrets in real app)" 
+            
+            fleet_added = []
+            try:
+                import toml
+                # Try to load secrets
+                secrets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".streamlit", "secrets.toml")
+                if os.path.exists(secrets_path):
+                    secs = toml.load(secrets_path)
+                    if "fleet_manager" in secs:
+                        fleet_id = secs["fleet_manager"]["sheet_id"]
+                        fleet_added, fleet_msg = lh.sync_fleet_manager(fleet_creds, fleet_id)
+            except:
+               pass
+
+            total_new = 0
+            # Safety check: Ensure lists are actually lists
+            if isinstance(web_added, list):
+                total_new += len(web_added)
+            if isinstance(fleet_added, list):
+                total_new += len(fleet_added)
+            
+            if total_new > 0:
+                new_leads_found = True
+                msg = f"🎉 Found {total_new} New Replies!\n\n"
+                if isinstance(web_added, list) and web_added:
+                    msg += "**Web Hunter:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in web_added]) + "\n\n"
+                if isinstance(fleet_added, list) and fleet_added:
+                    msg += "**Fleet Manager:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in fleet_added])
+                
+                # Update Alert
+                st.session_state['sync_alert'] = msg
+                if not silent:
+                    st.balloons()
+            elif not silent:
+                st.info("No new replies found.")
+                
+            # Update Timestamp
+            st.session_state['last_sync_time'] = datetime.now()
+            return new_leads_found
+
+        # Button for Manual Sync
         if st.button("🔄 Sync Replies"):
             with st.spinner("Checking for new replies..."):
-                 # 1. Sync Web Hunter
-                 web_creds = "/Volumes/CeeJay SSD/Projects/lead puller/service_account.json"
-                 web_added, web_msg = lh.sync_from_sheet(web_creds)
-                 
-                 # 2. Sync Fleet Manager
-                 fleet_creds = "/Volumes/CeeJay SSD/Truck Scraper Master File/service_account.json"
-                 # Get Sheet ID from secret or hardcoded fallback
-                 fleet_id = "1Z-P_f8M... (Load from secrets in real app)" 
-                 # We need the real ID. Let's try to grab it from secrets if available, else use a known one or ask user.
-                 # Inspecting Prospector.py, we saw a helper `get_fleet_sheet_id`. 
-                 # Since we are in a different file, we might need to duplicate that logic or import.
-                 # For now, let's try to read it dynamically or use a placeholder if not found.
-                 
-                 fleet_added = []
-                 fleet_msg = "Fleet ID not found"
-                 
-                 try:
-                     import toml
-                     # Try to load secrets
-                     secrets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".streamlit", "secrets.toml")
-                     if os.path.exists(secrets_path):
-                         secs = toml.load(secrets_path)
-                         if "fleet_manager" in secs:
-                             fleet_id = secs["fleet_manager"]["sheet_id"]
-                             fleet_added, fleet_msg = lh.sync_fleet_manager(fleet_creds, fleet_id)
-                 except:
-                    pass
+                 run_sync(silent=False)
+                 st.success("Sync Complete!")
 
-                 total_new = len(web_added) + len(fleet_added)
-                 
-                 if total_new > 0:
-                     st.balloons()
-                     msg = f"🎉 Found {total_new} New Replies!\n\n"
-                     if web_added:
-                         msg += "**Web Hunter:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in web_added]) + "\n\n"
-                     if fleet_added:
-                         msg += "**Fleet Manager:**\n" + "\n".join([f"- {l['company_name']}: {l['email']}" for l in fleet_added])
-                     
-                     st.success(msg)
-                     st.session_state['sync_alert'] = msg # Persist alert
-                 else:
-                     st.info("No new replies found.")
+        # Auto-Run Logic (Every 4 Hours)
+        now = datetime.now()
+        last_run = st.session_state['last_sync_time']
+        
+        if last_run is None or (now - last_run).total_seconds() > 14400: # 14400 seconds = 4 hours
+            with st.spinner("⏳ Auto-Syncing Replies..."):
+                run_sync(silent=True)
+        
+        # Display Last Sync Time
+        if last_run:
+            st.caption(f"Last checked: {last_run.strftime('%I:%M %p')}")
+        else:
+            st.caption("Last checked: Just now")
 
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
