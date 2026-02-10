@@ -177,20 +177,24 @@ def save_web_templates(templates):
         tpl_path = os.path.join(LEAD_PULLER_DIR, "templates.json")
         with open(tpl_path, 'w') as f: json.dump(templates, f, indent=2)
 
-def load_fleet_html_template():
-    """Load fleet HTML email template."""
+def load_fleet_templates():
+    """Load fleet JSON templates."""
     if IS_LOCAL:
-        tp = os.path.join(TRUCK_SCRAPER_DIR, "templates", "email_template.html")
+        tp = os.path.join(TRUCK_SCRAPER_DIR, "templates", "fleet_templates.json")
         if os.path.exists(tp):
-            with open(tp) as f: return f.read()
-    # Fallback: embedded default
-    return "<html><body><p>Hi {contact_name}, congrats on your new authority!</p></body></html>"
+            with open(tp) as f: return json.load(f)
+    # Default fallback if file missing
+    return {
+        "welcome": {"subject": "Welcome", "body": "Hi {contact_name}, welcome!"},
+        "followup_1": {"subject": "Follow up", "body": "Checking in..."},
+        "followup_2": {"subject": "Final check", "body": "Last attempt..."}
+    }
 
-def save_fleet_html_template(html):
-    """Save fleet HTML template."""
+def save_fleet_templates(data):
+    """Save fleet JSON templates."""
     if IS_LOCAL:
-        tp = os.path.join(TRUCK_SCRAPER_DIR, "templates", "email_template.html")
-        with open(tp, 'w') as f: f.write(html)
+        tp = os.path.join(TRUCK_SCRAPER_DIR, "templates", "fleet_templates.json")
+        with open(tp, 'w') as f: json.dump(data, f, indent=4)
 
 def parse_last_sent_web(df):
     """Parse last sent date from Web Hunter data."""
@@ -529,34 +533,36 @@ with tab_fleet:
             st.subheader("Fleet Email Template")
             
             # Load current HTML or default
-            current_html = load_fleet_html_template()
+            # Load Templates
+            templates = load_fleet_templates()
             
-            # Try to extract existing body text if it's a simple template
-            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe provide comprehensive compliance services to keep you on the road and making money.\n\nLet us handle the paperwork so you can focus on driving.\n\nBest,\nJayboi Services LLC\n\"Your Compliance Company\""
+            # Template Selector
+            t_opts = ["welcome", "followup_1", "followup_2"]
+            t_sel = st.selectbox("Select Stage", t_opts, format_func=lambda x: x.replace("_", " ").title())
+            
+            current_tmpl = templates.get(t_sel, {})
             
             with st.form("fleet_email_form"):
-                st.write("Edit your email content below. It will be automatically formatted nicely.")
-                subject = st.text_input("Subject Line", "Welcome to the Industry: Essential Setup for {company_name}")
-                body = st.text_area("Email Body", value=default_body, height=300)
+                st.write(f"Editing: **{t_sel.replace('_', ' ').title()}**")
+                
+                new_subj = st.text_input("Subject Line", current_tmpl.get("subject", ""))
+                new_body = st.text_area("Email Body", value=current_tmpl.get("body", ""), height=300)
+                
                 st.caption("Variables: `{contact_name}`, `{company_name}`, `{dot_number}`")
                 
                 if st.form_submit_button("💾 Save Template"):
-                    # Wrap the plain text in the HTML structure
-                    new_html = f"""<html>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto;">
-        <p>{body.replace(chr(10), '<br>')}</p>
-    </div>
-</body>
-</html>"""
-                    save_fleet_html_template(new_html)
-                    st.success("Template Saved!")
+                    templates[t_sel] = {"subject": new_subj, "body": new_body}
+                    save_fleet_templates(templates)
+                    st.success(f"Saved {t_sel} template!")
+                    time.sleep(1)
                     st.rerun()
 
             st.divider()
             st.subheader("Preview")
             # Simple preview of the body text
-            st.info(body.format(contact_name="John Doe", company_name="Acme Trucking", dot_number="1234567"))
+            st.subheader("Preview")
+            st.markdown(f"**Subject:** {current_tmpl.get('subject', '')}")
+            st.info(current_tmpl.get('body', '').format(contact_name="John Doe", company_name="Acme Trucking", dot_number="1234567"))
 
         # --- FLEET CAMPAIGN ---
         with fleet_sub_campaign:
