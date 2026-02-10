@@ -46,17 +46,33 @@ DEFAULT_WEB_TEMPLATES = {
   "standard": {
     "subject_a": "Question about {business_name}",
     "subject_b": "Are you accepting new jobs in {city}?",
-    "body": "Hi,\n\nAre you taking on new work in {city} right now?\n\nI have a system that brings in consistent jobs for {business_name}, and I'm looking for one partner in the area.\n\nOpen to a quick chat to see if we're a fit?\n\nBest,\n{sender_name}"
+    "body": "Hi,\n\nAre you looking to grow your customer base in {city}?\n\nI have a system that brings in consistent jobs for {business_name}, and I'm looking for one partner in the area to work with.\n\nOpen to a quick chat?\n\nBest,\nCalvin Manning\nTech Trap Solutions\n\"Helping you build your customer base with a web trap to catch their attention\""
   },
   "broken_link": {
     "subject": "Question about {business_name}",
-    "body": "Hi,\n\nI tried to visit your website earlier but got a \"Page Not Found\" error.\n\nI think you might be losing customers who click on your maps listing.\n\nI fix broken links for local businesses. Want me to get it back online for you tomorrow?\n\nBest,\n{sender_name}"
+    "body": "Hi,\n\nI tried to visit your website earlier but got a \"Page Not Found\" error.\n\nI think you might be losing customers who click on your maps listing.\n\nI fix broken links for local businesses. Want me to get it back online for you tomorrow?\n\nBest,\nCalvin Manning\nTech Trap Solutions\n\"Helping you build your customer base with a web trap to catch their attention\""
   },
   "not_secure": {
     "subject": "Question about {business_name}",
-    "body": "Hi,\n\nApplying for a job in the area and noticed your website says \"Not Secure\" when I visit.\n\nGoogle is flagging it, which scares away customers.\n\nI can fix the SSL certificate for you this week if you want?\n\nLet me know,\n{sender_name}"
+    "body": "Hi,\n\nApplying for a job in the area and noticed your website says \"Not Secure\" when I visit.\n\nGoogle is flagging it, which scares away customers.\n\nI can fix the SSL certificate for you this week if you want?\n\nLet me know,\nCalvin Manning\nTech Trap Solutions\n\"Helping you build your customer base with a web trap to catch their attention\""
   }
 }
+
+# ... (Helper functions remain unchanged) ...
+
+# ... Inside Fleet Manager Tab ...
+
+        # --- FLEET EMAIL STUDIO ---
+        with fleet_sub_studio:
+            st.subheader("Fleet Email Template")
+            
+            # Load current HTML or default
+            current_html = load_fleet_html_template()
+            
+            # Try to extract existing body text if it's a simple template
+            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe provide comprehensive compliance services to keep you on the road and making money.\n\nLet us handle the paperwork so you can focus on driving.\n\nBest,\nJayboi Services LLC\n\"Your Compliance Company\""
+            
+            with st.form("fleet_email_form"):
 
 # ==========================================
 # HELPER FUNCTIONS
