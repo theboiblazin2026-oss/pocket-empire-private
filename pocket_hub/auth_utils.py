@@ -6,9 +6,15 @@ def check_password():
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets["app_password"]:
+        # TARGET_SECRET_NAME = "app_password"
+        if "app_password" not in st.secrets:
+            st.error("🚨 System Error: 'app_password' not found in secrets. Please update Streamlit Cloud settings.")
+            return
+
+        if st.session_state.get("password") == st.secrets["app_password"]:
             st.session_state["password_correct"] = True
-            # del st.session_state["password"]  # don't store password
+            # Optional: Clear the password from text input to be cleaner
+            # st.session_state["password"] = "" 
         else:
             st.session_state["password_correct"] = False
 
@@ -20,10 +26,15 @@ def check_password():
         "🔑 Security Check", type="password", on_change=password_entered, key="password"
     )
     
+    # Check for missing secret upfront to prevent crash
+    if "app_password" not in st.secrets:
+        st.error("⚠️ Admin: Please add 'app_password' to your .streamlit/secrets.toml or Cloud Secrets.")
+        return False
+    
     if "password_correct" in st.session_state and not st.session_state["password_correct"]:
         st.error("😕 Password Incorrect")
         
-    st.error("🔒 App is Locked. Enter Password.")
+    st.warning("🔒 App is Locked. Enter Password.")
     return False
 
 def require_auth():
