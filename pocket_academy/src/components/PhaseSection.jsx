@@ -87,7 +87,7 @@ const PhaseSection = ({
 
             {/* Body */}
             {isOpen && !locked && (
-                <div className={`p-6 space-y-6 rounded-b-3xl animate-reveal ${darkMode ? 'bg-slate-800/20' : 'bg-white/90'
+                <div className={`p-6 space-y-6 rounded-b-3xl animate-reveal backdrop-blur-md border px-6 py-6 ${darkMode ? 'bg-slate-900/40 border-white/5 border-t-0' : 'bg-white/60 border-white/40 border-t-0'
                     }`}>
                     {/* Audio + Scratchpad toolbar */}
                     <div className="flex gap-2">

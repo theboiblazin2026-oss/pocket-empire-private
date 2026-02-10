@@ -7,7 +7,7 @@ const ProgressBar = ({ progress, children, onGoHome }) => {
     const { darkMode } = useTheme();
 
     return (
-        <div className={`fixed top-0 left-0 w-full z-50 glass border-b px-4 py-3 shadow-sm ${darkMode ? 'border-white/10' : 'border-gray-200/80'}`}>
+        <div className={`fixed top-0 left-0 w-full z-50 backdrop-blur-xl border-b px-4 py-3 shadow-sm transition-colors duration-300 ${darkMode ? 'bg-slate-900/60 border-white/10' : 'bg-white/60 border-white/20'}`}>
             <div className="max-w-3xl mx-auto flex items-center gap-4">
                 <button
                     onClick={onGoHome}
