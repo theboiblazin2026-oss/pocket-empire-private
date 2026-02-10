@@ -477,5 +477,50 @@ export const truckingCurriculumData = [
             { question: "What is a Terminal in trucking?", options: ["An airport gate", "Company HQ and parking yard", "A computer screen", "End of a route"], correctAnswer: 1 },
             { question: "Why use fuel cards?", options: ["For fun", "Fleet discounts of 30-50 cents per gallon", "They're required by law", "For toll payment only"], correctAnswer: 1 }
         ]
+    },
+    {
+        id: 10,
+        title: "Level 10: The Auto-Blaster 🤖",
+        description: "Automated Fleet Marketing. Let the robots find the loads.",
+        color: "bg-cyan-600",
+        sketchChallenge: "Draw a robot shaking hands with a truck.",
+        lingo: [
+            { term: "Drip Campaign", def: "A series of automated emails sent over time (Day 0, Day 3, Day 7)." },
+            { term: "Prospector", def: "Your command center for finding and emailing new carriers." },
+            { term: "Auto-Blaster", def: "The bot that sends emails while you sleep." }
+        ],
+        tasks: [
+            {
+                id: "t10-1",
+                text: "Prospector Setup: Configure your Fleet Manager",
+                tool: "Pocket Empire App",
+                detail: "1. Open the 'Prospector' tab in your app.\n2. Click on 'Fleet Manager'.\n3. Ensure your status says 'Online'.\n4. This tool pulls new authority grants daily."
+            },
+            {
+                id: "t10-2",
+                text: "Email Studio: Customize your pitch",
+                tool: "Prospector > Email Studio",
+                detail: "1. Go to 'Email Studio'.\n2. Select 'Welcome', 'Follow-up 1', or 'Follow-up 2'.\n3. Write your email. Use {contact_name} variables.\n4. Save it. This is what the bot will send."
+            },
+            {
+                id: "t10-3",
+                text: "Drip Campaign Logic: Understand the flow",
+                tool: "Brain",
+                detail: "1. Day 0: Bot sends 'Welcome' email immediately to new leads.\n2. Day 3: Bot checks if they replied. If not, sends 'Follow-up 1'.\n3. Day 7: Final check. Sends 'Follow-up 2' if still silent.\n4. If they reply, the bot STOPS automatically."
+            },
+            {
+                id: "t10-4",
+                text: "Launch Campaign: Safe blasting",
+                tool: "Prospector > Campaign",
+                detail: "1. Go to 'Campaign' tab.\n2. Set your 'Blast Limit' (start with 10/day).\n3. Click 'LAUNCH FLEET CAMPAIGN'.\n4. Watch the progress bar. Do not close the tab until finished."
+            }
+        ],
+        exam: [
+            { question: "What is a Drip Campaign?", options: ["Leaking oil", "Automated email sequence", "Washing the truck", "Rainy weather"], correctAnswer: 1 },
+            { question: "When does the bot stop sending emails?", options: ["Never", "When you run out of money", "When the lead replies", "When the truck breaks down"], correctAnswer: 2 },
+            { question: "Where do you edit your emails?", options: ["In Gmail", "In the Email Studio", "On a napkin", "You can't"], correctAnswer: 1 },
+            { question: "What is the blast limit for?", options: ["To prevent spamming and crashing", "To make it go faster", "To save electricity", "No reason"], correctAnswer: 0 },
+            { question: "How many stages are in the default drip?", options: ["1", "3 (Welcome + 2 Follow-ups)", "10", "100"], correctAnswer: 1 }
+        ]
     }
 ];

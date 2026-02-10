@@ -190,6 +190,19 @@ def load_fleet_templates():
         "followup_2": {"subject": "Final check", "body": "Last attempt..."}
     }
 
+def wrap_fleet_html(body_text):
+    """Wraps plain text body in HTML with Logo and Flyer."""
+    return f"""<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto;">
+        <p>{body_text.replace(chr(10), '<br>')}</p>
+        <br>
+        <p><img src="cid:logo_image" alt="Jayboi Services" width="200"></p>
+        <p><img src="cid:flyer_image" alt="Services Flyer" width="100%"></p>
+    </div>
+</body>
+</html>"""
+
 def save_fleet_templates(data):
     """Save fleet JSON templates."""
     if IS_LOCAL:
@@ -345,6 +358,9 @@ with tab_dash:
         st.subheader("🌐 Web Hunter")
         st.markdown(f"**Status:** {web_health}")
         st.metric("Total Leads", web_total)
+        web_replies = len(web_df[web_df['Lead Status'].str.contains("Replied", case=False, na=False)]) if "Lead Status" in web_df.columns else 0
+        web_rate = (web_replies / web_total * 100) if web_total > 0 else 0
+        st.metric("Reply Rate", f"{web_rate:.1f}% ({web_replies})")
         st.metric("Last Email Sent", web_last_sent)
         
         with st.expander("System Checks"):
@@ -358,6 +374,9 @@ with tab_dash:
         st.subheader("🚛 Fleet Manager")
         st.markdown(f"**Status:** {fleet_health}")
         st.metric("Total Carriers", fleet_total)
+        fleet_replies = len(fleet_df[fleet_df['Status'].str.contains("Replied", case=False, na=False)]) if "Status" in fleet_df.columns else 0
+        fleet_rate = (fleet_replies / fleet_total * 100) if fleet_total > 0 else 0
+        st.metric("Reply Rate", f"{fleet_rate:.1f}% ({fleet_replies})")
         st.metric("Last Email Sent", fleet_last_sent)
         
         with st.expander("System Checks"):
@@ -424,6 +443,36 @@ with tab_web:
                     templates[t_type] = curr
                     save_web_templates(templates)
                     st.success("Saved!")
+
+            st.divider()
+            st.subheader("🧪 Test Mode")
+            test_config = get_mailer_config()
+            default_test = test_config.get('email_address', '') if test_config else ""
+            test_email = st.text_input("Send Test To", value=default_test)
+            
+            if st.button("📨 Send Test Email"):
+                if not test_config:
+                    st.error("Mailer not configured.")
+                else:
+                    try:
+                        server = smtplib.SMTP(test_config['smtp_server'], test_config['smtp_port'])
+                        server.starttls()
+                        server.login(test_config['email_address'], test_config['app_password'])
+                        
+                        msg = MIMEMultipart()
+                        msg['From'] = test_config['email_address']
+                        msg['To'] = test_email
+                        msg['Subject'] = "[TEST] " + (curr.get("subject_a") if t_type == "standard" else curr.get("subject"))
+                        
+                        # Mock variables
+                        body_txt = curr.get("body", "").format(business_name="Test Business", city="Test City", sender_name=test_config.get('your_name', 'Me'))
+                        msg.attach(MIMEText(body_txt, 'plain'))
+                        
+                        server.sendmail(test_config['email_address'], test_email, msg.as_string())
+                        server.quit()
+                        st.success(f"Sent test to {test_email}")
+                    except Exception as e:
+                        st.error(f"Test Failed: {e}")
 
         # --- CAMPAIGN ---
         with web_sub_campaign:
@@ -555,7 +604,68 @@ with tab_fleet:
                     save_fleet_templates(templates)
                     st.success(f"Saved {t_sel} template!")
                     time.sleep(1)
+                    st.success(f"Saved {t_sel} template!")
+                    time.sleep(1)
                     st.rerun()
+
+            st.divider()
+            st.subheader("🧪 Test Mode")
+            
+            # Load Creds for Test
+            test_fleet_user = ""
+            test_fleet_pass = ""
+            if "fleet_manager" in st.secrets:
+                test_fleet_user = st.secrets["fleet_manager"].get("gmail_username", "")
+                test_fleet_pass = st.secrets["fleet_manager"].get("gmail_app_password", "")
+            elif IS_LOCAL:
+                try:
+                    from dotenv import dotenv_values
+                    env = dotenv_values(os.path.join(TRUCK_SCRAPER_DIR, ".env"))
+                    test_fleet_pass = env.get("GMAIL_APP_PASSWORD", "").strip('"')
+                    test_fleet_user = "Theboiblazin2026@gmail.com"
+                except: pass
+
+            test_to = st.text_input("Send Test To", value=test_fleet_user, key="fleet_test_to")
+            
+            if st.button("📨 Send Test Fleet Email") and test_fleet_pass:
+                try:
+                    server = smtplib.SMTP("smtp.gmail.com", 587)
+                    server.starttls()
+                    server.login(test_fleet_user, test_fleet_pass)
+                    
+                    # Construct
+                    subj = "[TEST] " + current_tmpl.get("subject", "")
+                    body_txt = current_tmpl.get("body", "").format(contact_name="Test Manager", company_name="Test Corp", dot_number="000000")
+                    html = wrap_fleet_html(body_txt)
+                    
+                    msg = MIMEMultipart('related')
+                    msg['From'] = test_fleet_user
+                    msg['To'] = test_to
+                    msg['Subject'] = subj
+                    
+                    # Attach HTML
+                    alt = MIMEMultipart('alternative')
+                    msg.attach(alt)
+                    alt.attach(MIMEText("HTML Required", 'plain'))
+                    alt.attach(MIMEText(html, 'html'))
+                    
+                    # Attach Images (Local only for test unless we map paths)
+                    # For simplicity in test mode on cloud, we might skip images or try to load them
+                    # If local, attach.
+                    if IS_LOCAL:
+                         for cid, fname in [('logo_image', 'logo.png'), ('flyer_image', 'flyer.png')]:
+                            img_path = os.path.join(TRUCK_SCRAPER_DIR, 'templates', fname)
+                            if os.path.exists(img_path):
+                                with open(img_path, 'rb') as f:
+                                    img = MIMEImage(f.read())
+                                img.add_header('Content-ID', f'<{cid}>')
+                                msg.attach(img)
+
+                    server.sendmail(test_fleet_user, test_to, msg.as_string())
+                    server.quit()
+                    st.success(f"Test sent to {test_to}")
+                except Exception as e:
+                    st.error(f"Test failed: {e}")
 
             st.divider()
             st.subheader("Preview")
@@ -607,7 +717,11 @@ with tab_fleet:
                 prog = st.progress(0)
                 status_text = st.empty()
                 
-                html_tmpl = load_fleet_html_template()
+                # Load "Welcome" template for new blasts
+                templates = load_fleet_templates()
+                welcome_tmpl = templates.get("welcome", {})
+                start_subj = welcome_tmpl.get("subject", "Welcome to the Industry")
+                start_body = welcome_tmpl.get("body", "Hi {contact_name}")
                 
                 try:
                     smtp = smtplib.SMTP("smtp.gmail.com", 587)
@@ -620,11 +734,14 @@ with tab_fleet:
                 if smtp:
                     sent_count = 0
                     for idx, lead in enumerate(candidates[:blast_limit]):
-                        subj = f"Welcome to the Industry: Essential Setup for {lead['name']}"
+                        # Personalize
                         try:
-                            body_html = html_tmpl.format(company_name=lead['name'], contact_name="Manager", dot_number=lead['dot'])
+                            subj = start_subj.format(company_name=lead['name'], contact_name="Manager", dot_number=lead['dot'])
+                            body_txt = start_body.format(company_name=lead['name'], contact_name="Manager", dot_number=lead['dot'])
+                            body_html = wrap_fleet_html(body_txt)
                         except:
-                            body_html = html_tmpl
+                            subj = start_subj
+                            body_html = wrap_fleet_html(start_body)
                         
                         try:
                             msg = MIMEMultipart('related')
