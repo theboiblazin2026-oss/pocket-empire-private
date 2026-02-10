@@ -8,30 +8,40 @@ import ProgressBar from './components/ProgressBar';
 import AuthGate from './components/AuthGate';
 import PomodoroTimer from './components/PomodoroTimer';
 import Certificate from './components/Certificate';
-import { BookOpen, FileText, Truck, Code, ArrowLeft, Award } from 'lucide-react';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { BookOpen, FileText, Truck, Code, ArrowLeft, Award, Sun, Moon } from 'lucide-react';
 
-function App() {
-  // Load initial state from local storage or start empty
+function ThemeToggle() {
+  const { darkMode, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      className={`fixed top-4 right-14 z-[60] p-2.5 glass rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${darkMode ? 'text-yellow-400 hover:text-yellow-300' : 'text-indigo-600 hover:text-indigo-500'
+        }`}
+      title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+    >
+      {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
+}
+
+function AppContent() {
+  const { darkMode } = useTheme();
+
   const [completedTasks, setCompletedTasks] = useState(() => {
     const saved = localStorage.getItem('curriculumProgress');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [activeTrack, setActiveTrack] = useState(() => {
-    // Remember the last track user was on
     return localStorage.getItem('activeTrack') || null;
   });
 
   const [showCertificate, setShowCertificate] = useState(false);
 
-  // Decide which data to show based on track
   const currentData = activeTrack === 'trucking' ? truckingCurriculumData : curriculumData;
-
-  // Calculate total progress
   const totalTasks = currentData.reduce((acc, phase) => acc + phase.tasks.length, 0);
 
-  // Filter completed tasks to only count ones relevant to current track (simple approximation)
-  // Ideally, we'd enable separate progress storage, but this works if IDs are unique
   const relevantCompleted = completedTasks.filter(id => {
     if (activeTrack === 'trucking') return id.startsWith('t');
     return !id.startsWith('t');
@@ -39,7 +49,6 @@ function App() {
 
   const progressPercentage = totalTasks === 0 ? 0 : (relevantCompleted.length / totalTasks) * 100;
 
-  // Save to local storage whenever state changes
   useEffect(() => {
     localStorage.setItem('curriculumProgress', JSON.stringify(completedTasks));
   }, [completedTasks]);
@@ -51,7 +60,6 @@ function App() {
     setShowCertificate(false);
   }, [activeTrack]);
 
-  // Handle task toggling
   const toggleTask = (taskId) => {
     setCompletedTasks(prev => {
       const isCompleted = prev.includes(taskId);
@@ -61,8 +69,6 @@ function App() {
         newCompleted = prev.filter(id => id !== taskId);
       } else {
         newCompleted = [...prev, taskId];
-        // We check completion based on the NEW state, which is this `newCompleted` array
-        // But we need to filter it again for the current track to be accurate
         const currentTrackCompleted = newCompleted.filter(id => {
           if (activeTrack === 'trucking') return id.startsWith('t');
           return !id.startsWith('t');
@@ -70,9 +76,8 @@ function App() {
 
         if (currentTrackCompleted.length === totalTasks) {
           triggerConfetti({ particleCount: 500, spread: 180 });
-          setTimeout(() => setShowCertificate(true), 1500); // Show cert after confetti
+          setTimeout(() => setShowCertificate(true), 1500);
         } else {
-          // Random celebration for normal tasks
           if (Math.random() > 0.8) {
             triggerConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
           }
@@ -90,33 +95,55 @@ function App() {
   if (!activeTrack) {
     return (
       <AuthGate>
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Choose Your Path</h1>
-          <p className="text-gray-500 mb-12 text-center max-w-md">What empire do you want to build today?</p>
+        <ThemeToggle />
+        <div className={`min-h-screen flex flex-col items-center justify-center px-4 transition-colors duration-300 ${darkMode ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 to-indigo-50/30'}`}>
+          {/* Background decorations */}
+          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
 
-          <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
+          <h1 className={`text-5xl md:text-6xl font-black tracking-tight mb-3 animate-fade-in ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Choose Your Path
+          </h1>
+          <p className={`text-xl mb-14 text-center max-w-md animate-fade-in ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+            What empire do you want to build today?
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
             <button
               onClick={() => setActiveTrack('web')}
-              className="group relative bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-blue-500 hover:shadow-2xl transition-all text-left"
+              className={`group relative p-10 rounded-3xl shadow-lg border-2 transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
+                  ? 'bg-slate-800/80 border-slate-700 hover:border-indigo-500'
+                  : 'bg-white border-gray-100 hover:border-indigo-400'
+                }`}
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-2xl"></div>
-              <div className="mb-4 bg-blue-50 w-16 h-16 rounded-xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                <Code size={32} />
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div className={`mb-6 w-18 h-18 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-indigo-500/20 text-indigo-400 shadow-indigo-500/10' : 'bg-blue-50 text-blue-600 shadow-blue-500/10'
+                }`} style={{ width: '72px', height: '72px' }}>
+                <Code size={36} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Tech Mogul</h2>
-              <p className="text-gray-500">Master Web Development. Build apps, SaaS businesses, and digital empires. From HTML to React.</p>
+              <h2 className={`text-3xl font-extrabold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Tech Mogul</h2>
+              <p className={`text-lg leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                Master Web Development. Build apps, SaaS businesses, and digital empires. From HTML to React.
+              </p>
             </button>
 
             <button
               onClick={() => setActiveTrack('trucking')}
-              className="group relative bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-green-500 hover:shadow-2xl transition-all text-left"
+              className={`group relative p-10 rounded-3xl shadow-lg border-2 transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
+                  ? 'bg-slate-800/80 border-slate-700 hover:border-emerald-500'
+                  : 'bg-white border-gray-100 hover:border-green-400'
+                }`}
+              style={{ animationDelay: '0.1s' }}
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-700 rounded-t-2xl"></div>
-              <div className="mb-4 bg-green-50 w-16 h-16 rounded-xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
-                <Truck size={32} />
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div className={`mb-6 w-18 h-18 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/10' : 'bg-green-50 text-green-600 shadow-green-500/10'
+                }`} style={{ width: '72px', height: '72px' }}>
+                <Truck size={36} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Fleet Mogul</h2>
-              <p className="text-gray-500">Master Compliance & Safety. Build a trucking company, manage drivers, and conquer the road.</p>
+              <h2 className={`text-3xl font-extrabold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Fleet Mogul</h2>
+              <p className={`text-lg leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                Master Compliance & Safety. Build a trucking company, manage drivers, and conquer the road.
+              </p>
             </button>
           </div>
         </div>
@@ -127,54 +154,54 @@ function App() {
 
   return (
     <AuthGate>
-      <div className="min-h-screen pb-20 pt-24 font-sans text-gray-900 bg-gray-50">
+      <ThemeToggle />
+      <div className={`min-h-screen pb-20 pt-24 font-sans transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-50 to-indigo-50/20 text-gray-900'}`}>
         <ProgressBar progress={progressPercentage} />
 
-        {/* Back to Home Button */}
+        {/* Back Button */}
         <button
           onClick={() => setActiveTrack(null)}
-          className="fixed top-4 left-4 z-40 bg-white/80 backdrop-blur p-2 rounded-full shadow hover:bg-white text-gray-500 hover:text-gray-900 transition"
+          className={`fixed top-4 left-4 z-40 glass p-2.5 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${darkMode ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
           title="Switch Track"
         >
           <ArrowLeft size={20} />
         </button>
 
         <main className="max-w-3xl mx-auto px-4">
-          <header className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold tracking-wide uppercase">
-              {activeTrack === 'trucking' ? <Truck size={14} /> : <Code size={14} />}
+          <header className="mb-14 text-center animate-fade-in">
+            <div className={`inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full text-sm font-bold tracking-wide uppercase ${darkMode ? 'bg-slate-800 text-slate-400' : 'bg-gray-100 text-gray-600'
+              }`}>
+              {activeTrack === 'trucking' ? <Truck size={16} /> : <Code size={16} />}
               {activeTrack === 'trucking' ? 'Fleet Empire Track' : 'Tech Empire Track'}
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4">
-              {activeTrack === 'trucking' ? 'Zero to ' : 'Zero to '}
-              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeTrack === 'trucking' ? 'from-green-600 to-emerald-800' : 'from-blue-600 to-purple-600'}`}>
+            <h1 className={`text-5xl md:text-6xl font-black tracking-tight mb-5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Zero to{' '}
+              <span className={`gradient-text bg-gradient-to-r ${activeTrack === 'trucking' ? 'from-green-400 to-emerald-600' : 'from-indigo-400 to-purple-500'}`}>
                 {activeTrack === 'trucking' ? 'Fleet Mogul' : 'Tech Mogul'}
               </span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            <p className={`text-xl max-w-2xl mx-auto leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               {activeTrack === 'trucking'
                 ? "Setup your authority, ace your audits, and build a safety-first logistics back office."
                 : "From your first line of code to your first million. Interactive lessons to build real apps."}
             </p>
-
-            <div className="flex justify-center gap-4">
-              {/* Context aware links could go here */}
-            </div>
           </header>
 
-          <div className="space-y-6">
-            {currentData.map(phase => (
-              <PhaseSection
-                key={phase.id}
-                phase={phase}
-                completedTasks={completedTasks}
-                onToggleTask={toggleTask}
-              />
+          <div className="space-y-8">
+            {currentData.map((phase, index) => (
+              <div key={phase.id} className="animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+                <PhaseSection
+                  phase={phase}
+                  completedTasks={completedTasks}
+                  onToggleTask={toggleTask}
+                />
+              </div>
             ))}
           </div>
         </main>
 
-        <footer className="mt-20 text-center text-gray-400 text-sm pb-10">
+        <footer className={`mt-20 text-center text-sm pb-10 ${darkMode ? 'text-slate-600' : 'text-gray-400'}`}>
           <p>Built with React & Tailwind CSS</p>
         </footer>
 
@@ -186,6 +213,14 @@ function App() {
       </div>
     </AuthGate>
   )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
 }
 
 export default App

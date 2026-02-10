@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Timer } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const PomodoroTimer = () => {
-    const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+    const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
-    const [isWorkMode, setIsWorkMode] = useState(true); // true = work, false = break
-    const [isOpen, setIsOpen] = useState(false); // Widget open/close state
+    const [isWorkMode, setIsWorkMode] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
+    const { darkMode } = useTheme();
 
     useEffect(() => {
         let interval = null;
@@ -16,19 +18,16 @@ const PomodoroTimer = () => {
                 setTimeLeft((time) => time - 1);
             }, 1000);
         } else if (timeLeft === 0) {
-            // Time is up!
             clearInterval(interval);
             setIsActive(false);
-            // Play a sound
             const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
             audio.play();
 
-            // Auto-switch modes (optional, or just stop)
             if (isWorkMode) {
-                setTimeLeft(5 * 60); // 5 min break
+                setTimeLeft(5 * 60);
                 setIsWorkMode(false);
             } else {
-                setTimeLeft(25 * 60); // 25 min work
+                setTimeLeft(25 * 60);
                 setIsWorkMode(true);
             }
         }
@@ -53,7 +52,7 @@ const PomodoroTimer = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-4 right-4 z-50 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center justify-center"
+                className="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white p-4 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-110 flex items-center justify-center"
                 title="Open Study Timer"
             >
                 <Timer size={24} />
@@ -62,41 +61,63 @@ const PomodoroTimer = () => {
     }
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 bg-white border border-gray-200 p-6 rounded-2xl shadow-xl w-72 animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                    <Timer size={18} className="text-indigo-500" />
+        <div className={`fixed bottom-4 right-4 z-50 p-6 rounded-3xl shadow-2xl w-80 animate-scale-in border-2 ${darkMode
+                ? 'bg-slate-800 border-slate-700 shadow-black/40'
+                : 'bg-white border-gray-100 shadow-indigo-500/10'
+            }`}>
+            <div className="flex justify-between items-center mb-5">
+                <h3 className={`font-extrabold text-lg flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                    <Timer size={20} className="text-indigo-500" />
                     {isWorkMode ? 'Focus Time' : 'Break Time'}
                 </h3>
-                <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <button onClick={() => setIsOpen(false)} className={`text-lg transition-colors ${darkMode ? 'text-slate-500 hover:text-slate-300' : 'text-gray-400 hover:text-gray-600'}`}>✕</button>
             </div>
 
-            <div className="text-5xl font-mono font-bold text-center text-gray-800 mb-6 tracking-wider">
+            <div className={`text-6xl font-mono font-black text-center mb-6 tracking-wider ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                 {formatTime(timeLeft)}
             </div>
 
             <div className="flex justify-center gap-3">
                 <button
                     onClick={toggleTimer}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium text-white transition-colors ${isActive ? 'bg-amber-500 hover:bg-amber-600' : 'bg-indigo-600 hover:bg-indigo-700'
+                    className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-white text-lg transition-all duration-200 ${isActive
+                        ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30 shadow-lg'
+                        : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-indigo-500/30 shadow-lg'
                         }`}
                 >
-                    {isActive ? <Pause size={18} /> : <Play size={18} />}
+                    {isActive ? <Pause size={20} /> : <Play size={20} />}
                     {isActive ? 'Pause' : 'Start'}
                 </button>
 
                 <button
                     onClick={resetTimer}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                    className={`p-3 rounded-2xl transition-all duration-200 ${darkMode ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                        }`}
                     title="Reset"
                 >
-                    <RotateCcw size={20} />
+                    <RotateCcw size={22} />
                 </button>
             </div>
 
-            <div className="mt-4 flex justify-between text-xs text-gray-400">
-                <button onClick={() => { setIsWorkMode(true); setTimeLeft(25 * 60); setIsActive(false); }} className={`hover:text-indigo-500 ${isWorkMode ? 'text-indigo-600 font-bold' : ''}`}>25m Work</button>
-                <button onClick={() => { setIsWorkMode(false); setTimeLeft(5 * 60); setIsActive(false); }} className={`hover:text-indigo-500 ${!isWorkMode ? 'text-indigo-600 font-bold' : ''}`}>5m Break</button>
+            <div className="mt-5 flex justify-between text-sm font-bold">
+                <button
+                    onClick={() => { setIsWorkMode(true); setTimeLeft(25 * 60); setIsActive(false); }}
+                    className={`px-4 py-2 rounded-xl transition-all ${isWorkMode
+                        ? 'bg-indigo-500/20 text-indigo-400'
+                        : darkMode ? 'text-slate-500 hover:text-indigo-400' : 'text-gray-400 hover:text-indigo-500'
+                        }`}
+                >
+                    25m Work
+                </button>
+                <button
+                    onClick={() => { setIsWorkMode(false); setTimeLeft(5 * 60); setIsActive(false); }}
+                    className={`px-4 py-2 rounded-xl transition-all ${!isWorkMode
+                        ? 'bg-indigo-500/20 text-indigo-400'
+                        : darkMode ? 'text-slate-500 hover:text-indigo-400' : 'text-gray-400 hover:text-indigo-500'
+                        }`}
+                >
+                    5m Break
+                </button>
             </div>
         </div>
     );
