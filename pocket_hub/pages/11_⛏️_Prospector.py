@@ -397,7 +397,7 @@ with tab_web:
             if search and "Business Name" in filtered.columns:
                 filtered = filtered[filtered["Business Name"].str.contains(search, case=False, na=False)]
             
-            st.dataframe(filtered, use_container_width=True, height=500)
+            st.dataframe(filtered, use_container_width=True, height=800)
             st.caption(f"Showing {len(filtered)} of {web_total}")
 
         # --- EMAIL STUDIO ---
@@ -521,7 +521,7 @@ with tab_fleet:
             if type_f != "All" and "Type" in filtered_fleet.columns:
                 filtered_fleet = filtered_fleet[filtered_fleet["Type"] == type_f]
             
-            st.dataframe(filtered_fleet, use_container_width=True, height=500)
+            st.dataframe(filtered_fleet, use_container_width=True, height=800)
             st.caption(f"Showing {len(filtered_fleet)} of {fleet_total}")
 
         # --- FLEET EMAIL STUDIO ---
