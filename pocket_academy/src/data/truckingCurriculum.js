@@ -377,7 +377,7 @@ export const truckingCurriculumData = [
                 id: "t7-4",
                 text: "Rate Con Analysis: Read the fine print before signing!",
                 tool: "PDF Reader",
-                detail: "1. Check the Rate: Is it what you agreed?\n2. Check the Address: Is it correct?\n3. Check 'Lumper Fees': Will they reimburse you?\n4. Check 'Detention': Do they pay if you wait 5 hours?"
+                detail: "1. Open the PDF (Preview on Mac, Edge/Adobe on Windows).\n2. Check the Rate: Is it what you agreed?\n3. Check the Address: Is it correct?\n4. Check 'Lumper Fees': Will they reimburse you?\n5. Check 'Detention': Do they pay if you wait 5 hours?"
             }
         ],
         exam: [
@@ -410,7 +410,7 @@ export const truckingCurriculumData = [
                 id: "t8-2",
                 text: "Upload Portal: Learn how to upload PDFs to the safety portal",
                 tool: "FMCSA New Entrant Portal",
-                detail: "1. Convert your DQ Files, Maintenance Files, and Logs to PDF.\n2. Group them clearly (e.g., 'Driver A - DQ File').\n3. Upload to the official New Entrant portal.\n4. Clarity = Happy Auditor."
+                detail: "1. Convert your DQ Files, Maintenance Files, and Logs to PDF.\n2. Use 'Print to PDF' (Ctrl+P on Windows, Cmd+P on Mac).\n3. Group them clearly (e.g., 'Driver A - DQ File').\n4. Upload to the official New Entrant portal."
             },
             {
                 id: "t8-3",

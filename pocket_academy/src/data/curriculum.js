@@ -82,7 +82,7 @@ export const curriculumData = [
                 id: "1-1",
                 text: "HTML Tags: The bricks of the web (<p>, <h1>, <button>)",
                 tool: "VS Code",
-                detail: "1. Create a folder named 'website'.\n2. Open it in VS Code.\n3. Create a file 'index.html'.\n4. Type '!' and hit Tab. VS Code writes the skeleton for you.\n5. Inside <body>, type <h1>My Store</h1>."
+                detail: "1. Create a folder named 'website'.\n2. Open it in VS Code.\n3. Create a file 'index.html'.\n4. Type '!' and hit Tab.\n5. Press Cmd+S (Mac) or Ctrl+S (Windows) to save."
             },
             {
                 id: "1-2",
@@ -151,7 +151,7 @@ export const curriculumData = [
                 id: "2-4",
                 text: "Responsive: Making it look great on iPhones and iPads",
                 tool: "Chrome DevTools",
-                detail: "1. Implement @media (max-width: 600px) { ... }.\n2. Change flex-direction to 'column' for mobile.\n3. Use Chrome DevTools (Phone Icon) to test different screen sizes."
+                detail: "1. Implement @media (max-width: 600px) { ... }.\n2. Change flex-direction to 'column' for mobile.\n3. Open DevTools: Press F12 (Windows) or Cmd+Option+I (Mac).\n4. Click the 'Phone Icon' to test different screen sizes."
             },
             {
                 id: "2-5",
@@ -184,7 +184,7 @@ export const curriculumData = [
                 id: "3-1",
                 text: "Variables: Storing information (Like a backpack)",
                 tool: "VS Code",
-                detail: "1. Create 'script.js' and link it in HTML.\n2. Type: let score = 0;\n3. Type: const name = 'Your Name';\n4. Use console.log(name) to see it in the Chrome Console."
+                detail: "1. Create 'script.js' and link it in HTML.\n2. Type: let score = 0;\n3. Type: const name = 'Your Name';\n4.  Press Cmd+Option+J (Mac) or Ctrl+Shift+J (Windows) to open Console."
             },
             {
                 id: "3-2",
@@ -247,7 +247,7 @@ export const curriculumData = [
                 id: "4-3",
                 text: "Vite: The super-fast engine for your apps",
                 tool: "Terminal",
-                detail: "1. Open Terminal.\n2. Type: npm create vite@latest\n3. Follow prompts (Select React + JavaScript).\n4. cd into folder, npm install, npm run dev. You have a full app running."
+                detail: "1. Open Terminal (Mac) or PowerShell (Windows).\n2. Type: npm create vite@latest\n3. Follow prompts (Select React + JavaScript).\n4. cd into folder, npm install, npm run dev. You have a full app running."
             },
             {
                 id: "4-4",
