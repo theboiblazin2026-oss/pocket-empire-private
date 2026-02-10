@@ -19,11 +19,13 @@ export const curriculumData = [
             { id: "0-6", text: "Git: The 'Save Game' button for your code", link: "https://git-scm.com/" },
             { id: "0-7", text: "Node.js: The engine that runs your robots", link: "https://nodejs.org/" }
         ],
-        quiz: {
-            question: "What is VS Code used for?",
-            options: ["Watching movies", "Writing code (Magic Spells)", "Playing games", "Shopping"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What is VS Code used for?", options: ["Watching movies", "Writing code", "Playing games", "Shopping"], correctAnswer: 1 },
+            { question: "What does 'Terminal' refer to?", options: ["A bus station", "A text-based command interface", "A type of font", "A video player"], correctAnswer: 1 },
+            { question: "What is Git used for?", options: ["Chatting online", "Version control (saving code history)", "Browsing the web", "Editing photos"], correctAnswer: 1 },
+            { question: "What does an IDE help you do?", options: ["Cook food", "Write and edit code efficiently", "Play music", "Install hardware"], correctAnswer: 1 },
+            { question: "What does Node.js allow you to do?", options: ["Run JavaScript outside the browser", "Edit images", "Browse social media", "Design logos"], correctAnswer: 0 }
+        ]
     },
     {
         id: 1,
@@ -43,11 +45,13 @@ export const curriculumData = [
             { id: "1-4", text: "Forms: How to let customers talk to you" },
             { id: "1-5", text: "Publishing: putting your site on the internet for FREE" }
         ],
-        quiz: {
-            question: "Which tag creates a big heading (like a billboard)?",
-            options: ["<p>", "<button>", "<h1>", "<img>"],
-            correctAnswer: 2
-        }
+        exam: [
+            { question: "Which tag creates a big heading?", options: ["<p>", "<button>", "<h1>", "<img>"], correctAnswer: 2 },
+            { question: "What does the <a> tag do?", options: ["Adds an image", "Creates a link", "Makes text bold", "Plays a video"], correctAnswer: 1 },
+            { question: "What is an HTML attribute?", options: ["A type of website", "Extra info inside a tag", "A programming language", "A CSS style"], correctAnswer: 1 },
+            { question: "Which tag adds an image?", options: ["<p>", "<img>", "<h1>", "<div>"], correctAnswer: 1 },
+            { question: "What does HTML stand for?", options: ["Hyper Tool Markup Listing", "HyperText Markup Language", "High Tech Modern Language", "Home Text Making Layout"], correctAnswer: 1 }
+        ]
     },
     {
         id: 2,
@@ -67,11 +71,13 @@ export const curriculumData = [
             { id: "2-4", text: "Responsive: Making it look great on iPhones and iPads" },
             { id: "2-5", text: "Project: Style your Business Card to look like Apple/Nike" }
         ],
-        quiz: {
-            question: "What language changes the colors and fonts?",
-            options: ["HTML", "CSS", "Python", "English"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What language controls colors and fonts?", options: ["HTML", "CSS", "Python", "English"], correctAnswer: 1 },
+            { question: "What is Padding?", options: ["Space outside the element", "Space inside the element", "A type of font", "A border style"], correctAnswer: 1 },
+            { question: "What does Flexbox help with?", options: ["Adding images", "Laying out elements in rows/columns", "Playing audio", "Writing JavaScript"], correctAnswer: 1 },
+            { question: "What does 'Responsive Design' mean?", options: ["Fast loading speed", "Works on all screen sizes", "Dark mode only", "Has animations"], correctAnswer: 1 },
+            { question: "What is a CSS Selector?", options: ["A tool to copy code", "How you target which element to style", "A color picker", "A font name"], correctAnswer: 1 }
+        ]
     },
     {
         id: 3,
@@ -91,16 +97,18 @@ export const curriculumData = [
             { id: "3-4", text: "Logic: If This, Then That (Teaching the computer to think)" },
             { id: "3-5", text: "Project: Build a 'Tip Calculator' app for restaurants" }
         ],
-        quiz: {
-            question: "What is a 'Variable' like?",
-            options: ["A backpack that holds data", "A type of car", "A computer virus", "A website"],
-            correctAnswer: 0
-        }
+        exam: [
+            { question: "What is a Variable?", options: ["A container that holds data", "A type of car", "A computer virus", "A website"], correctAnswer: 0 },
+            { question: "What is a Function?", options: ["A button", "A reusable block of code", "A style rule", "An image tag"], correctAnswer: 1 },
+            { question: "What is an 'Event' in JavaScript?", options: ["A party", "Something that happens (click, type, scroll)", "An error", "A variable"], correctAnswer: 1 },
+            { question: "What is a Bug?", options: ["An insect in your computer", "An error in your code", "A feature", "A type of variable"], correctAnswer: 1 },
+            { question: "What does 'console.log()' do?", options: ["Deletes files", "Prints output to the developer console", "Creates a website", "Sends an email"], correctAnswer: 1 }
+        ]
     },
     {
         id: 4,
         title: "Level 4: The Factory 🏭 (React)",
-        description: "Stop building one by one. Build a factory that makes apps for you. Use professional tools.",
+        description: "Stop building one by one. Build a factory that makes apps for you.",
         color: "bg-cyan-500",
         sketchChallenge: "Draw a 'Component' Tree (App -> Header, Main, Footer).",
         lingo: [
@@ -115,11 +123,13 @@ export const curriculumData = [
             { id: "4-4", text: "Polishing: Using Tailwind CSS for instant style" },
             { id: "4-5", text: "Project: Build a 'Search Engine' for movies" }
         ],
-        quiz: {
-            question: "What is a React Component?",
-            options: ["A reusable building block", "A virus", "A mistake", "A slow computer"],
-            correctAnswer: 0
-        }
+        exam: [
+            { question: "What is a React Component?", options: ["A reusable building block", "A virus", "A mistake", "A slow computer"], correctAnswer: 0 },
+            { question: "What is 'State' in React?", options: ["A US state", "Data that changes and triggers re-renders", "A CSS property", "A type of tag"], correctAnswer: 1 },
+            { question: "What are Props?", options: ["Stage decorations", "Data passed from parent to child", "Error messages", "CSS classes"], correctAnswer: 1 },
+            { question: "What tool does Vite replace?", options: ["CSS", "A slower bundler like Webpack", "HTML", "The browser"], correctAnswer: 1 },
+            { question: "What is JSX?", options: ["A new language", "HTML-like syntax inside JavaScript", "A type of database", "A server framework"], correctAnswer: 1 }
+        ]
     },
     {
         id: 5,
@@ -139,11 +149,13 @@ export const curriculumData = [
             { id: "5-4", text: "Project: E-Commerce Store (Sell real products!)" },
             { id: "5-5", text: "Mobile: Turn your web store into a phone app" }
         ],
-        quiz: {
-            question: "What do we use to store customer data forever?",
-            options: ["RAM", "Database", "Notepad", "Sticky Notes"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What do we use to store customer data?", options: ["RAM", "Database", "Notepad", "Sticky Notes"], correctAnswer: 1 },
+            { question: "What does API stand for?", options: ["Apple Pie Interface", "Application Programming Interface", "Auto Program Install", "Advanced Phone Input"], correctAnswer: 1 },
+            { question: "What is Authentication?", options: ["Making things fast", "Verifying a user's identity", "Adding animations", "Writing CSS"], correctAnswer: 1 },
+            { question: "What does CRUD stand for?", options: ["Crash, Run, Update, Delete", "Create, Read, Update, Delete", "Code, Review, Upload, Deploy", "Clean, Restart, Undo, Debug"], correctAnswer: 1 },
+            { question: "What is Stripe used for?", options: ["Painting", "Processing payments", "Hosting websites", "Writing code"], correctAnswer: 1 }
+        ]
     },
     {
         id: 6,
@@ -162,11 +174,13 @@ export const curriculumData = [
             { id: "6-3", text: "Scalability: How to not crash when you go viral" },
             { id: "6-4", text: "CI/CD: Robots that deploy your code automatically" }
         ],
-        quiz: {
-            question: "What does 'Serverless' mean?",
-            options: ["No servers exist", "You don't manage the servers", "Broken internet", "Offline mode"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What does 'Serverless' mean?", options: ["No servers exist", "You don't manage the servers", "Broken internet", "Offline mode"], correctAnswer: 1 },
+            { question: "What is a CDN?", options: ["Canadian Dollar Network", "Content Delivery Network", "Code Debug Node", "Central Data Number"], correctAnswer: 1 },
+            { question: "What does CI/CD automate?", options: ["Coffee making", "Testing and deploying code", "Designing logos", "Writing emails"], correctAnswer: 1 },
+            { question: "What is Latency?", options: ["Amount of data stored", "The delay before data transfer begins", "A programming language", "The speed of your keyboard"], correctAnswer: 1 },
+            { question: "Which is a cloud provider?", options: ["Nike", "AWS", "Uber", "McDonald's"], correctAnswer: 1 }
+        ]
     },
     {
         id: 7,
@@ -176,7 +190,7 @@ export const curriculumData = [
         sketchChallenge: "Draw a 'Funnel' (Traffic -> Signups -> Paid Users).",
         lingo: [
             { term: "SaaS", def: "Software as a Service. Paying a subscription for software." },
-            { term: "Churn", def: "The percentage of subscribers who discontinue their subscriptions." },
+            { term: "Churn", def: "The percentage of subscribers who cancel their subscriptions." },
             { term: "MVP", def: "Minimum Viable Product. The simplest version of a product." }
         ],
         tasks: [
@@ -185,10 +199,12 @@ export const curriculumData = [
             { id: "7-3", text: "Marketing: SEO and getting your first 100 users" },
             { id: "7-4", text: "The Exit: Selling your app for millions" }
         ],
-        quiz: {
-            question: "What is MRR?",
-            options: ["Monthly Recurring Revenue", "My Red Robot", "More Real Roads", "Money Run Rate"],
-            correctAnswer: 0
-        }
+        exam: [
+            { question: "What is MRR?", options: ["Monthly Recurring Revenue", "My Red Robot", "More Real Roads", "Money Run Rate"], correctAnswer: 0 },
+            { question: "What is an MVP?", options: ["Most Valuable Player", "Minimum Viable Product", "Maximum Volume Processing", "Mobile Video Platform"], correctAnswer: 1 },
+            { question: "What is 'Churn Rate'?", options: ["Speed of a butter churner", "Percentage of users who cancel", "The loading speed", "Amount of code written"], correctAnswer: 1 },
+            { question: "What is SEO?", options: ["Super Easy Operation", "Search Engine Optimization", "Software Engineering Office", "Simple Email Output"], correctAnswer: 1 },
+            { question: "What is LTV?", options: ["Live TV", "Lifetime Value of a customer", "Low Tech Version", "Large Text Volume"], correctAnswer: 1 }
+        ]
     }
 ];

@@ -1,113 +1,182 @@
 import React, { useState } from 'react';
+import { ChevronDown, Lock, Award, CheckCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import TaskItem from './TaskItem';
 import AudioPlayer from './AudioPlayer';
-import QuizSection from './QuizSection';
 import ScratchPad from './ScratchPad';
-import { PenTool, ChevronDown, ChevronUp } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import ExamSection from './ExamSection';
 
-const PhaseSection = ({ phase, completedTasks, onToggleTask }) => {
-    const [showScratchPad, setShowScratchPad] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(true);
+const PhaseSection = ({
+    phase,
+    completedTasks,
+    onToggle,
+    index,
+    locked,
+    examScore,
+    onExamPass
+}) => {
     const { darkMode } = useTheme();
+    const [isOpen, setIsOpen] = useState(!locked && index === 0);
+    const [showExam, setShowExam] = useState(false);
 
-    const phaseTasks = phase.tasks;
-    const completedCount = phaseTasks.filter(t => completedTasks.includes(t.id)).length;
-    const isPhaseComplete = completedCount === phaseTasks.length && phaseTasks.length > 0;
+    const completedCount = phase.tasks.filter(t =>
+        completedTasks.includes(t.id)
+    ).length;
+    const allTasksDone = completedCount === phase.tasks.length;
+    const hasPassed = examScore !== undefined && examScore >= 80;
 
-    const audioText = `${phase.description} . Tasks include: ${phaseTasks.map(t => t.text).join('. ')}`;
+    // Gradient colors for phase headers
+    const gradients = [
+        'from-slate-600 to-slate-800',
+        'from-blue-600 to-indigo-700',
+        'from-rose-500 to-pink-700',
+        'from-amber-500 to-orange-700',
+        'from-cyan-500 to-blue-700',
+        'from-emerald-500 to-green-700',
+        'from-violet-500 to-indigo-700',
+        'from-fuchsia-500 to-purple-700',
+        'from-teal-500 to-cyan-700',
+        'from-orange-500 to-red-700'
+    ];
 
     return (
-        <div className={`rounded-3xl overflow-hidden border-2 transition-all duration-300 card-hover ${isPhaseComplete
-                ? darkMode ? 'border-green-500/30 bg-green-900/10' : 'border-green-200 bg-green-50/30'
-                : darkMode ? 'border-slate-700/80 bg-slate-800/50' : 'border-gray-100 bg-white shadow-sm'
-            }`}>
+        <div
+            className={`rounded-3xl overflow-hidden transition-all duration-300 ${locked
+                    ? darkMode ? 'opacity-40' : 'opacity-50'
+                    : ''
+                }`}
+            style={{ animationDelay: `${index * 0.1}s` }}
+        >
             {/* Header */}
-            <div
-                className={`p-6 ${phase.color} text-white cursor-pointer`}
-                onClick={() => setIsExpanded(!isExpanded)}
+            <button
+                onClick={() => !locked && setIsOpen(!isOpen)}
+                disabled={locked}
+                className={`w-full text-left p-6 bg-gradient-to-r ${gradients[index % gradients.length]} text-white rounded-3xl transition-all duration-200 ${locked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'
+                    } ${isOpen ? 'rounded-b-none' : ''}`}
             >
-                <div className="flex justify-between items-start">
+                <div className="flex items-center justify-between">
                     <div className="flex-1">
-                        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{phase.title}</h2>
-                        <p className="opacity-90 mt-2 text-lg leading-relaxed">{phase.description}</p>
-                    </div>
-                    <div className="flex items-center gap-3 ml-4">
-                        <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-base font-bold">
-                            {completedCount} / {phaseTasks.length}
+                        <div className="flex items-center gap-3 mb-2">
+                            {locked && <Lock size={20} className="text-white/60" />}
+                            {hasPassed && <Award size={20} className="text-yellow-300" />}
+                            <h3 className="text-2xl font-extrabold tracking-tight">
+                                {phase.title}
+                            </h3>
                         </div>
-                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <p className="text-white/70 text-base">
+                            {phase.description}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4">
+                        {hasPassed && (
+                            <span className="bg-green-400/20 text-green-300 px-3 py-1 rounded-full text-sm font-bold">
+                                {examScore}%
+                            </span>
+                        )}
+                        <span className="bg-white/20 text-white/90 px-3 py-1 rounded-full text-sm font-bold">
+                            {completedCount} / {phase.tasks.length}
+                        </span>
+                        {!locked && (
+                            <ChevronDown
+                                size={24}
+                                className={`text-white/70 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                                    }`}
+                            />
+                        )}
                     </div>
                 </div>
+            </button>
 
-                {isExpanded && (
-                    <div className="flex flex-wrap gap-3 mt-5">
-                        <AudioPlayer title={phase.title} text={audioText} />
-
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setShowScratchPad(!showScratchPad); }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${showScratchPad ? 'bg-white text-gray-900 shadow-lg' : 'bg-white/20 text-white hover:bg-white/30'}`}
-                        >
-                            <PenTool size={16} />
-                            {showScratchPad ? 'Hide Scratchpad' : 'Open Scratchpad'}
-                        </button>
+            {/* Body */}
+            {isOpen && !locked && (
+                <div className={`p-6 space-y-6 rounded-b-3xl ${darkMode ? 'bg-slate-800/30' : 'bg-white/80'
+                    }`}>
+                    {/* Audio + Scratchpad toolbar */}
+                    <div className="flex gap-2">
+                        <AudioPlayer text={`${phase.title}. ${phase.description}`} />
+                        <ScratchPad challenge={phase.sketchChallenge} />
                     </div>
-                )}
-            </div>
 
-            {/* Content */}
-            {isExpanded && (
-                <div className="p-5 flex flex-col gap-3">
-                    {/* Lingo Section */}
+                    {/* Insider Lingo */}
                     {phase.lingo && phase.lingo.length > 0 && (
-                        <div className={`rounded-2xl p-5 mb-3 ${darkMode ? 'bg-indigo-900/20 border border-indigo-500/20' : 'bg-indigo-50/70 border border-indigo-100'}`}>
-                            <h3 className={`text-lg font-bold mb-3 flex items-center gap-2 ${darkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
-                                📖 Insider Lingo
-                            </h3>
+                        <div>
+                            <h4 className={`text-lg font-bold mb-3 flex items-center gap-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'
+                                }`}>
+                                🗣️ Insider Lingo
+                            </h4>
                             <div className="grid gap-2">
                                 {phase.lingo.map((item, i) => (
-                                    <div key={i} className={`rounded-xl p-3 ${darkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
-                                        <span className={`font-bold text-base ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>{item.term}:</span>
-                                        <span className={`ml-2 text-base ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{item.def}</span>
+                                    <div
+                                        key={i}
+                                        className={`p-4 rounded-2xl ${darkMode ? 'bg-indigo-900/15' : 'bg-indigo-50/50'
+                                            }`}
+                                    >
+                                        <span className={`font-bold ${darkMode ? 'text-indigo-300' : 'text-indigo-700'
+                                            }`}>{item.term}</span>
+                                        <span className={`${darkMode ? 'text-slate-400' : 'text-gray-600'
+                                            }`}> — {item.def}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {phaseTasks.map(task => (
-                        <TaskItem
-                            key={task.id}
-                            task={task}
-                            isCompleted={completedTasks.includes(task.id)}
-                            onToggle={onToggleTask}
-                        />
-                    ))}
+                    {/* Tasks */}
+                    <div className="space-y-1">
+                        {phase.tasks.map((task) => (
+                            <TaskItem
+                                key={task.id}
+                                task={task}
+                                isCompleted={completedTasks.includes(task.id)}
+                                onToggle={() => onToggle(task.id)}
+                                locked={false}
+                            />
+                        ))}
+                    </div>
 
-                    <button
-                        onClick={() => setShowScratchPad(!showScratchPad)}
-                        className={`flex items-center gap-2 text-base font-medium transition-colors mb-4 ${darkMode ? 'text-slate-400 hover:text-indigo-400' : 'text-gray-500 hover:text-indigo-600'
-                            }`}
-                    >
-                        <PenTool size={16} />
-                        {showScratchPad ? 'Hide Sketchpad' : (phase.sketchChallenge ? 'Start Drawing Challenge 🎨' : 'Open Sketchpad')}
-                    </button>
-
-                    {showScratchPad && (
-                        <div className="my-4 animate-slide-up">
-                            {phase.sketchChallenge && (
-                                <div className={`p-4 rounded-t-2xl text-base font-bold border-b flex items-center gap-2 ${darkMode ? 'bg-indigo-900/30 text-indigo-300 border-indigo-500/20' : 'bg-indigo-50 text-indigo-800 border-indigo-100'
-                                    }`}>
-                                    <PenTool size={16} />
-                                    Challenge: {phase.sketchChallenge}
-                                </div>
+                    {/* Exam Section */}
+                    {allTasksDone && !hasPassed && (
+                        <div className="pt-4">
+                            {!showExam ? (
+                                <button
+                                    onClick={() => setShowExam(true)}
+                                    className="w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/30 animate-fade-in"
+                                >
+                                    📝 Take Section Exam
+                                    <span className="bg-white/20 px-3 py-0.5 rounded-full text-sm">
+                                        Need 80% to pass
+                                    </span>
+                                </button>
+                            ) : (
+                                <ExamSection
+                                    exam={phase.exam}
+                                    phaseId={phase.id}
+                                    onPass={onExamPass}
+                                />
                             )}
-                            <ScratchPad />
                         </div>
                     )}
 
-                    {phase.quiz && (
-                        <QuizSection quiz={phase.quiz} />
+                    {hasPassed && (
+                        <div className={`flex items-center gap-3 p-5 rounded-2xl ${darkMode ? 'bg-green-900/15' : 'bg-green-50'
+                            }`}>
+                            <CheckCircle size={24} className="text-green-500" />
+                            <div>
+                                <p className={`font-bold text-lg ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                                    Section Passed! Score: {examScore}%
+                                </p>
+                                <p className={`text-sm ${darkMode ? 'text-green-400/60' : 'text-green-600/60'}`}>
+                                    Next section unlocked
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {!allTasksDone && (
+                        <p className={`text-center text-sm py-3 ${darkMode ? 'text-slate-500' : 'text-gray-400'
+                            }`}>
+                            Complete all tasks above to unlock the section exam
+                        </p>
                     )}
                 </div>
             )}

@@ -37,6 +37,11 @@ function AppContent() {
     return localStorage.getItem('activeTrack') || null;
   });
 
+  const [examScores, setExamScores] = useState(() => {
+    const saved = localStorage.getItem('examScores');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [showCertificate, setShowCertificate] = useState(false);
 
   const currentData = activeTrack === 'trucking' ? truckingCurriculumData : curriculumData;
@@ -49,9 +54,17 @@ function AppContent() {
 
   const progressPercentage = totalTasks === 0 ? 0 : (relevantCompleted.length / totalTasks) * 100;
 
+  // Get exam scores for current track
+  const trackScoreKey = activeTrack === 'trucking' ? 'trucking' : 'web';
+  const trackScores = examScores[trackScoreKey] || {};
+
   useEffect(() => {
     localStorage.setItem('curriculumProgress', JSON.stringify(completedTasks));
   }, [completedTasks]);
+
+  useEffect(() => {
+    localStorage.setItem('examScores', JSON.stringify(examScores));
+  }, [examScores]);
 
   useEffect(() => {
     if (activeTrack) {
@@ -75,11 +88,11 @@ function AppContent() {
         });
 
         if (currentTrackCompleted.length === totalTasks) {
-          triggerConfetti({ particleCount: 500, spread: 180 });
+          confetti({ particleCount: 500, spread: 180, zIndex: 999 });
           setTimeout(() => setShowCertificate(true), 1500);
         } else {
-          if (Math.random() > 0.8) {
-            triggerConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          if (Math.random() > 0.85) {
+            confetti({ particleCount: 60, spread: 50, origin: { y: 0.7 }, zIndex: 999 });
           }
         }
       }
@@ -87,9 +100,23 @@ function AppContent() {
     });
   };
 
-  const triggerConfetti = (opts) => {
-    confetti({ ...opts, zIndex: 999 });
-  }
+  const handleExamPass = (phaseId, score) => {
+    setExamScores(prev => ({
+      ...prev,
+      [trackScoreKey]: {
+        ...prev[trackScoreKey],
+        [phaseId]: score
+      }
+    }));
+  };
+
+  // Check if a section is locked (needs previous section's exam at 80%+)
+  const isSectionLocked = (index) => {
+    if (index === 0) return false; // First section always open
+    const prevPhaseId = currentData[index - 1].id;
+    const prevScore = trackScores[prevPhaseId];
+    return prevScore === undefined || prevScore < 80;
+  };
 
   // -- TRACK SELECTION SCREEN --
   if (!activeTrack) {
@@ -111,13 +138,13 @@ function AppContent() {
           <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
             <button
               onClick={() => setActiveTrack('web')}
-              className={`group relative p-10 rounded-3xl shadow-lg border-2 transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
-                  ? 'bg-slate-800/80 border-slate-700 hover:border-indigo-500'
-                  : 'bg-white border-gray-100 hover:border-indigo-400'
+              className={`group relative p-10 rounded-3xl shadow-lg transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
+                ? 'bg-slate-800/80 hover:bg-slate-800'
+                : 'bg-white hover:shadow-xl'
                 }`}
             >
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
-              <div className={`mb-6 w-18 h-18 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-indigo-500/20 text-indigo-400 shadow-indigo-500/10' : 'bg-blue-50 text-blue-600 shadow-blue-500/10'
+              <div className={`mb-6 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-indigo-500/20 text-indigo-400 shadow-indigo-500/10' : 'bg-blue-50 text-blue-600 shadow-blue-500/10'
                 }`} style={{ width: '72px', height: '72px' }}>
                 <Code size={36} />
               </div>
@@ -129,14 +156,14 @@ function AppContent() {
 
             <button
               onClick={() => setActiveTrack('trucking')}
-              className={`group relative p-10 rounded-3xl shadow-lg border-2 transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
-                  ? 'bg-slate-800/80 border-slate-700 hover:border-emerald-500'
-                  : 'bg-white border-gray-100 hover:border-green-400'
+              className={`group relative p-10 rounded-3xl shadow-lg transition-all duration-300 text-left card-hover animate-slide-up ${darkMode
+                ? 'bg-slate-800/80 hover:bg-slate-800'
+                : 'bg-white hover:shadow-xl'
                 }`}
               style={{ animationDelay: '0.1s' }}
             >
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-t-3xl opacity-80 group-hover:opacity-100 transition-opacity"></div>
-              <div className={`mb-6 w-18 h-18 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/10' : 'bg-green-50 text-green-600 shadow-green-500/10'
+              <div className={`mb-6 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/10' : 'bg-green-50 text-green-600 shadow-green-500/10'
                 }`} style={{ width: '72px', height: '72px' }}>
                 <Truck size={36} />
               </div>
@@ -186,15 +213,25 @@ function AppContent() {
                 ? "Setup your authority, ace your audits, and build a safety-first logistics back office."
                 : "From your first line of code to your first million. Interactive lessons to build real apps."}
             </p>
+
+            {/* Passing info */}
+            <div className={`mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${darkMode ? 'bg-indigo-900/20 text-indigo-400' : 'bg-indigo-50 text-indigo-700'
+              }`}>
+              🎯 Score 80% or higher on each exam to unlock the next level
+            </div>
           </header>
 
-          <div className="space-y-8">
+          <div className="space-y-6">
             {currentData.map((phase, index) => (
               <div key={phase.id} className="animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
                 <PhaseSection
                   phase={phase}
                   completedTasks={completedTasks}
-                  onToggleTask={toggleTask}
+                  onToggle={toggleTask}
+                  index={index}
+                  locked={isSectionLocked(index)}
+                  examScore={trackScores[phase.id]}
+                  onExamPass={handleExamPass}
                 />
               </div>
             ))}

@@ -17,11 +17,13 @@ export const truckingCurriculumData = [
             { id: "t0-4", text: "Business Bank Account: Keep money separate from personal" },
             { id: "t0-5", text: "DUNS Number: Build business credit profile", link: "https://www.dnb.com/duns-number/get-a-duns.html" }
         ],
-        quiz: {
-            question: "What is an EIN used for?",
-            options: ["Driving License", "Tax Identification", "Ordering Pizza", "Radio Frequency"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What is an EIN used for?", options: ["Driving License", "Tax Identification", "Ordering Pizza", "Radio Frequency"], correctAnswer: 1 },
+            { question: "What type of entity protects your personal assets?", options: ["Sole Proprietorship", "LLC", "Nickname", "Social Club"], correctAnswer: 1 },
+            { question: "Why do you need a separate bank account?", options: ["To look cool", "To separate business and personal finances", "To hide money", "It's optional"], correctAnswer: 1 },
+            { question: "What is a DUNS number for?", options: ["Social media", "Building business credit", "Getting a CDL", "Fuel discounts"], correctAnswer: 1 },
+            { question: "Where do you register an LLC?", options: ["The DMV", "Secretary of State", "The post office", "A truck stop"], correctAnswer: 1 }
+        ]
     },
     {
         id: 1,
@@ -31,7 +33,7 @@ export const truckingCurriculumData = [
         sketchChallenge: "Sketch the path of a truck crossing 3 state lines. Label the MC#.",
         lingo: [
             { term: "Interstate", def: "Driving between two or more states. Needs federal permission." },
-            { term: "Intrastate", def: "Driving ONLY inside one state. simpler rules." },
+            { term: "Intrastate", def: "Driving ONLY inside one state. Simpler rules." },
             { term: "Process Agent", def: "A lawyer in every state who creates a 'mailbox' for you to get legal papers." }
         ],
         tasks: [
@@ -40,11 +42,13 @@ export const truckingCurriculumData = [
             { id: "t1-3", text: "BOC-3 Filing: Process Agents (Legal requirement)" },
             { id: "t1-4", text: "UCR (Unified Carrier Registration): Pay your state fees", link: "https://plan.ucr.gov/" }
         ],
-        quiz: {
-            question: "What is an MC Number for?",
-            options: ["Motorcycle Club", "Operating Authority (Interstate)", "McDonalds", "Music Cassette"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What is an MC Number for?", options: ["Motorcycle Club", "Operating Authority (Interstate)", "McDonalds", "Music Cassette"], correctAnswer: 1 },
+            { question: "What does USDOT stand for?", options: ["US Department of Travel", "US Department of Transportation", "United States Driving Office", "Universal System for Dispatching"], correctAnswer: 1 },
+            { question: "What is a BOC-3?", options: ["A type of truck", "Process Agent filing", "A fuel type", "A trailer model"], correctAnswer: 1 },
+            { question: "What is 'Interstate' driving?", options: ["Driving on one highway", "Driving between two or more states", "Driving in circles", "Driving at night only"], correctAnswer: 1 },
+            { question: "What is UCR?", options: ["Universal Credit Report", "Unified Carrier Registration", "US Commercial Registry", "United Company Review"], correctAnswer: 1 }
+        ]
     },
     {
         id: 2,
@@ -63,11 +67,13 @@ export const truckingCurriculumData = [
             { id: "t2-3", text: "MCS-150 Update: Keep your DOT info current" },
             { id: "t2-4", text: "Drug & Alcohol Clearinghouse: Register your company", link: "https://clearinghouse.fmcsa.dot.gov/" }
         ],
-        quiz: {
-            question: "What is the standard minimum Liability Insurance?",
-            options: ["$50,000", "$100,000", "$750,000", "$10,000,000"],
-            correctAnswer: 2
-        }
+        exam: [
+            { question: "What is the minimum Liability Insurance?", options: ["$50,000", "$100,000", "$750,000", "$10,000,000"], correctAnswer: 2 },
+            { question: "What is a 'Premium'?", options: ["A type of fuel", "Your monthly insurance payment", "A truck model", "A toll fee"], correctAnswer: 1 },
+            { question: "What is a 'Deductible'?", options: ["Tax deduction", "Amount you pay before insurance kicks in", "A type of brake", "Discounted fuel"], correctAnswer: 1 },
+            { question: "What does the MCS-150 form update?", options: ["Your fuel tax", "Your DOT registration info", "Your CDL", "Your insurance policy"], correctAnswer: 1 },
+            { question: "What is the Drug & Alcohol Clearinghouse?", options: ["A pharmacy", "A federal database for drug/alcohol violations", "A gas station", "A medical clinic"], correctAnswer: 1 }
+        ]
     },
     {
         id: 3,
@@ -86,15 +92,17 @@ export const truckingCurriculumData = [
             { id: "t3-3", text: "Heavy Highway Tax (2290): Pay the IRS for heavy trucks" },
             { id: "t3-4", text: "State Permits: NY HUT, KY KYU, NM Weight Distance (if needed)" }
         ],
-        quiz: {
-            question: "What is IFTA related to?",
-            options: ["Internet Access", "Fuel Taxes", "Food Safety", "Tire Pressure"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What is IFTA related to?", options: ["Internet Access", "Fuel Taxes", "Food Safety", "Tire Pressure"], correctAnswer: 1 },
+            { question: "What is Form 2290 for?", options: ["Income tax", "Heavy Highway Vehicle Use Tax", "Sales tax", "Property tax"], correctAnswer: 1 },
+            { question: "What does IRP stand for?", options: ["Interstate Road Pass", "International Registration Plan", "Instant Repair Permission", "Internal Revenue Processing"], correctAnswer: 1 },
+            { question: "How often must IFTA taxes be filed?", options: ["Monthly", "Quarterly", "Annually", "Weekly"], correctAnswer: 1 },
+            { question: "What does 'Apportioned' mean for plates?", options: ["One plate for all states", "Cost split across states you drive in", "Free plates", "Temporary plates"], correctAnswer: 1 }
+        ]
     },
     {
         id: 4,
-        title: "Level 4: The Hiring Gauntlet (Pre-Hire) 🕵️",
+        title: "Level 4: The Hiring Gauntlet 🕵️",
         description: "BEFORE they drive: The absolute must-haves for every driver applicant.",
         color: "bg-orange-600",
         sketchChallenge: "Draw a timeline of the last 10 years. Mark gaps in employment.",
@@ -111,16 +119,18 @@ export const truckingCurriculumData = [
             { id: "t4-5", text: "Safety Performance History: Send inquiries to ALL DOT employers from last 3 years" },
             { id: "t4-6", text: "Pre-Employment Drug Test: Must have NEGATIVE result in hand before driving" }
         ],
-        quiz: {
-            question: "How many years of work history must the application cover?",
-            options: ["1 year", "3 years", "5 years", "10 years"],
-            correctAnswer: 3
-        }
+        exam: [
+            { question: "How many years of work history must the application cover?", options: ["1 year", "3 years", "5 years", "10 years"], correctAnswer: 3 },
+            { question: "What is an MVR?", options: ["Motor Vehicle Record", "Manual Vehicle Registration", "Monthly Vehicle Report", "Minimum Voltage Required"], correctAnswer: 0 },
+            { question: "When must a drug test result be available?", options: ["After 30 days of driving", "Before the driver starts driving", "At the end of the year", "Only if there's an accident"], correctAnswer: 1 },
+            { question: "How many years back must you check Safety Performance History?", options: ["1 year", "3 years", "5 years", "10 years"], correctAnswer: 1 },
+            { question: "What is the Clearinghouse?", options: ["A bank", "A federal database for drug/alcohol violations", "A warehouse", "A dispatch service"], correctAnswer: 1 }
+        ]
     },
     {
         id: 5,
-        title: "Level 5: The DQ File (Onboarding) 📁",
-        description: "The 'Holy Grail' of audit protection. This specific file must exist for every driver.",
+        title: "Level 5: The DQ File 📁",
+        description: "The 'Holy Grail' of audit protection. This file must exist for every driver.",
         color: "bg-indigo-600",
         sketchChallenge: "Draw a file folder and label the 5 essential documents inside.",
         lingo: [
@@ -135,11 +145,13 @@ export const truckingCurriculumData = [
             { id: "t5-4", text: "Annual MVR Review: You must review and sign off on their record yearly" },
             { id: "t5-5", text: "Policy Receipt: Driver signs they received Drug/Alcohol policy" }
         ],
-        quiz: {
-            question: "How often must you review a driver's MVR?",
-            options: ["Every Week", "Every Month", "Once a Year (Annual)", "Never"],
-            correctAnswer: 2
-        }
+        exam: [
+            { question: "How often must you review a driver's MVR?", options: ["Every Week", "Every Month", "Once a Year", "Never"], correctAnswer: 2 },
+            { question: "What is a DQ File?", options: ["Dairy Queen File", "Driver Qualification File", "Digital Query File", "Dispatch Queue File"], correctAnswer: 1 },
+            { question: "Who must sign the Road Test Certificate?", options: ["The driver", "A qualified evaluator", "The DMV", "Anyone"], correctAnswer: 1 },
+            { question: "What is the Annual List of Violations?", options: ["A list of company rules", "Driver's self-reported tickets/violations", "A maintenance log", "Insurance claims"], correctAnswer: 1 },
+            { question: "What must a driver sign a receipt for?", options: ["Fuel cards", "Drug/Alcohol policy", "Company merchandise", "Vacation days"], correctAnswer: 1 }
+        ]
     },
     {
         id: 6,
@@ -158,11 +170,13 @@ export const truckingCurriculumData = [
             { id: "t6-3", text: "ELD Logs: Monitor Hours of Service daily. No cheating!" },
             { id: "t6-4", text: "Random Testing Pool: You MUST be enrolled in a consortium" }
         ],
-        quiz: {
-            question: "How long must you keep vehicle maintenance records?",
-            options: ["1 month", "6 months", "12 months (1 year)", "Forever"],
-            correctAnswer: 2
-        }
+        exam: [
+            { question: "How long must you keep maintenance records?", options: ["1 month", "6 months", "12 months", "Forever"], correctAnswer: 2 },
+            { question: "What is a DVIR?", options: ["A type of truck", "Daily Vehicle Inspection Report", "Digital Video Recording", "Driver Vacation Request"], correctAnswer: 1 },
+            { question: "How long must DVIRs be kept?", options: ["1 week", "3 months", "1 year", "5 years"], correctAnswer: 1 },
+            { question: "What is an ELD?", options: ["Electric Light Display", "Electronic Logging Device", "Emergency Location Detector", "Engine Load Distributor"], correctAnswer: 1 },
+            { question: "What is a Consortium for?", options: ["Fuel buying", "Random drug testing management", "Load booking", "Truck washing"], correctAnswer: 1 }
+        ]
     },
     {
         id: 7,
@@ -181,11 +195,13 @@ export const truckingCurriculumData = [
             { id: "t7-3", text: "Dispatcher Agreement: Clear terms if you hire help" },
             { id: "t7-4", text: "Rate Con Analysis: Read the fine print before signing!" }
         ],
-        quiz: {
-            question: "What document tells you how much a load pays?",
-            options: ["The Bill of Lading", "The Rate Confirmation", "The Driver's License", "The Fuel Receipt"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What document tells you how much a load pays?", options: ["The Bill of Lading", "The Rate Confirmation", "The Driver's License", "The Fuel Receipt"], correctAnswer: 1 },
+            { question: "What is Factoring?", options: ["Math homework", "Getting paid early by selling invoices", "A type of insurance", "Truck maintenance"], correctAnswer: 1 },
+            { question: "What is Deadheading?", options: ["A concert", "Driving with an empty trailer", "Sleeping in the cab", "A toll road"], correctAnswer: 1 },
+            { question: "What are DAT and Truckstop?", options: ["Gas stations", "Load boards for finding freight", "Insurance companies", "Truck dealerships"], correctAnswer: 1 },
+            { question: "Why is reading the Rate Con important?", options: ["It has jokes", "To understand pay, pickup/delivery details, and terms", "It's optional", "For entertainment"], correctAnswer: 1 }
+        ]
     },
     {
         id: 8,
@@ -204,11 +220,13 @@ export const truckingCurriculumData = [
             { id: "t8-3", text: "CAP (Corrective Action Plan): How to fix mistakes if you fail" },
             { id: "t8-4", text: "Mock Audit: Audit yourself before they do" }
         ],
-        quiz: {
-            question: "What happens if you fail a Safety Audit?",
-            options: ["You get a free lunch", "Your MC Authority is Revoked", "Nothing", "They give you a warning"],
-            correctAnswer: 1
-        }
+        exam: [
+            { question: "What happens if you fail a Safety Audit?", options: ["Free lunch", "Your MC Authority is Revoked", "Nothing", "A warning"], correctAnswer: 1 },
+            { question: "What is a CAP?", options: ["A hat", "Corrective Action Plan", "Commercial Authority Permit", "Cargo Assessment Protocol"], correctAnswer: 1 },
+            { question: "How long is a 'New Entrant' period?", options: ["6 months", "12 months", "18 months", "24 months"], correctAnswer: 2 },
+            { question: "What should you do when you get an audit letter?", options: ["Ignore it", "Respond immediately", "Call a lawyer first", "Throw it away"], correctAnswer: 1 },
+            { question: "What is a Mock Audit?", options: ["A fake test", "Auditing yourself before the real one", "An FMCSA visit", "A truck inspection"], correctAnswer: 1 }
+        ]
     },
     {
         id: 9,
@@ -227,10 +245,12 @@ export const truckingCurriculumData = [
             { id: "t9-3", text: "Fuel Cards: Saving 50 cents/gallon with fleet discounts" },
             { id: "t9-4", text: "IFTA Automation: Using GPS to calculate taxes instantly" }
         ],
-        quiz: {
-            question: "What is the biggest expense for a fleet?",
-            options: ["Coffee", "Tires", "Fuel", "Office Paper"],
-            correctAnswer: 2
-        }
+        exam: [
+            { question: "What is the biggest expense for a fleet?", options: ["Coffee", "Tires", "Fuel", "Office Paper"], correctAnswer: 2 },
+            { question: "What is Bobtailing?", options: ["Fishing", "Driving a truck without a trailer", "Backing up", "Sleeping in the cab"], correctAnswer: 1 },
+            { question: "What is a Lumper?", options: ["A speed bump", "Person hired to unload freight", "A type of fuel", "A dispatcher"], correctAnswer: 1 },
+            { question: "What is a Terminal in trucking?", options: ["An airport gate", "Company HQ and parking yard", "A computer screen", "End of a route"], correctAnswer: 1 },
+            { question: "Why use fuel cards?", options: ["For fun", "Fleet discounts of 30-50 cents per gallon", "They're required by law", "For toll payment only"], correctAnswer: 1 }
+        ]
     }
 ];
