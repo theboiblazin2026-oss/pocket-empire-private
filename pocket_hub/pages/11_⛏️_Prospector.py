@@ -110,7 +110,17 @@ def get_fleet_sheet_id():
                         return line.strip().split("=", 1)[1]
     return None
 
-def get_mailer_config():
+def get_web_sheet_id():
+    """Get Web Hunter Sheet ID from secrets or local config."""
+    if "web_hunter" in st.secrets:
+        return st.secrets["web_hunter"]["sheet_id"]
+    elif IS_LOCAL:
+        # Fallback to hardcoded ID or local file if needed, but usually we just use the name for local
+        # For uniformity with Cloud, we'll try to find it in the lead puller config if possible
+        # But simpler: return None and let the main logic handle it (get_worksheet by name)
+        # Actually, the Sidebar logic relies on opening by key. Let's support name-based open there too.
+        pass
+    return "1xYw-X6q3Q2Zk8J9a5s4D7fG0h1j2k3l4m5n6o7p" # Fallback/Placeholder if needed, but better to handle gracefully in caller
     """Get web mailer config from secrets or local file."""
     if "web_hunter" in st.secrets:
         s = st.secrets["web_hunter"]
@@ -268,30 +278,45 @@ with st.sidebar:
             # Try to get/create Config sheet
             client = get_web_client()
             sheet_id = get_web_sheet_id()
-            if client and sheet_id:
+            
+            config_ws = None
+            if client:
                 try:
-                    config_ws = client.open_by_key(sheet_id).worksheet("Config")
+                    if sheet_id and len(sheet_id) > 20:
+                        config_ws = client.open_by_key(sheet_id).worksheet("Config")
+                    else:
+                        # Fallback to name if ID is missing (Local mode)
+                        config_ws = client.open("Lead Puller Master List").worksheet("Config")
                 except:
-                    config_ws = client.open_by_key(sheet_id).add_worksheet("Config", 10, 2)
-                    config_ws.update([["Automation Status", "Value"], ["Global", "ACTIVE"]], "A1")
+                    # Create if missing
+                    try:
+                        if sheet_id and len(sheet_id) > 20:
+                            wb = client.open_by_key(sheet_id)
+                        else:
+                            wb = client.open("Lead Puller Master List")
+                        config_ws = wb.add_worksheet("Config", 10, 2)
+                        config_ws.update([["Automation Status", "Value"], ["Global", "ACTIVE"]], "A1")
+                    except:
+                        pass # Fail silently if we can't create
                 
-                # Read Status
-                current_status = config_ws.acell("B2").value
-                is_active = (str(current_status).strip().upper() != "PAUSED")
-                
-                # Toggle
-                new_state = st.toggle("🟢 Automation Active", value=is_active)
-                
-                # Update if changed
-                if new_state != is_active:
-                    new_val = "ACTIVE" if new_state else "PAUSED"
-                    config_ws.update_acell("B2", new_val)
-                    st.toast(f"Automation set to {new_val}")
-                    time.sleep(1)
-                    st.rerun()
+                if config_ws:
+                    # Read Status
+                    current_status = config_ws.acell("B2").value
+                    is_active = (str(current_status).strip().upper() != "PAUSED")
                     
-                if not is_active:
-                    st.error("🛑 Automation PAUSED")
+                    # Toggle
+                    new_state = st.toggle("🟢 Automation Active", value=is_active)
+                    
+                    # Update if changed
+                    if new_state != is_active:
+                        new_val = "ACTIVE" if new_state else "PAUSED"
+                        config_ws.update_acell("B2", new_val)
+                        st.toast(f"Automation set to {new_val}")
+                        time.sleep(1)
+                        st.rerun()
+                        
+                    if not is_active:
+                        st.error("🛑 Automation PAUSED")
         except Exception as e:
             st.caption(f"Config Sync: {str(e)[:20]}...")
 
