@@ -235,7 +235,7 @@ with c4:
 st.divider()
 if st.button("🎓 Launch Pocket Academy (Curriculum)", use_container_width=True):
     import webbrowser
-    webbrowser.open_new_tab("http://localhost:8510")
+    webbrowser.open_new_tab("https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app")
 
 # --- Footer ---
 st.caption(f"System Online | {datetime.datetime.now().strftime('%A, %B %d')} | Pocket Empire Cloud v1.0")

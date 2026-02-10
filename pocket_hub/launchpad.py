@@ -44,7 +44,7 @@ col_edu1, col_edu2 = st.columns(2)
 with col_edu1:
     st.info("**🎓 Pocket Academy**")
     st.caption("Tech & Fleet Curriculum")
-    st.link_button("🚀 Launch (8510)", "http://localhost:8510", use_container_width=True)
+    st.link_button("🚀 Launch (Cloud)", "https://pocket-empire-private-g2yyb9y1z-theboiblazin2026-oss-projects.vercel.app", use_container_width=True)
 
 st.divider()
 st.header("🛡️ Finance & Compliance")
