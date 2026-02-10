@@ -464,7 +464,7 @@ with tab_fleet:
             current_html = load_fleet_html_template()
             
             # Try to extract existing body text if it's a simple template
-            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe help new carriers get set up with compliance and load booking.\n\nBest,\nTech Trap Solutions"
+            default_body = "Hi {contact_name},\n\nCongrats on your new authority!\n\nWe provide comprehensive compliance services to keep you on the road and making money.\n\nLet us handle the paperwork so you can focus on driving.\n\nBest,\nJayboi Services LLC\n\"Your Compliance Company\""
             
             with st.form("fleet_email_form"):
                 st.write("Edit your email content below. It will be automatically formatted nicely.")
