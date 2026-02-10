@@ -16,11 +16,11 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className={`fixed top-4 right-14 z-[60] p-2.5 glass rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${darkMode ? 'text-yellow-400 hover:text-yellow-300' : 'text-indigo-600 hover:text-indigo-500'
+      className={`p-2 rounded-full transition-all duration-300 hover:scale-110 shrink-0 ${darkMode ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10' : 'text-indigo-600 hover:text-indigo-500 hover:bg-indigo-50'
         }`}
       title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
     >
-      {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+      {darkMode ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }
@@ -181,9 +181,10 @@ function AppContent() {
 
   return (
     <AuthGate>
-      <ThemeToggle />
-      <div className={`min-h-screen pb-20 pt-24 font-sans transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-50 to-indigo-50/20 text-gray-900'}`}>
-        <ProgressBar progress={progressPercentage} />
+      <div className={`min-h-screen pb-20 pt-20 font-sans transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-50 to-indigo-50/20 text-gray-900'}`}>
+        <ProgressBar progress={progressPercentage}>
+          <ThemeToggle />
+        </ProgressBar>
 
         {/* Back Button */}
         <button
