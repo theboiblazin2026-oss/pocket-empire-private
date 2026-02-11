@@ -14,7 +14,8 @@ except ImportError:
 
 import requests
 import json
-import google.generativeai as genai
+from google import genai
+from pocket_core.ai_helper import ask_gemini
 from openai import OpenAI
 import pypdf
 from sentence_transformers import SentenceTransformer
@@ -183,7 +184,7 @@ with st.sidebar:
             st.success("✅ System API Key Active")
     
     if api_key and provider == "Google Gemini (Free)":
-        genai.configure(api_key=api_key)
+        _gemini_client = genai.Client(api_key=api_key)
     
     st.divider()
     mode = st.radio("Practice Area", [
@@ -229,8 +230,6 @@ if "Contract" in mode:
                         contract_text = uploaded_file.getvalue().decode("utf-8")
                     
                     if provider == "Google Gemini (Free)":
-                        model = genai.GenerativeModel('gemini-2.0-flash')
-                        
                         prompt = f"""
                         You are a ruthlessly efficient contract attorney. Review this {contract_type} contract.
                         
@@ -252,8 +251,11 @@ if "Contract" in mode:
                         {contract_text[:15000]}
                         """
                         
-                        response = model.generate_content(prompt)
-                        st.markdown(response.text)
+                        text, error = ask_gemini(prompt, api_key=api_key)
+                        if error:
+                            st.error(f"AI Error: {error}")
+                        else:
+                            st.markdown(text)
                         
                     else:
                         st.warning("OpenAI implementation pending. Please use Gemini.")
@@ -345,21 +347,27 @@ else:
 
             else: # Google Gemini
                 full_response = ""
-                genai.configure(api_key=api_key)
                 model_id = 'gemini-2.0-flash'
                 
                 try:
-                    model = genai.GenerativeModel(model_id, system_instruction=system_prompt)
-                    history = []
-                    for m in st.session_state.messages[:-1]: 
+                    _client = genai.Client(api_key=api_key)
+                    # Build conversation history for context
+                    history_parts = []
+                    for m in st.session_state.messages[:-1]:
                         role = "user" if m["role"] == "user" else "model"
-                        history.append({"role": role, "parts": [m["content"]]})
+                        history_parts.append({"role": role, "parts": [{"text": m["content"]}]})
                     
-                    chat = model.start_chat(history=history)
-                    response = chat.send_message(prompt, stream=True)
+                    # Combine system prompt + history + new prompt
+                    full_prompt = system_prompt + "\n\nUser question: " + prompt
+                    
+                    response = _client.models.generate_content_stream(
+                        model=model_id,
+                        contents=full_prompt,
+                    )
                     for chunk in response:
-                        full_response += chunk.text
-                        message_placeholder.markdown(full_response + "▌")
+                        if chunk.text:
+                            full_response += chunk.text
+                            message_placeholder.markdown(full_response + "▌")
                     message_placeholder.markdown(full_response)
                     st.session_state.messages.append({"role": "assistant", "content": full_response})
                     

@@ -1,64 +1,48 @@
-import google.generativeai as genai
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from pocket_core.ai_helper import ask_gemini, parse_json_response
+
 import imaplib
 import email
 from email.header import decode_header
 import streamlit as st
-import os
-
-def get_gemini_key():
-    """Retrieve Gemini API Key from secrets or env"""
-    if "gemini" in st.secrets and "api_key" in st.secrets["gemini"]:
-        return st.secrets["gemini"]["api_key"]
-    return os.environ.get("GEMINI_API_KEY")
 
 def analyze_reply(email_body):
     """
     Analyze the sentiment and intent of a lead's reply.
     Returns a dict with sentiment, intent, and suggested_status.
     """
-    api_key = get_gemini_key()
-    if not api_key:
-        return {"error": "No API Key"}
-
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        prompt = f"""
-        You are a Sales Manager. Analyze this email reply from a lead.
-        
-        Email Body:
-        "{email_body[:2000]}"
-        
-        Determine:
-        1. Sentiment (Positive, Negative, Neutral)
-        2. Intent (Interested, Not Interested, Info Needed, Unsubscribe, Out of Office)
-        3. Suggested Pipeline Status (Negotiating, Lost, Contacted, No Response)
-        4. Brief Summary (Max 15 words)
-        
-        Return ONLY valid JSON:
-        {{
-            "sentiment": "...",
-            "intent": "...",
-            "suggested_status": "...",
-            "summary": "..."
-        }}
-        """
-        
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        
-        # Clean markdown code blocks if present
-        if text.startswith("```json"):
-            text = text[7:-3]
-        elif text.startswith("```"):
-            text = text[3:-3]
-            
-        import json
-        return json.loads(text)
-        
-    except Exception as e:
-        return {"error": str(e)}
+    prompt = f"""
+    You are a Sales Manager. Analyze this email reply from a lead.
+    
+    Email Body:
+    "{email_body[:2000]}"
+    
+    Determine:
+    1. Sentiment (Positive, Negative, Neutral)
+    2. Intent (Interested, Not Interested, Info Needed, Unsubscribe, Out of Office)
+    3. Suggested Pipeline Status (Negotiating, Lost, Contacted, No Response)
+    4. Brief Summary (Max 15 words)
+    
+    Return ONLY valid JSON:
+    {{
+        "sentiment": "...",
+        "intent": "...",
+        "suggested_status": "...",
+        "summary": "..."
+    }}
+    """
+    
+    text, error = ask_gemini(prompt)
+    if error:
+        return {"error": error}
+    
+    parsed, parse_error = parse_json_response(text)
+    if parse_error:
+        return {"error": parse_error}
+    
+    return parsed
 
 def fetch_latest_email(lead_email, imap_server, imap_user, imap_pass):
     """

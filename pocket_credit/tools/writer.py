@@ -468,9 +468,9 @@ class DisputeWriter:
             return "ERROR: No Google API Key found. Go to Settings."
 
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            import sys
+            sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+            from pocket_core.ai_helper import ask_gemini
             
             # 2. Construct Prompt
             creditor = item_data.get('creditor', 'Unknown')
@@ -492,8 +492,11 @@ class DisputeWriter:
             - Format: Plain text, standard business letter format.
             """
             
-            response = model.generate_content(prompt)
-            letter_text = response.text
+            text, error = ask_gemini(prompt, api_key=api_key)
+            if error:
+                return f"Error using Gemini: {error}"
+            
+            letter_text = text
             
             # 3. Add content to Docx
             # Clean up asterisks often used by AI

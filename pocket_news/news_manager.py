@@ -153,37 +153,22 @@ def generate_daily_briefing():
     
     # Gemini Summarization
     try:
-        # 1. Try Session State
-        api_key = st.session_state.get("GOOGLE_API_KEY")
+        import sys
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+        from pocket_core.ai_helper import ask_gemini
 
-        # 2. Try Env / Secrets
-        if not api_key:
-            api_key = os.environ.get("GOOGLE_API_KEY")
+        news_text = "Summarize these headlines into a 5-bullet executive briefing for a trucking business owner (focus on rates, fuel, regulations, and market trends):\n\n"
+        for a in articles[:20]:
+            news_text += f"- {a.get('title', 'No Title')} ({a.get('source', '')})\n"
         
-        if not api_key:
-            try:
-                if "GOOGLE_API_KEY" in st.secrets:
-                    api_key = st.secrets["GOOGLE_API_KEY"]
-            except:
-                pass
-
-        if api_key:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            # Prepare context
-            news_text = "Summarize these headlines into a 5-bullet executive briefing for a trucking business owner (focus on rates, fuel, regulations, and market trends):\n\n"
-            for a in articles[:20]:
-                news_text += f"- {a.get('title', 'No Title')} ({a.get('source', '')})\n"
-            
-            response = model.generate_content(news_text)
-            briefing += response.text
+        text, error = ask_gemini(news_text)
+        if text:
+            briefing += text
             briefing += "\n\n*(Analysis by Google Gemini)*"
         else:
-             # Fallback
-             briefing += "**(AI Summarization Unavailable)**\n\n*Go to Settings and add your Google API Key to enable AI summaries.*\n\n"
-             for source, arts in by_source.items():
+            # Fallback — no key or AI error
+            briefing += f"**(AI Summarization Unavailable)** {error or ''}\n\n"
+            for source, arts in by_source.items():
                 briefing += f"**{source}:**\n"
                 for a in arts[:3]:
                     briefing += f"• {a['title']}\n"

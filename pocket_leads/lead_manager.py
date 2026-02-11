@@ -414,53 +414,36 @@ def analyze_risk_with_gemini(carrier_data):
     """
     Use Google Gemini to provide a deep-dive risk analysis of the carrier.
     """
-    import os
-    try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            # Try secrets
-            try:
-               import streamlit as st
-               if "GOOGLE_API_KEY" in st.secrets:
-                   api_key = st.secrets["GOOGLE_API_KEY"]
-            except:
-               pass
-        
-        if not api_key:
-            return "⚠️ **AI Analysis Unavailable**: Please add your Google API Key in 'Settings'."
+    import sys
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from pocket_core.ai_helper import ask_gemini
 
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        # Construct Prompt
-        prompt = f"""
-        You are a Freight Broker Risk Officer. Analyze this trucking company for fraud and safety risk.
-        
-        **Carrier Data:**
-        - Legal Name: {carrier_data.get('legal_name', 'Unknown')}
-        - DBA: {carrier_data.get('dba_name', 'N/A')}
-        - MC Number: {carrier_data.get('mc_number', 'N/A')}
-        - DOT Number: {carrier_data.get('dot_number', 'N/A')}
-        - Safety Rating: {carrier_data.get('safety_rating', 'None')}
-        - Operating Status: {carrier_data.get('status', 'Unknown')}
-        - Fleet Size: {carrier_data.get('power_units', 0)} Trucks, {carrier_data.get('drivers', 0)} Drivers
-        - Authority Age: {calculate_authority_age_months(carrier_data.get('mcs150_date'))} months active (Approx)
-        
-        **Task:**
-        1. Give a "Verdict": [APPROVED], [CAUTION], or [DO NOT LOAD].
-        2. Explain WHY in 3 bullet points.
-        3. Identify specific "Red Flags" (e.g., specific age < 6 months, no inspections mentioned, conditional rating).
-        4. Suggest 2 specific questions to ask the dispatcher to verify legitimacy.
-        
-        Keep it concise (under 200 words). Professional tone.
-        """
-        
-        response = model.generate_content(prompt)
-        return response.text
-        
-    except Exception as e:
-        return f"⚠️ **AI Error:** {str(e)}"
+    prompt = f"""
+    You are a Freight Broker Risk Officer. Analyze this trucking company for fraud and safety risk.
+    
+    **Carrier Data:**
+    - Legal Name: {carrier_data.get('legal_name', 'Unknown')}
+    - DBA: {carrier_data.get('dba_name', 'N/A')}
+    - MC Number: {carrier_data.get('mc_number', 'N/A')}
+    - DOT Number: {carrier_data.get('dot_number', 'N/A')}
+    - Safety Rating: {carrier_data.get('safety_rating', 'None')}
+    - Operating Status: {carrier_data.get('status', 'Unknown')}
+    - Fleet Size: {carrier_data.get('power_units', 0)} Trucks, {carrier_data.get('drivers', 0)} Drivers
+    - Authority Age: {calculate_authority_age_months(carrier_data.get('mcs150_date'))} months active (Approx)
+    
+    **Task:**
+    1. Give a "Verdict": [APPROVED], [CAUTION], or [DO NOT LOAD].
+    2. Explain WHY in 3 bullet points.
+    3. Identify specific "Red Flags" (e.g., specific age < 6 months, no inspections mentioned, conditional rating).
+    4. Suggest 2 specific questions to ask the dispatcher to verify legitimacy.
+    
+    Keep it concise (under 200 words). Professional tone.
+    """
+    
+    text, error = ask_gemini(prompt)
+    if error:
+        return f"⚠️ **AI Analysis Unavailable**: {error}"
+    return text
 
 if __name__ == "__main__":
     # Test

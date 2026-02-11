@@ -399,20 +399,11 @@ def main():
                 if st.button("🧠 Analyze with AI", type="primary"):
                     with st.spinner("AI is reading your credit report..."):
                         try:
-                            import google.generativeai as genai
                             import base64
+                            sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+                            from pocket_core.ai_helper import ask_gemini_with_image, parse_json_response
                             
-                            api_key = st.secrets.get("GEMINI_API_KEY", "")
-                            if not api_key:
-                                st.error("Please set your Gemini API key in Settings first.")
-                            else:
-                                genai.configure(api_key=api_key)
-                                model = genai.GenerativeModel("gemini-2.5-flash")
-                                
-                                img_bytes = camera_img.read()
-                                img_b64 = base64.b64encode(img_bytes).decode()
-                                
-                                prompt = """Analyze this credit report image. Extract ALL negative accounts.
+                            prompt = """Analyze this credit report image. Extract ALL negative accounts.
 For each account, provide:
 - Creditor Name
 - Account Number (last 4 if visible)
@@ -424,16 +415,14 @@ Return as a JSON array like:
 [{"creditor": "...", "account_number": "...", "balance": "...", "status": "...", "date_opened": "..."}]
 
 If no negative accounts found, return empty array: []"""
-                                
-                                response = model.generate_content([
-                                    {"mime_type": "image/jpeg", "data": img_b64}, # Default to jpeg for gemini compatibility
-                                    prompt
-                                ])
-                                
-                                import json
+                            
+                            img_bytes = camera_img.read()
+                            
+                            text, error = ask_gemini_with_image(img_bytes, prompt)
+                            if error:
+                                st.error(f"AI Error: {error}")
+                            else:
                                 import re
-                                
-                                text = response.text
                                 json_match = re.search(r'\[.*\]', text, re.DOTALL)
                                 if json_match:
                                     items = json.loads(json_match.group())
@@ -446,8 +435,6 @@ If no negative accounts found, return empty array: []"""
                                         # Save to bureaus data
                                         if is_personal:
                                             personal['bureaus'][bureau_key].extend(items)
-                                            # Also add to negative items main list if desired, or let user do it
-                                            # For now, just bureau bucket
                                             save_personal(personal)
                                         else:
                                             st.session_state['bureaus'][bureau_key].extend(items)
@@ -658,38 +645,35 @@ If no negative accounts found, return empty array: []"""
                 if st.button("✨ Write Custom Letter", disabled=len(selected_items)==0):
                     with st.spinner("Consulting AI Specialist..."):
                         try:
-                            import google.generativeai as genai
-                            api_key = st.secrets.get("GEMINI_API_KEY", "")
+                            sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+                            from pocket_core.ai_helper import ask_gemini
                             
-                            if not api_key:
-                                st.error("Please set GEMINI_API_KEY in Settings!")
+                            user_name = personal['name'] if is_personal else current_client['name']
+                            user_addr = personal['address'] if is_personal else current_client['address']
+                            
+                            prompt = f"""
+                            Write a formal credit dispute letter for {user_name}.
+                            Address: {user_addr}
+                            Date: {datetime.now().strftime('%B %d, %Y')}
+                            
+                            Strategy: {strategy}
+                            
+                            Items to Dispute:
+                            {json.dumps(selected_items, indent=2)}
+                            
+                            Instructions:
+                            1. Use a professional, firm legal tone.
+                            2. Cite relevant FCRA/FDCPA laws based on the strategy.
+                            3. Clearly list each account and the reason for dispute.
+                            4. Demand deletion or correction.
+                            5. Do NOT include placeholders like [Your Name], use the provided real data.
+                            """
+                            
+                            text, error = ask_gemini(prompt)
+                            if error:
+                                st.error(f"AI Error: {error}")
                             else:
-                                genai.configure(api_key=api_key)
-                                model = genai.GenerativeModel("gemini-2.5-flash")
-                                
-                                user_name = personal['name'] if is_personal else current_client['name']
-                                user_addr = personal['address'] if is_personal else current_client['address']
-                                
-                                prompt = f"""
-                                Write a formal credit dispute letter for {user_name}.
-                                Address: {user_addr}
-                                Date: {datetime.now().strftime('%B %d, %Y')}
-                                
-                                Strategy: {strategy}
-                                
-                                Items to Dispute:
-                                {json.dumps(selected_items, indent=2)}
-                                
-                                Instructions:
-                                1. Use a professional, firm legal tone.
-                                2. Cite relevant FCRA/FDCPA laws based on the strategy.
-                                3. Clearly list each account and the reason for dispute.
-                                4. Demand deletion or correction.
-                                5. Do NOT include placeholders like [Your Name], use the provided real data.
-                                """
-                                
-                                response = model.generate_content(prompt)
-                                st.session_state['ai_letter_content'] = response.text
+                                st.session_state['ai_letter_content'] = text
                                 st.success("Letter Drafted!")
                                 
                         except Exception as e:

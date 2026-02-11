@@ -46,19 +46,11 @@ def save_expenses(data):
         json.dump(data, f, indent=4)
 
 def scan_receipt_with_ai(file_bytes, api_key):
-    """Scan receipt using Gemini Flash 2.5."""
+    """Scan receipt using Gemini via centralized ai_helper."""
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        
-        # Create the image part
-        image_part = {
-            "mime_type": "image/jpeg",
-            "data": file_bytes
-        }
-        
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+        from pocket_core.ai_helper import ask_gemini_with_image, parse_json_response
+
         prompt = """
         Analyze this receipt. Extract these fields as JSON:
         - date (YYYY-MM-DD format. If ambiguous, assume current year)
@@ -71,12 +63,16 @@ def scan_receipt_with_ai(file_bytes, api_key):
         Return ONLY valid JSON. do not include markdown formatting.
         """
         
-        response = model.generate_content([prompt, image_part])
-        content = response.text
+        text, error = ask_gemini_with_image(file_bytes, prompt, api_key=api_key)
+        if error:
+            st.error(f"AI Error: {error}")
+            return None
         
-        # Clean code blocks
-        content = content.replace("```json", "").replace("```", "").strip()
-        return json.loads(content)
+        parsed, parse_error = parse_json_response(text)
+        if parse_error:
+            st.error(f"AI Parse Error: {parse_error}")
+            return None
+        return parsed
         
     except Exception as e:
         st.error(f"AI Error: {e}")
