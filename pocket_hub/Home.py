@@ -398,11 +398,18 @@ with right:
         ai_status = "offline"
         ai_label = "No Key"
     
-    # Database Status
+    # Database Status — live check
     try:
-        supabase_url = st.secrets.get("SUPABASE_URL", None)
-        db_status = "online" if supabase_url else "warning"
-        db_label = "Connected" if supabase_url else "Local Only"
+        from pocket_core.db import get_db
+        _db = get_db()
+        if _db:
+            _rows = _db.table("app_data").select("key").execute()
+            _count = len(_rows.data) if _rows and _rows.data else 0
+            db_status = "online"
+            db_label = f"Cloud ({_count} modules)"
+        else:
+            db_status = "warning"
+            db_label = "Local Only"
     except:
         db_status = "warning"
         db_label = "Local Only"
