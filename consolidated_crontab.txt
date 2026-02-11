@@ -1,6 +1,0 @@
-0 * * * * "/Volumes/CeeJay SSD/Truck Scraper Master File/run.sh" >> "/Volumes/CeeJay SSD/Truck Scraper Master File/scraper.log" 2>&1
-5 * * * * "/Volumes/CeeJay SSD/Projects/lead puller/run_daily_job.sh" >> "/Volumes/CeeJay SSD/Projects/lead puller/automation.log" 2>&1
-10 * * * * "/Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_jarvis/run_daily.sh" >> "/Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_jarvis/cron.log" 2>&1
-10 8 * * * /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/.venv/bin/python3 /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_compliance/run_compliance.py >> /tmp/compliance_cron.log 2>&1
-0 9 * * * /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/.venv/bin/python3 /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_reminders/run_daily_check.py >> /tmp/reminder_cron.log 2>&1
-0 6,12,17,21 * * * /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/.venv/bin/python3 /Users/newguy/.gemini/antigravity/playground/shimmering-eagle/pocket_news/run_news_check.py >> /tmp/news_cron.log 2>&1

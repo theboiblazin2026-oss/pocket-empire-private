@@ -1,20 +1,32 @@
 import streamlit as st
-
-# --- SECURITY CHECK ---
 import sys
 import os
+
+# --- SECURITY CHECK ---
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
     import auth_utils
     auth_utils.require_auth()
 except ImportError:
-    import streamlit as st
     st.error("Authentication module missing. Please contact administrator.")
     st.stop()
 # ----------------------
 
-import os
+import requests
+import json
+import google.generativeai as genai
 from openai import OpenAI
+import pypdf
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+import pickle
+
+# --- RAG CONSTANTS ---
+# pocket_hub/pages/ -> pocket_hub/ -> root -> pocket_lawyer/data/legal_docs
+RAG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "pocket_lawyer", "data", "legal_docs")
+INDEX_FILE = os.path.join(RAG_DIR, "vector_index.faiss")
+TEXT_STORE = os.path.join(RAG_DIR, "text_store.pkl")
 
 # --- Page Config ---
 st.set_page_config(
@@ -23,10 +35,76 @@ st.set_page_config(
     layout="wide"
 )
 
-import requests
-import json
+# --- RAG ENGINE ---
+@st.cache_resource
+def load_rag_engine():
+    """Load or Build the Vector Database"""
+    embedder = SentenceTransformer('all-MiniLM-L6-v2')
+    
+    if os.path.exists(INDEX_FILE) and os.path.exists(TEXT_STORE):
+        index = faiss.read_index(INDEX_FILE)
+        with open(TEXT_STORE, "rb") as f:
+            chunks = pickle.load(f)
+        return index, chunks, embedder
+    
+    # Build Index
+    st.toast("Building Legal Knowledge Base... this runs once.")
+    chunks = []
+    
+    # Read PDFs
+    if not os.path.exists(RAG_DIR):
+        try:
+            os.makedirs(RAG_DIR)
+        except:
+             return None, None, embedder
+        
+    for f in os.listdir(RAG_DIR):
+        if f.endswith(".pdf"):
+            try:
+                reader = pypdf.PdfReader(os.path.join(RAG_DIR, f))
+                for i, page in enumerate(reader.pages):
+                    text = page.extract_text()
+                    if text:
+                        # Simple chunking by page for now
+                        chunks.append({"source": f, "page": i+1, "text": text})
+            except:
+                pass
+    
+    if not chunks:
+        return None, None, embedder
 
-import google.generativeai as genai
+    # Embed
+    texts = [c["text"] for c in chunks]
+    if not texts:
+         return None, None, embedder
+         
+    embeddings = embedder.encode(texts)
+    
+    # Init FAISS
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(np.array(embeddings).astype('float32'))
+    
+    # Save
+    faiss.write_index(index, INDEX_FILE)
+    with open(TEXT_STORE, "wb") as f:
+        pickle.dump(chunks, f)
+        
+    return index, chunks, embedder
+
+def search_legal_docs(query, index, chunks, embedder, k=3):
+    """Retrieve top k relevant chunks"""
+    if not index or not chunks:
+        return []
+        
+    q_embed = embedder.encode([query])
+    D, I = index.search(np.array(q_embed).astype('float32'), k)
+    
+    results = []
+    for idx in I[0]:
+        if idx < len(chunks):
+            results.append(chunks[idx])
+    return results
 
 # --- Sidebar: Settings & API Key ---
 with st.sidebar:
@@ -36,24 +114,19 @@ with st.sidebar:
     provider = st.radio("Model Provider", ["OpenAI (Cloud)", "Google Gemini (Free)"], index=1)
     
     # API Key Logic
-    # API Key Logic
-    # Initialize with known working key (Fallback) so it works immediately
-    api_key = "AIzaSyDniw4SdcQE6dZSWt7wGapY4dxu6j9SloY"
+    api_key = None
     
     # Robustly find secrets.toml
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # pages -> pocket_hub -> root (shimmering-eagle)
         root_dir = os.path.abspath(os.path.join(current_dir, "../../.."))
         secrets_path = os.path.join(root_dir, ".streamlit", "secrets.toml")
         
-        # Fallback to CWD if above fails or file missing
         if not os.path.exists(secrets_path):
              secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
     except:
         secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
     
-    # helper to load secrets from file
     def load_secrets_file():
         if os.path.exists(secrets_path):
             try:
@@ -64,24 +137,20 @@ with st.sidebar:
                 return {}
         return {}
 
-    # 1. Try Session State (Immediate)
     if "GOOGLE_API_KEY" in st.session_state:
         api_key = st.session_state["GOOGLE_API_KEY"]
-
-    # 2. Try Secrets (Memory)
     elif "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
+    elif "gemini" in st.secrets and "api_key" in st.secrets["gemini"]:
+        api_key = st.secrets["gemini"]["api_key"]
     
-    # 2. Try Reading File Directly (Fallback)
     if not api_key:
         file_secrets = load_secrets_file()
         api_key = file_secrets.get("GOOGLE_API_KEY")
 
-    # 3. Environment Variable
     if not api_key:
         api_key = os.getenv("GOOGLE_API_KEY")
 
-    # OpenAI Logic
     if provider == "OpenAI (Cloud)":
         user_key = st.text_input("OpenAI API Key", type="password", help="Required for GPT-4o")
         if user_key:
@@ -90,7 +159,6 @@ with st.sidebar:
              api_key = os.getenv("OPENAI_API_KEY")
              
     else: # Google Gemini
-        # Management UI
         with st.expander("🔐 API Key Settings", expanded=not api_key):
             current_val = api_key if api_key else ""
             new_key = st.text_input("Google API Key", value=current_val, type="password", help="Your auto-saved system key")
@@ -100,7 +168,6 @@ with st.sidebar:
                     import toml
                     os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
                     
-                    # Load existing to preserve other keys
                     file_data = load_secrets_file()
                     file_data["GOOGLE_API_KEY"] = new_key
                     
@@ -115,7 +182,6 @@ with st.sidebar:
         if api_key:
             st.success("✅ System API Key Active")
     
-    # Configure Gemini if key is available
     if api_key and provider == "Google Gemini (Free)":
         genai.configure(api_key=api_key)
     
@@ -130,14 +196,11 @@ with st.sidebar:
 
 # --- Main Interface ---
 st.title(f"⚖️ {mode.split('(')[0].strip()} Assistant" if "Contract" not in mode else "⚖️ Pocket Contract Lawyer")
-st.caption("✅ Version 2.1 - Models Updated")
+st.caption("✅ Version 3.0 - RAG Enabled")
 
 if "Contract" in mode:
     st.caption("Upload any contract. I'll find the risks, money traps, and extract key contacts.")
     
-    # --- Contract Reader Mode ---
-    
-    # Context Selector
     contract_type = st.selectbox(
         "📂 What type of contract is this?",
         ["🚛 Trucking / Logistics (Broker-Carrier, Lease)", 
@@ -153,25 +216,20 @@ if "Contract" in mode:
         if st.button("🔍 Analyze Contract"):
             with st.spinner("Reading legitimate fine print..."):
                 try:
-                    # Text Extraction
                     contract_text = ""
                     if uploaded_file.type == "application/pdf":
                         try:
-                            import pypdf
                             pdf_reader = pypdf.PdfReader(uploaded_file)
                             for page in pdf_reader.pages:
                                 contract_text += page.extract_text()
                         except ImportError:
-                            st.error("PYPDF not installed. Please install it or upload TXT.")
+                            st.error("PYPDF not installed.")
                             st.stop()
                     else:
-                        # Assuming TXT
                         contract_text = uploaded_file.getvalue().decode("utf-8")
                     
-                    # AI Analysis
                     if provider == "Google Gemini (Free)":
-                        # Updated to 2.5 Flash
-                        model = genai.GenerativeModel('gemini-2.5-flash')
+                        model = genai.GenerativeModel('gemini-2.0-flash')
                         
                         prompt = f"""
                         You are a ruthlessly efficient contract attorney. Review this {contract_type} contract.
@@ -204,34 +262,28 @@ if "Contract" in mode:
                     st.error(f"Error analyzing contract: {e}")
 
 else:
-    # --- Chat Mode (Existing) ---
     st.caption("Ask questions. Get answers backed by actual federal code.")
 
-    # Initialize Chat History
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Display History
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat Input
     if prompt := st.chat_input("Ask a legal question..."):
         if not api_key:
             st.error("❌ API Key Required. Configure in sidebar.")
             st.stop()
             
-        # User Message
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
             
-        # AI Response
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             
-            # System Prompt Selection
+            # Base Prompts
             if "Trucking" in mode:
                 system_prompt = """You are an expert Transportation Attorney specializing in FMCSA and DOT regulations.
                 Your goal is to provide accurate, legally-backed answers to trucking questions.
@@ -251,7 +303,24 @@ else:
                 2. Be aggressive but legal.
                 """
             
-            # Model Logic
+            # --- RAG INJECTION ---
+            try:
+                index, chunks, embedder = load_rag_engine()
+                if index:
+                    docs = search_legal_docs(prompt, index, chunks, embedder)
+                    if docs:
+                        context_str = "\n\n".join([f"Source: {d['source']} (Page {d['page']})\nContent: {d['text'][:500]}..." for d in docs])
+                        system_prompt += f"""
+                        
+                        REFERENCED LEGAL DOCUMENTS (Use these to ground your answer):
+                        {context_str}
+                        
+                        INSTRUCTION: If the documents above serve as evidence, cite them as "According to [Source]...".
+                        """
+            except Exception as e:
+                pass
+            # ---------------------
+            
             full_response = ""
             
             if provider == "OpenAI (Cloud)":
@@ -275,15 +344,12 @@ else:
                     st.error(f"OpenAI Error: {e}")
 
             else: # Google Gemini
-                full_response = "" # Explicit Init
+                full_response = ""
                 genai.configure(api_key=api_key)
-                
-                # Use 2.5 Flash as requested by environment
-                model_id = 'gemini-2.5-flash'
+                model_id = 'gemini-2.0-flash'
                 
                 try:
                     model = genai.GenerativeModel(model_id, system_instruction=system_prompt)
-                    # Convert history
                     history = []
                     for m in st.session_state.messages[:-1]: 
                         role = "user" if m["role"] == "user" else "model"
@@ -298,5 +364,4 @@ else:
                     st.session_state.messages.append({"role": "assistant", "content": full_response})
                     
                 except Exception as e:
-                    st.error(f"Gemini 2.5 Error ({model_id}): {e}") # Changed message to verify update
-                    st.info("💡 Troubleshooting: Check your API Key in sidebar.")
+                    st.error(f"Gemini Error ({model_id}): {e}")

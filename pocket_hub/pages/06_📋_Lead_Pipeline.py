@@ -12,19 +12,30 @@ except ImportError:
     st.error("Authentication module missing. Please contact administrator.")
     st.stop()
 # ----------------------
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
 
 import sys
 import os
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime, timedelta
 
 # Add parent directory to path for imports
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../pocket_leads')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../pocket_invoices')))
 
 try:
     import lead_history as lh
+    import ai_analyst
+    import invoice_manager as im
 except ImportError:
-    st.error("Could not load lead history module")
+    st.error("Could not load lead modules")
     st.stop()
 
 def main():
@@ -85,6 +96,47 @@ def main():
             if isinstance(fleet_added, list):
                 total_new += len(fleet_added)
             
+            # --- AI ANALYSIS ---
+            if total_new > 0:
+                with st.spinner("🧠 AI Analyzing Replies..."):
+                    # 1. Analyze Web Leads
+                    if isinstance(web_added, list) and web_added:
+                        # Get Creds
+                        w_user = ""
+                        w_pass = ""
+                        if "web_hunter" in st.secrets:
+                            w_user = st.secrets["web_hunter"].get("mailer_email", "")
+                            w_pass = st.secrets["web_hunter"].get("mailer_password", "")
+                        
+                        if w_user and w_pass:
+                            for l in web_added:
+                                body = ai_analyst.fetch_latest_email(l['email'], "imap.gmail.com", w_user, w_pass)
+                                if body:
+                                    analysis = ai_analyst.analyze_reply(body)
+                                    if "error" not in analysis:
+                                        # Auto-Update
+                                        lh.update_lead_status(l['id'], analysis.get("suggested_status", "New"))
+                                        lh.add_lead_note(l['id'], f"AI Analysis: {analysis.get('summary')}\nSentiment: {analysis.get('sentiment')}\nIntent: {analysis.get('intent')}")
+                                
+                    # 2. Analyze Fleet Leads
+                    if isinstance(fleet_added, list) and fleet_added:
+                        # Get Creds
+                        f_user = ""
+                        f_pass = ""
+                        if "fleet_manager" in st.secrets:
+                            f_user = st.secrets["fleet_manager"].get("gmail_username", "")
+                            f_pass = st.secrets["fleet_manager"].get("gmail_app_password", "")
+                        
+                        if f_user and f_pass:
+                            for l in fleet_added:
+                                body = ai_analyst.fetch_latest_email(l['email'], "imap.gmail.com", f_user, f_pass)
+                                if body:
+                                    analysis = ai_analyst.analyze_reply(body)
+                                    if "error" not in analysis:
+                                        # Auto-Update
+                                        lh.update_lead_status(l['id'], analysis.get("suggested_status", "New"))
+                                        lh.add_lead_note(l['id'], f"AI Analysis: {analysis.get('summary')}\nSentiment: {analysis.get('sentiment')}\nIntent: {analysis.get('intent')}")
+
             if total_new > 0:
                 new_leads_found = True
                 msg = f"🎉 Found {total_new} New Replies!\n\n"
@@ -123,18 +175,83 @@ def main():
             st.caption(f"Last checked: {last_run.strftime('%I:%M %p')}")
         else:
             st.caption("Last checked: Just now")
+        
+        st.divider()
+        st.subheader("📄 Info Packet")
+        uploaded_file = st.file_uploader("Upload Brochure (PDF)", type="pdf")
+        
+        BROCHURE_PATH = os.path.join(os.path.dirname(__file__), "../../pocket_leads/data/brochure.pdf")
+        if uploaded_file:
+            with open(BROCHURE_PATH, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success("Brochure Saved!")
+            
+        elif os.path.exists(BROCHURE_PATH):
+            st.caption("✅ Brochure loaded and ready to send.")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    with c1:
-        st.metric("🔥 Due Today", stats.get("due_today", 0))
-    with c2:
-        st.metric("📥 New", stats.get("New", 0))
-    with c3:
-        st.metric("📞 Contacted", stats.get("Contacted", 0))
-    with c4:
-        st.metric("💰 Won", stats.get("Won", 0))
-    with c5:
-        st.metric("📊 Total", stats.get("total", 0))
+        # Mobile Toggle
+        st.session_state['mobile_view'] = st.toggle("📱 Mobile View", value=st.session_state.get('mobile_view', False))
+
+    # --- METRICS ---
+    if st.session_state.get('mobile_view'):
+        # 3x2 Grid for Mobile
+        m1, m2, m3 = st.columns(3)
+        with m1: st.metric("🔥 Due", stats.get("due_today", 0))
+        with m2: st.metric("📥 New", stats.get("New", 0))
+        with m3: st.metric("📞 Contacted", stats.get("Contacted", 0))
+        
+        m4, m5, m6 = st.columns(3)
+        with m4: st.metric("💰 Won", stats.get("Won", 0))
+        with m5: st.metric("📊 Total", stats.get("total", 0))
+        with m6: st.metric("💵 Value", f"${stats.get('pipeline_value', 0):,.0f}")
+    else:
+        # --- VISUAL ANALYTICS (Plotly) ---
+        c1, c2 = st.columns(2)
+        with c1:
+            # Revenue Forecast (Deal Value by Status)
+            try:
+                leads = lh.load_leads()
+                df = pd.DataFrame(leads)
+                if not df.empty and "deal_value" in df.columns:
+
+                     df["deal_value"] = pd.to_numeric(df["deal_value"], errors='coerce').fillna(0)
+                     rev = df.groupby("status")["deal_value"].sum().reset_index()
+                     
+                     fig = px.bar(rev, x="status", y="deal_value", title="💰 Revenue Forecast by Stage", 
+                                  color="status", color_discrete_sequence=px.colors.qualitative.Pastel)
+                     fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+                     st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Add deal values to see revenue forecast")
+            except:
+                st.info("Chart unavailable")
+        
+        with c2:
+            # Pipeline Funnel
+            try:
+                funnel_data = {"Stage": [], "Count": []}
+                for s in ["New", "Contacted", "Proposal", "Negotiation", "Won"]:
+                    count = stats.get(s, 0)
+                    if count > 0:
+                        funnel_data["Stage"].append(s)
+                        funnel_data["Count"].append(count)
+                
+                if funnel_data["Stage"]:
+                    fig = px.funnel(funnel_data, x='Count', y='Stage', title="🔻 Sales Funnel")
+                    fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Pipeline empty")
+            except:
+                pass
+    
+    # Original Metrics Row (Compact)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.metric("🔥 Due Today", stats.get("due_today", 0))
+    with c2: st.metric("📥 New Leads", stats.get("New", 0))
+    with c3: st.metric("💰 Won Deals", stats.get("Won", 0))
+    with c4: st.metric("💵 Pipeline Value", f"${stats.get('pipeline_value', 0):,.0f}")
+
 
     # --- Tabs ---
     tab1, tab2, tab3, tab4 = st.tabs(["🔔 Follow-ups", "📋 Pipeline", "➕ Add Lead", "📊 Analytics"])
@@ -208,7 +325,8 @@ def main():
         
         # Lead List
         for lead in leads:
-            with st.expander(f"{lead.get('company_name', 'Unknown')} | {lead.get('status', 'New')}", expanded=False):
+            val_str = f"${lead.get('deal_value', 0):,.0f}" if lead.get('deal_value') else "$0"
+            with st.expander(f"{lead.get('company_name', 'Unknown')} | {lead.get('status', 'New')} | {val_str}", expanded=False):
                 c1, c2 = st.columns([2, 1])
                 
                 with c1:
@@ -227,11 +345,78 @@ def main():
                         key=f"status_{lead['id']}"
                     )
                     if new_status != lead.get('status'):
-                        if st.button("💾 Update", key=f"update_{lead['id']}"):
+                        if st.button("💾 Update Status", key=f"update_{lead['id']}"):
                             lh.update_lead_status(lead['id'], new_status)
                             st.success("Updated!")
+                            st.success("Updated!")
                             st.rerun()
+
+                    # Convert to Client (If Won)
+                    if lead.get('status') == "Won":
+                        if st.button("🎉 Convert to Client", key=f"conv_{lead['id']}"):
+                            try:
+                                im.add_client(
+                                    name=lead.get('company_name', 'Unknown'),
+                                    address="Address Pending", 
+                                    city_state_zip="",
+                                    email=lead.get('email', ''),
+                                    phone=lead.get('phone', '')
+                                )
+                                st.success(f"Client Profile Created for {lead.get('company_name')}!")
+                                st.balloons()
+                                lh.add_lead_note(lead['id'], "Converted to Client", "System")
+                            except Exception as e:
+                                st.error(f"Conversion Failed: {e}")
                     
+                    # Edit Value
+                    curr_val = float(lead.get('deal_value', 0.0))
+                    new_val = st.number_input("Deal Value ($)", value=curr_val, step=100.0, key=f"val_{lead['id']}")
+                    if new_val != curr_val:
+                         if st.button("💾 Save Value", key=f"save_val_{lead['id']}"):
+                             lh.update_lead(lead['id'], deal_value=new_val)
+                             st.success("Value Saved!")
+                             st.rerun()
+                    
+                    # Send Brochure
+                    if os.path.exists(BROCHURE_PATH):
+                        if st.button("📤 Send Brochure", key=f"send_broch_{lead['id']}"):
+                            # 1. Get Mailer Config
+                            m_user = ""
+                            m_pass = ""
+                            if "web_hunter" in st.secrets:
+                                m_user = st.secrets["web_hunter"].get("mailer_email", "")
+                                m_pass = st.secrets["web_hunter"].get("mailer_password", "")
+                            
+                            if m_user and m_pass:
+                                try:
+                                    msg = MIMEMultipart()
+                                    msg['From'] = m_user
+                                    msg['To'] = lead['email']
+                                    msg['Subject'] = f"Info for {lead['company_name']} - Pocket Empire" # Basic subject
+                                    
+                                    body = "Hi,\n\nHere is the information you requested.\n\nBest,\nSales Team"
+                                    msg.attach(MIMEText(body, 'plain'))
+                                    
+                                    with open(BROCHURE_PATH, "rb") as f:
+                                        part = MIMEApplication(f.read(), Name="Brochure.pdf")
+                                    part['Content-Disposition'] = 'attachment; filename="Brochure.pdf"'
+                                    msg.attach(part)
+                                    
+                                    s = smtplib.SMTP('smtp.gmail.com', 587)
+                                    s.starttls()
+                                    s.login(m_user, m_pass)
+                                    s.sendmail(m_user, lead['email'], msg.as_string())
+                                    s.quit()
+                                    
+                                    st.success("Brochure Sent!")
+                                    lh.add_lead_note(lead['id'], "Sent Brochure", "Email")
+                                    lh.update_lead_status(lead['id'], "Contacted")
+                                except Exception as e:
+                                    st.error(f"Send Failed: {e}")
+                            else:
+                                st.error("Mailer Config Missing in Secrets")
+
+
                     # Follow-up
                     st.markdown("---")
                     follow_date = st.date_input("Follow-up Date", key=f"date_{lead['id']}")
@@ -273,11 +458,12 @@ def main():
                 phone = st.text_input("Phone", placeholder="(555) 123-4567")
             with c2:
                 email = st.text_input("Email", placeholder="john@company.com")
+                deal_val = st.number_input("Est. Deal Value ($)", min_value=0.0, step=100.0)
                 notes = st.text_area("Notes", placeholder="Initial notes about this lead...")
             
             if st.form_submit_button("💾 Add Lead"):
                 if company:
-                    lh.add_lead(company, mc, contact, phone, email, notes)
+                    lh.add_lead(company, mc, contact, phone, email, notes, deal_value=deal_val)
                     st.success(f"Added: {company}")
                     st.balloons()
                     st.rerun()

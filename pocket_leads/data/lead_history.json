@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1770768864.723353,
+    "company_name": "Test Logistics",
+    "mc_number": "MC999999",
+    "contact_name": "Tester",
+    "phone": "",
+    "email": "test@example.com",
+    "status": "Won",
+    "deal_value": 0.0,
+    "notes": "",
+    "history": [
+      {
+        "date": "2026-02-10T19:16:23.223073",
+        "action": "Status: New \u2192 Won",
+        "notes": ""
+      }
+    ],
+    "follow_up_date": null,
+    "created_at": "2026-02-10T19:14:24.723376",
+    "updated_at": "2026-02-10T19:16:23.223053"
+  }
+]

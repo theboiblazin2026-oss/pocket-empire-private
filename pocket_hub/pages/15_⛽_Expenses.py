@@ -45,41 +45,41 @@ def save_expenses(data):
     with open(EXPENSES_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
-def scan_receipt_with_ai(file_bytes):
-    """Scan receipt using local LLM."""
+def scan_receipt_with_ai(file_bytes, api_key):
+    """Scan receipt using Gemini Flash 2.5."""
     try:
-        import ollama
-    except ImportError:
-        return None  # Ollama not installed
-    
-    try:
-        # Save temp file
-        temp_path = "temp_receipt.jpg"
-        with open(temp_path, "wb") as f:
-            f.write(file_bytes)
-            
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Create the image part
+        image_part = {
+            "mime_type": "image/jpeg",
+            "data": file_bytes
+        }
+        
         prompt = """
         Analyze this receipt. Extract these fields as JSON:
-        - date (YYYY-MM-DD)
-        - merchant (Name)
-        - amount (Total float)
-        - gallons (If fuel, float. Else 0)
-        - state (2-letter US state code, e.g. TX. Infer from address if needed)
+        - date (YYYY-MM-DD format. If ambiguous, assume current year)
+        - merchant (Name of store/station)
+        - amount (Total float value)
+        - gallons (If this is a fuel receipt, extract gallons. Else 0.0)
+        - state (2-letter US state code, e.g. GA, FL. Look for address or station ID)
+        - category (Best guess from: "⛽ Fuel", "🔧 Maintenance", "🍔 Meals", "🏨 Lodging", "OTHER")
         
-        Return ONLY JSON. No markdown.
+        Return ONLY valid JSON. do not include markdown formatting.
         """
         
-        response = ollama.chat(model='llava', messages=[
-            {'role': 'user', 'content': prompt, 'images': [temp_path]}
-        ])
+        response = model.generate_content([prompt, image_part])
+        content = response.text
         
-        content = response['message']['content']
         # Clean code blocks
         content = content.replace("```json", "").replace("```", "").strip()
         return json.loads(content)
         
     except Exception as e:
-        print(f"AI Error: {e}")
+        st.error(f"AI Error: {e}")
         return None
 
 # --- UI ---
@@ -112,15 +112,36 @@ with tab1:
         
     # AI Uploader
     with st.expander("📸 Scan Receipt (AI Auto-Fill)", expanded=True):
+        # API Key Logic (Reused from Pocket Lawyer)
+        api_key = None
+        if "GOOGLE_API_KEY" in st.secrets:
+            api_key = st.secrets["GOOGLE_API_KEY"]
+        elif "gemini" in st.secrets and "api_key" in st.secrets["gemini"]:
+            api_key = st.secrets["gemini"]["api_key"]
+            
+        if not api_key:
+            api_key = st.text_input("Enter Google API Key for AI Scanning", type="password")
+        
         uploaded_file = st.file_uploader("Upload Receipt", type=["jpg", "png", "jpeg"])
-        if uploaded_file and st.button("✨ Scan with AI"):
-            with st.spinner("Reading Receipt..."):
-                extracted = scan_receipt_with_ai(uploaded_file.getvalue())
-                if extracted:
-                    st.success("Read Successful!")
-                    st.session_state.exp_form_data = extracted
+        
+        # Camera Input for Mobile
+        camera_file = st.camera_input("Or Take Photo")
+        if camera_file:
+            uploaded_file = camera_file
+            
+        if uploaded_file: 
+            if st.button("✨ Scan with AI"):
+                if not api_key:
+                    st.error("API Key required for AI scanning.")
                 else:
-                    st.error("Could not read receipt. Enter manually.")
+                    with st.spinner("Reading Receipt..."):
+                        extracted = scan_receipt_with_ai(uploaded_file.getvalue(), api_key)
+                        if extracted:
+                            st.success("Read Successful!")
+                            st.session_state.exp_form_data = extracted
+                            st.rerun() # Refresh to populate form
+                        else:
+                            st.error("Could not read receipt. Enter manually.")
     
     # Form
     with st.form("expense_form", clear_on_submit=True):

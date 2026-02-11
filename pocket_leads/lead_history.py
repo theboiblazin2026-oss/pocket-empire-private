@@ -128,6 +128,7 @@ def sync_fleet_manager(creds_path, sheet_id):
                     "phone": str(row.get('Phone', '')),
                     "email": email,
                     "status": "New",
+                    "deal_value": 0.0, # Default value
                     "notes": f"Imported from Fleet Manager. DOT#: {dot}",
                     "history": [{
                         "date": datetime.now().isoformat(),
@@ -162,7 +163,7 @@ def save_leads(leads):
     with open(LEADS_FILE, 'w') as f:
         json.dump(leads, f, indent=2)
 
-def add_lead(company_name, mc_number="", contact_name="", phone="", email="", notes=""):
+def add_lead(company_name, mc_number="", contact_name="", phone="", email="", notes="", deal_value=0.0):
     """Add a new lead to tracking"""
     leads = load_leads()
     
@@ -174,6 +175,7 @@ def add_lead(company_name, mc_number="", contact_name="", phone="", email="", no
         "phone": phone,
         "email": email,
         "status": "New",
+        "deal_value": float(deal_value),
         "notes": notes,
         "history": [],
         "follow_up_date": None,
@@ -184,6 +186,17 @@ def add_lead(company_name, mc_number="", contact_name="", phone="", email="", no
     leads.append(lead)
     save_leads(leads)
     return lead
+
+def update_lead(lead_id, **kwargs):
+    """Update arbitrary lead fields (like deal_value)"""
+    leads = load_leads()
+    for lead in leads:
+        if lead["id"] == lead_id:
+            for key, value in kwargs.items():
+                lead[key] = value
+            lead["updated_at"] = datetime.now().isoformat()
+            break
+    save_leads(leads)
 
 def update_lead_status(lead_id, new_status, notes=""):
     """Update lead status and add to history"""
@@ -271,6 +284,9 @@ def get_lead_by_id(lead_id):
     leads = load_leads()
     for lead in leads:
         if lead["id"] == lead_id:
+            # Ensure deal_value exists
+            if "deal_value" not in lead:
+                lead["deal_value"] = 0.0
             return lead
     return None
 
@@ -295,21 +311,32 @@ def search_leads(query):
         if (query in lead.get("company_name", "").lower() or
             query in lead.get("contact_name", "").lower() or
             query in lead.get("mc_number", "").lower()):
+            if "deal_value" not in lead: lead["deal_value"] = 0.0
             results.append(lead)
     
     return results
 
 def get_lead_stats():
-    """Get pipeline statistics"""
+    """Get pipeline statistics with Total Value"""
     leads = load_leads()
     
     stats = {status: 0 for status in LEAD_STATUSES}
+    total_value = 0.0
+    
     for lead in leads:
         status = lead.get("status", "New")
         if status in stats:
             stats[status] += 1
-    
+        
+        # Calculate Value
+        val = lead.get("deal_value", 0.0)
+        # Only count value for active leads (exclude Lost/No Response/Won? No, count Won as revenue, Lost as lost)
+        # Actually pipeline value usually means "Open Pipeline". Won is "Closed Revenue".
+        # Let's sum ALL for now, or maybe separate Open vs Won.
+        total_value += float(val)
+
     stats["total"] = len(leads)
     stats["due_today"] = len(get_due_follow_ups())
+    stats["pipeline_value"] = total_value
     
     return stats

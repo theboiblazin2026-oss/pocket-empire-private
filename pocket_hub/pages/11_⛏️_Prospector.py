@@ -1,7 +1,10 @@
 import streamlit as st
 import sys
 import os
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
+
 import gspread
 from google.oauth2.service_account import Credentials
 import smtplib
@@ -237,53 +240,91 @@ def parse_last_sent_fleet(df):
 # ==========================================
 # DATA LOADING
 # ==========================================
-web_health = "Unknown"
-fleet_health = "Unknown"
-web_last_sent = "Checking..."
-fleet_last_sent = "Checking..."
-web_total = 0
-fleet_total = 0
-web_df = pd.DataFrame()
-fleet_df = pd.DataFrame()
 
-# --- WEB HUNTER DATA ---
-web_client = get_web_client()
-web_worksheet = None
-if web_client:
+# ==========================================
+# DATA LOADING (CACHED)
+# ==========================================
+
+@st.cache_data(ttl=600)
+def get_web_data():
+    """Fetch all Web Hunter data, cached for 10 mins."""
+    web_client = get_web_client()
+    if not web_client:
+        return pd.DataFrame(), "❌ Not Configured"
+    
     try:
         sheet_name = "Lead Puller Master List"
         if "web_hunter" in st.secrets:
             sheet_name = st.secrets["web_hunter"].get("sheet_name", sheet_name)
+        
         sh = web_client.open(sheet_name)
         ws_name = "Website Leads"
         if "web_hunter" in st.secrets:
             ws_name = st.secrets["web_hunter"].get("worksheet_name", ws_name)
+            
         web_worksheet = sh.worksheet(ws_name)
-        web_df = load_sheet_data(web_worksheet)
-        web_total = len(web_df)
-        web_last_sent = parse_last_sent_web(web_df)
-        web_health = "✅ Online"
+        df = load_sheet_data(web_worksheet)
+        return df, "✅ Online"
     except Exception as e:
-        web_health = f"⚠️ {str(e)[:40]}"
-else:
-    web_health = "❌ Not Configured"
+        return pd.DataFrame(), f"⚠️ {str(e)[:40]}"
 
-# --- FLEET MANAGER DATA ---
-fleet_client = get_fleet_client()
-fleet_worksheet = None
-fleet_sheet_id = get_fleet_sheet_id()
-if fleet_client and fleet_sheet_id:
+@st.cache_data(ttl=600)
+def get_fleet_data():
+    """Fetch all Fleet Manager data, cached for 10 mins."""
+    fleet_client = get_fleet_client()
+    fleet_sheet_id = get_fleet_sheet_id()
+    
+    if not fleet_client or not fleet_sheet_id:
+        return pd.DataFrame(), "❌ Not Configured"
+        
     try:
         fleet_sh = fleet_client.open_by_key(fleet_sheet_id)
         fleet_worksheet = fleet_sh.sheet1
-        fleet_df = pd.DataFrame(fleet_worksheet.get_all_records())
-        fleet_total = len(fleet_df)
-        fleet_last_sent = parse_last_sent_fleet(fleet_df)
-        fleet_health = "✅ Online"
+        df = pd.DataFrame(fleet_worksheet.get_all_records())
+        return df, "✅ Online"
     except Exception as e:
-        fleet_health = f"⚠️ {str(e)[:40]}"
-else:
-    fleet_health = "❌ Not Configured"
+        return pd.DataFrame(), f"⚠️ {str(e)[:40]}"
+
+# Load Data
+web_df, web_health = get_web_data()
+fleet_df, fleet_health = get_fleet_data()
+
+# Calculate Stats
+web_total = len(web_df)
+web_last_sent = parse_last_sent_web(web_df)
+fleet_total = len(fleet_df)
+fleet_last_sent = parse_last_sent_fleet(fleet_df)
+
+# Need worksheets object for updates (not cached)
+# We re-fetch the worksheet object only when needed for writes
+# to avoid serializing the socket connection in cache_data
+def get_active_web_worksheet():
+    try:
+        client = get_web_client()
+        if not client: return None
+        sheet_name = "Lead Puller Master List"
+        if "web_hunter" in st.secrets:
+            sheet_name = st.secrets["web_hunter"].get("sheet_name", sheet_name)
+        sh = client.open(sheet_name)
+        ws_name = "Website Leads"
+        if "web_hunter" in st.secrets:
+            ws_name = st.secrets["web_hunter"].get("worksheet_name", ws_name)
+        return sh.worksheet(ws_name)
+    except:
+        return None
+
+def get_active_fleet_worksheet():
+    try:
+        client = get_fleet_client()
+        fid = get_fleet_sheet_id()
+        if not client or not fid: return None
+        return client.open_by_key(fid).sheet1
+    except:
+        return None
+
+web_worksheet = get_active_web_worksheet()
+fleet_worksheet = get_active_fleet_worksheet()
+
 
 # ==========================================
 # SIDEBAR: GLOBAL SETTINGS
@@ -341,9 +382,175 @@ with st.sidebar:
         except Exception as e:
             st.caption(f"Config Sync: {str(e)[:20]}...")
 
-# ==========================================
-# APP LAYOUT (TABS)
-# ==========================================
+# ... (Existing Sidebar)
+    # Automation Toggle (using Sheet as DB)
+    if "web_worksheet" in locals() and web_worksheet:
+        # ... (Existing Automation Logic) ...
+        pass # Placeholder to keep context if needed, but we are appending mainly
+
+    st.divider()
+    st.markdown("### 🛡️ Data Safety")
+    if st.button("💾 Backup Data Now"):
+        with st.spinner("Backing up Leads, Invoices & Credit Data..."):
+            try:
+                import subprocess
+                backup_script = os.path.join(os.path.dirname(__file__), '../../scripts/daily_backup.py')
+                result = subprocess.run(["python3", backup_script], capture_output=True, text=True)
+                if result.returncode == 0:
+                    st.success("✅ Backup Complete!")
+                    st.toast("Backup saved to Empire_Data", icon="💾")
+                else:
+                    st.error(f"Backup Failed: {result.stderr}")
+            except Exception as e:
+                st.error(f"Error running backup: {e}")
+
+# ... (Rest of App) ...
+
+# ------------------------------------------------------------------
+# TAB 3: FLEET MANAGER (Updated Campaign Logic)
+# ------------------------------------------------------------------
+# ... (Inside fleet_sub_campaign) ...
+        with fleet_sub_campaign:
+            st.subheader("🚀 Fleet Auto-Blaster")
+            
+            # Identify candidates: Status='New', Type='C', has Email
+            candidates = []
+            if "Status" in fleet_df.columns and "Type" in fleet_df.columns and "Email" in fleet_df.columns:
+                for i, r in fleet_df.iterrows():
+                    status = str(r.get("Status", "")).strip().lower()
+                    auth_type = str(r.get("Type", "")).strip().upper()
+                    email = str(r.get("Email", "")).strip()
+                    if status == "new" and auth_type == "C" and email and email.lower() not in ['n/a', 'none', '', 'nan']:
+                        candidates.append({'idx': i + 2, 'name': r.get('Legal Name', 'Carrier'), 'email': email, 'dot': str(r.get('DOT#', ''))})
+            
+            st.metric("Ready to Blast", len(candidates))
+            blast_limit = st.slider("Blast Limit", 1, 50, 10, key="blast_slider")
+            
+            # Get fleet mailer creds ... (Existing Creds Logic) ...
+            fleet_user = ""
+            fleet_pass = ""
+            fleet_from = ""
+            if "fleet_manager" in st.secrets:
+                fleet_user = st.secrets["fleet_manager"].get("gmail_username", "")
+                fleet_pass = st.secrets["fleet_manager"].get("gmail_app_password", "")
+                fleet_from = st.secrets["fleet_manager"].get("from_email", fleet_user)
+            elif IS_LOCAL:
+                try:
+                    from dotenv import dotenv_values
+                    env = dotenv_values(os.path.join(TRUCK_SCRAPER_DIR, ".env"))
+                    fleet_pass = env.get("GMAIL_APP_PASSWORD", "").strip('"')
+                    fleet_user = "Theboiblazin2026@gmail.com"
+                    fleet_from = "Info@jayboiservicesllc.com"
+                except:
+                    pass
+            
+            if not fleet_pass:
+                st.warning("Fleet mailer credentials not found.")
+            
+            # SESSION STATE FOR CAMPAIGN RESULTS
+            if 'fleet_campaign_results' not in st.session_state:
+                st.session_state.fleet_campaign_results = None
+
+            if st.button("🚀 LAUNCH FLEET CAMPAIGN") and fleet_pass:
+                st.warning("⚠️ Sending Real Emails...")
+                prog = st.progress(0)
+                status_box = st.container()
+                
+                # Load "Welcome" template for new blasts
+                templates = load_fleet_templates()
+                welcome_tmpl = templates.get("welcome", {})
+                start_subj = welcome_tmpl.get("subject", "Welcome to the Industry")
+                start_body = welcome_tmpl.get("body", "Hi {contact_name}")
+                
+                try:
+                    smtp = smtplib.SMTP("smtp.gmail.com", 587)
+                    smtp.starttls()
+                    smtp.login(fleet_user, fleet_pass)
+                except Exception as e:
+                    st.error(f"SMTP Error: {e}")
+                    smtp = None
+                
+                if smtp:
+                    sent_count = 0
+                    failed_count = 0
+                    logs = []
+                    
+                    for idx, lead in enumerate(candidates[:blast_limit]):
+                        # Personalize
+                        try:
+                            subj = start_subj.format(company_name=lead['name'], contact_name="Manager", dot_number=lead['dot'])
+                            body_txt = start_body.format(company_name=lead['name'], contact_name="Manager", dot_number=lead['dot'])
+                            body_html = wrap_fleet_html(body_txt)
+                        except:
+                            subj = start_subj
+                            body_html = wrap_fleet_html(start_body)
+                        
+                        try:
+                            msg = MIMEMultipart('related')
+                            msg['From'] = f"Jayboi Services <{fleet_from}>" if fleet_from else fleet_user
+                            msg['To'] = lead['email']
+                            msg['Subject'] = subj
+                            
+                            alt = MIMEMultipart('alternative')
+                            msg.attach(alt)
+                            alt.attach(MIMEText("Please view in HTML.", 'plain'))
+                            alt.attach(MIMEText(body_html, 'html'))
+                            
+                            # Attach images if local
+                            if IS_LOCAL:
+                                for cid, fname in [('logo_image', 'logo.png'), ('flyer_image', 'flyer.png')]:
+                                    img_path = os.path.join(TRUCK_SCRAPER_DIR, 'templates', fname)
+                                    if os.path.exists(img_path):
+                                        with open(img_path, 'rb') as f:
+                                            img = MIMEImage(f.read())
+                                        img.add_header('Content-ID', f'<{cid}>')
+                                        img.add_header('Content-Disposition', 'inline')
+                                        msg.attach(img)
+                            
+                            recipients = [lead['email'], fleet_user]
+                            smtp.sendmail(fleet_user, recipients, msg.as_string())
+                            
+                            # Update sheet
+                            fleet_worksheet.update_cell(lead['idx'], 10, f"Emailed: {datetime.date.today()}")
+                            sent_count += 1
+                            logs.append(f"✅ Sent: {lead['name']}")
+                            # status_box.text(f"✅ Sent to {lead['name']}")
+                        except Exception as e:
+                            failed_count += 1
+                            logs.append(f"❌ Failed: {lead['name']} - {e}")
+                            # status_box.text(f"❌ Failed: {lead['name']} — {e}")
+                        
+                        prog.progress((idx + 1) / min(blast_limit, len(candidates)))
+                        time.sleep(2)
+                    
+                    smtp.quit()
+                    
+                    # Store results in session state
+                    st.session_state.fleet_campaign_results = {
+                        "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
+                        "sent": sent_count,
+                        "failed": failed_count,
+                        "logs": logs
+                    }
+                    st.rerun()
+
+            # Show Persistent Results
+            if st.session_state.fleet_campaign_results:
+                res = st.session_state.fleet_campaign_results
+                st.success(f"🎉 Campaign Finished at {res['timestamp']}")
+                c1, c2 = st.columns(2)
+                c1.metric("✅ Sent", res['sent'])
+                c2.metric("❌ Failed", res['failed'])
+                
+                with st.expander("View Campaign Logs", expanded=True):
+                    for log in res['logs']:
+                        st.text(log)
+                
+                if st.button("Clear Results"):
+                    st.session_state.fleet_campaign_results = None
+                    st.rerun()
+    else:
+        st.info("Fleet Manager not connected. Check credentials in secrets or connect SSD.")
 tab_dash, tab_web, tab_fleet = st.tabs(["📊 Dashboard", "🌐 Web Hunter", "🚛 Fleet Manager"])
 
 # ------------------------------------------------------------------
@@ -357,11 +564,24 @@ with tab_dash:
     with col1:
         st.subheader("🌐 Web Hunter")
         st.markdown(f"**Status:** {web_health}")
-        st.metric("Total Leads", web_total)
+        
+        # Velocity Chart
+        try:
+            if "Timestamp" in web_df.columns:
+                 web_df["Date"] = pd.to_datetime(web_df["Timestamp"], errors='coerce').dt.date
+                 vel = web_df.groupby("Date").size().reset_index(name="Leads")
+                 fig = px.bar(vel, x="Date", y="Leads", title="Lead Velocity", color_discrete_sequence=["#00CC96"])
+                 fig.update_layout(height=200, margin=dict(l=20, r=20, t=30, b=20))
+                 st.plotly_chart(fig, use_container_width=True)
+            else:
+                 st.metric("Total Leads", web_total)
+        except:
+            st.metric("Total Leads", web_total)
+
         web_replies = len(web_df[web_df['Lead Status'].str.contains("Replied", case=False, na=False)]) if "Lead Status" in web_df.columns else 0
         web_rate = (web_replies / web_total * 100) if web_total > 0 else 0
         st.metric("Reply Rate", f"{web_rate:.1f}% ({web_replies})")
-        st.metric("Last Email Sent", web_last_sent)
+        st.caption(f"Last Sent: {web_last_sent}")
         
         with st.expander("System Checks"):
             has_creds = "web_hunter" in st.secrets or (IS_LOCAL and os.path.exists(os.path.join(LEAD_PULLER_DIR, "service_account.json")))
@@ -373,11 +593,24 @@ with tab_dash:
     with col2:
         st.subheader("🚛 Fleet Manager")
         st.markdown(f"**Status:** {fleet_health}")
-        st.metric("Total Carriers", fleet_total)
+        
+        # Pipeline Health
+        try:
+            if "Status" in fleet_df.columns:
+                stats = fleet_df["Status"].value_counts().reset_index()
+                stats.columns = ["Status", "Count"]
+                fig = px.pie(stats, names="Status", values="Count", title="Pipeline Status", hole=0.4)
+                fig.update_layout(height=200, margin=dict(l=20, r=20, t=30, b=20), showlegend=False)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.metric("Total Carriers", fleet_total)
+        except:
+             st.metric("Total Carriers", fleet_total)
+
         fleet_replies = len(fleet_df[fleet_df['Status'].str.contains("Replied", case=False, na=False)]) if "Status" in fleet_df.columns else 0
         fleet_rate = (fleet_replies / fleet_total * 100) if fleet_total > 0 else 0
         st.metric("Reply Rate", f"{fleet_rate:.1f}% ({fleet_replies})")
-        st.metric("Last Email Sent", fleet_last_sent)
+        st.caption(f"Last Sent: {fleet_last_sent}")
         
         with st.expander("System Checks"):
             has_fleet = "fleet_manager" in st.secrets or (IS_LOCAL and os.path.exists(os.path.join(TRUCK_SCRAPER_DIR, ".env")))
@@ -404,7 +637,9 @@ with tab_web:
         with web_sub_data:
             c1, c2, c3 = st.columns([1, 1, 3])
             with c1:
-                if st.button("🔄 Refresh"): st.rerun()
+                if st.button("🔄 Refresh"):
+                    get_web_data.clear()
+                    st.rerun()
             with c2:
                 if "Address" in web_df.columns:
                     states = ["All"] + sorted(set(s for s in ["GA","TX","CA","FL","IL","TN","OH","NY","NC"] if web_df["Address"].str.contains(s, na=False).any()))
@@ -450,6 +685,7 @@ with tab_web:
             default_test = test_config.get('email_address', '') if test_config else ""
             test_email = st.text_input("Send Test To", value=default_test)
             
+
             if st.button("📨 Send Test Email"):
                 if not test_config:
                     st.error("Mailer not configured.")
@@ -459,14 +695,34 @@ with tab_web:
                         server.starttls()
                         server.login(test_config['email_address'], test_config['app_password'])
                         
-                        msg = MIMEMultipart()
+                        # Mock variables
+                        sender = test_config.get('your_name', 'Me')
+                        subj = "[TEST] " + (curr.get("subject_a") if t_type == "standard" else curr.get("subject"))
+                        body_txt = curr.get("body", "").format(business_name="Test Business", city="Test City", sender_name=sender)
+                        
+                        # Use Fleet HTML wrapper for consistency
+                        body_html = wrap_fleet_html(body_txt)
+
+                        msg = MIMEMultipart('related')
                         msg['From'] = test_config['email_address']
                         msg['To'] = test_email
-                        msg['Subject'] = "[TEST] " + (curr.get("subject_a") if t_type == "standard" else curr.get("subject"))
+                        msg['Subject'] = subj
                         
-                        # Mock variables
-                        body_txt = curr.get("body", "").format(business_name="Test Business", city="Test City", sender_name=test_config.get('your_name', 'Me'))
-                        msg.attach(MIMEText(body_txt, 'plain'))
+                        alt = MIMEMultipart('alternative')
+                        msg.attach(alt)
+                        alt.attach(MIMEText("Please view in HTML.", 'plain'))
+                        alt.attach(MIMEText(body_html, 'html'))
+
+                        # Attach Images (Logo + Flyer) - Local Only Check
+                        if IS_LOCAL:
+                             for cid, fname in [('logo_image', 'logo.png'), ('flyer_image', 'flyer.png')]:
+                                img_path = os.path.join(LEAD_PULLER_DIR, 'templates', fname)
+                                if os.path.exists(img_path):
+                                    with open(img_path, 'rb') as f:
+                                        img = MIMEImage(f.read())
+                                    img.add_header('Content-ID', f'<{cid}>')
+                                    img.add_header('Content-Disposition', 'inline')
+                                    msg.attach(img)
                         
                         server.sendmail(test_config['email_address'], test_email, msg.as_string())
                         server.quit()
@@ -494,52 +750,35 @@ with tab_web:
                 
                 batch_size = st.slider("Batch Size", 1, 20, 5)
                 
-                if st.button("📤 Send Web Batch"):
-                    try:
-                        server = smtplib.SMTP(config['smtp_server'], config['smtp_port'])
-                        server.starttls()
-                        server.login(config['email_address'], config['app_password'])
-                    except Exception as e:
-                        st.error(f"SMTP Error: {e}")
-                        server = None
-                    
-                    if server:
-                        prog = st.progress(0)
-                        to_send = eligible.head(batch_size)
-                        sent = 0
-                        updates = []
-                        today = datetime.date.today().strftime("%Y-%m-%d")
-                        
-                        for i, (idx, row) in enumerate(to_send.iterrows()):
-                            name = row.get('Business Name', 'Owner')
-                            email = row["Emails Found"].split(',')[0].strip()
-                            sender = config.get('your_name', 'Tech Trap')
-                            subj = std.get("subject_a", "Question").format(business_name=name, city="your area", sender_name=sender)
-                            body = std.get("body", "").format(business_name=name, city="your area", sender_name=sender)
-                            
-                            try:
-                                msg = MIMEMultipart()
-                                msg['From'] = config['email_address']
-                                msg['To'] = email
-                                msg['Subject'] = subj
-                                msg.attach(MIMEText(body, 'plain'))
-                                server.sendmail(config['email_address'], email, msg.as_string())
-                                
-                                cell = web_worksheet.find(row["Business Name"])
-                                if cell:
-                                    updates.append({'range': f"L{cell.row}:M{cell.row}", 'values': [[today, "Contacted"]]})
-                                sent += 1
-                                prog.progress((i + 1) / len(to_send))
-                                time.sleep(2)
-                            except Exception as e:
-                                st.error(f"Failed: {name} — {e}")
-                        
-                        server.quit()
-                        if updates:
-                            web_worksheet.batch_update(updates)
-                        st.success(f"✅ Sent {sent} emails!")
-                        time.sleep(1)
-                        st.rerun()
+                if st.button("🚀 Run Drip Campaign"):
+                    with st.spinner("⏳ Processing Drip Sequence..."):
+                         try:
+                             # Import local manager (lazy load)
+                             sys.path.append(os.path.join(os.path.dirname(__file__), '../../pocket_leads'))
+                             from campaign_manager import CampaignManager
+                             
+                             cm = CampaignManager(config)
+                             
+                             # 1. Get Eligible
+                             eligible = cm.get_eligible_leads(web_df, max_leads=batch_size)
+                             
+                             if not eligible:
+                                 st.info("✅ All caught up! No leads due for action today.")
+                             else:
+                                 # 2. Process
+                                 tmpls = load_web_templates()
+                                 res = cm.process_queue(eligible, web_worksheet, tmpls)
+                                 
+                                 st.success(f"Processed {len(eligible)} leads")
+                                 with st.expander("Campaign Logs", expanded=True):
+                                     for log in res.get("logs", []):
+                                         st.text(log)
+                                         
+                                 if res.get("sent", 0) > 0:
+                                     time.sleep(2)
+                                     st.rerun()
+                         except Exception as e:
+                             st.error(f"Campaign Error: {e}")
 
 # ------------------------------------------------------------------
 # TAB 3: FLEET MANAGER
@@ -556,7 +795,9 @@ with tab_fleet:
     if fleet_worksheet is not None:
         # --- FLEET DATA ---
         with fleet_sub_data:
-            if st.button("🔄 Refresh FMCSA"): st.rerun()
+            if st.button("🔄 Refresh FMCSA"):
+                get_fleet_data.clear()
+                st.rerun()
             
             cols = st.columns(3)
             with cols[0]:

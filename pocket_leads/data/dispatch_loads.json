@@ -1,0 +1,24 @@
+[
+  {
+    "id": "LOAD-1770778728",
+    "broker": "TQL",
+    "origin": "Atlanta, GA",
+    "destination": "Miami, FL",
+    "rate": 15000.0,
+    "pickup_date": "2026-02-10",
+    "delivery_date": "2026-02-10",
+    "weight": 0,
+    "commodity": "",
+    "status": "Booked",
+    "notes": "",
+    "created_at": "2026-02-10T21:58:48.273094",
+    "updated_at": "2026-02-10T21:58:48.273101",
+    "history": [
+      {
+        "date": "2026-02-10T21:58:48.273102",
+        "action": "Load Created",
+        "details": "Rate: $15000.0 | Lane: Atlanta, GA -> Miami, FL"
+      }
+    ]
+  }
+]
