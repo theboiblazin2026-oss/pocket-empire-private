@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting Zero to Hero Curriculum..."
 # Navigate to the project directory
-cd "/Users/newguy/.gemini/antigravity/playground/quantum-meteoroid/interactive-curriculum-app"
+cd "$(dirname "$0")"
 
 # Start the dev server in the background
 npm run dev &

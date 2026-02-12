@@ -399,20 +399,37 @@ with right:
         ai_label = "No Key"
     
     # Database Status — live check
+    # Database Status — live check
     try:
         from pocket_core.db import get_db
         _db = get_db()
         if _db:
-            _rows = _db.table("app_data").select("key").execute()
-            _count = len(_rows.data) if _rows and _rows.data else 0
-            db_status = "online"
-            db_label = f"Cloud ({_count} modules)"
+            try:
+                # Try a simple health check query
+                # If 'app_data' doesn't exist, this might fail. 
+                # Better to check something we know exists or just the client object.
+                _rows = _db.table("app_data").select("key", count="exact", head=True).execute()
+                db_status = "online"
+                db_label = "Cloud (Active)"
+            except Exception as e:
+                # If table missing, still online but empty?
+                # Let's try to just trust the client if it didn't error on init
+                import json
+                err = str(e)
+                if "404" in err or "relation" in err:
+                     db_status = "online"
+                     db_label = "Cloud (No Data)"
+                else:
+                     print(f"DB Check Fail: {e}")
+                     db_status = "warning"
+                     db_label = "Error (Check Logs)"
         else:
-            db_status = "warning"
-            db_label = "Local Only"
-    except:
-        db_status = "warning"
-        db_label = "Local Only"
+            db_status = "offline"
+            db_label = "Offline (Keys Missing)"
+    except Exception as e:
+        print(f"DB Import/Init Fail: {e}")
+        db_status = "offline"
+        db_label = "Offline (Init Fail)"
     
     st.markdown(f"""
     <div class="stat-card">
