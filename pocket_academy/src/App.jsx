@@ -204,24 +204,25 @@ function AppContent() {
           <p className={`mt-12 text-xs font-light animate-fade-in ${darkMode ? 'text-white/10' : 'text-gray-300'}`} style={{ animationDelay: '0.3s' }}>
             Pocket Academy · Learn by doing
           </p>
+
+          {/* Return Home Button */}
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = 'http://localhost:8501';
+              }
+            }}
+            className={`fixed top-4 left-4 z-50 glass p-2.5 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${darkMode ? 'text-slate-400 hover:text-white bg-slate-800/50' : 'text-gray-500 hover:text-gray-900 bg-white/50'
+              }`}
+            title="Return to Pocket Empire"
+          >
+            <ArrowLeft size={20} />
+            <span className="sr-only">Return Home</span>
+          </button>
         </div>
       </AuthGate>
-          {/* Return Home Button */ }
-    <button
-      onClick={() => {
-        if (window.history.length > 1) {
-          window.history.back();
-        } else {
-          window.location.href = 'http://localhost:8501'; // Fallback to standard Streamlit port
-        }
-      }}
-      className={`fixed top-4 left-4 z-50 glass p-2.5 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${darkMode ? 'text-slate-400 hover:text-white bg-slate-800/50' : 'text-gray-500 hover:text-gray-900 bg-white/50'
-        }`}
-      title="Return to Pocket Empire"
-    >
-      <ArrowLeft size={20} />
-      <span className="sr-only">Return Home</span>
-    </button>
     );
   }
 
