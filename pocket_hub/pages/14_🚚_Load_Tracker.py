@@ -179,36 +179,50 @@ if gc:
                 with st.spinner("Appending to Google Sheets..."):
                     try:
                         ws_load_log = sh.worksheet("Load Log")
-                        
-                        # Find first empty row by looking at column A (Load / PO #)
                         col_a = ws_load_log.col_values(1)
-                        next_row = 2
-                        for idx, val in enumerate(col_a):
-                            if idx == 0: continue
-                            if not val.strip():
-                                next_row = idx + 1
-                                break
+                        
+                        # Check for duplicate PO # (ignore empty/hourly placeholders)
+                        duplicate_row = None
+                        if load_no.strip() and load_no.upper().strip() != "HOURLY":
+                            clean_load_no = load_no.strip().replace("PO#", "").replace("PO", "").strip()
+                            for idx, val in enumerate(col_a):
+                                if idx == 0: continue
+                                clean_val = val.strip().replace("PO#", "").replace("PO", "").strip()
+                                if clean_val == clean_load_no:
+                                    duplicate_row = idx + 1
+                                    break
+                                    
+                        if duplicate_row:
+                            st.error(f"❌ Duplicate Error: Load / PO # '{load_no}' has already been logged in row {duplicate_row}!")
                         else:
-                            next_row = len(col_a) + 1
-                        
-                        # Prepare data row
-                        # Columns match: Load #, Dates, Week Ending, Route, Pay Type, Hours, Hourly Rate, Base Gross, Driver Rate%, Earned, Actual, Discrepancy, Paid?
-                        h_rate = f"=Settings!B$9" if hourly_rate == 30.0 else hourly_rate
-                        pct_rate = f"=Settings!B$8" if driver_rate_pct == 31.0 else (driver_rate_pct / 100.0)
-                        
-                        row_data = [
-                            load_no, dates, week_ending, route, pay_type,
-                            hours_worked if pay_type == "Hourly" else "",
-                            h_rate if pay_type == "Hourly" else "",
-                            base_pay if pay_type == "Percentage" else "",
-                            pct_rate if pay_type == "Percentage" else "",
-                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
-                            "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
-                        ]
-                        
-                        ws_load_log.update(values=[row_data], range_name=f"A{next_row}:M{next_row}", value_input_option="USER_ENTERED")
-                        st.success(f"✅ Load {load_no} saved successfully in row {next_row}!")
-                        del st.session_state["extracted_rate_con"]
+                            # Find first empty row by looking at column A (Load / PO #)
+                            next_row = 2
+                            for idx, val in enumerate(col_a):
+                                if idx == 0: continue
+                                if not val.strip():
+                                    next_row = idx + 1
+                                    break
+                            else:
+                                next_row = len(col_a) + 1
+                            
+                            # Prepare data row
+                            # Columns match: Load #, Dates, Week Ending, Route, Pay Type, Hours, Hourly Rate, Base Gross, Driver Rate%, Earned, Actual, Discrepancy, Paid?
+                            h_rate = f"=Settings!B$9" if hourly_rate == 30.0 else hourly_rate
+                            pct_rate = f"=Settings!B$8" if driver_rate_pct == 31.0 else (driver_rate_pct / 100.0)
+                            
+                            row_data = [
+                                load_no, dates, week_ending, route, pay_type,
+                                hours_worked if pay_type == "Hourly" else "",
+                                h_rate if pay_type == "Hourly" else "",
+                                base_pay if pay_type == "Percentage" else "",
+                                pct_rate if pay_type == "Percentage" else "",
+                                f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
+                                "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
+                            ]
+                            
+                            ws_load_log.update(values=[row_data], range_name=f"A{next_row}:M{next_row}", value_input_option="USER_ENTERED")
+                            st.success(f"✅ Load {load_no} saved successfully in row {next_row}!")
+                            del st.session_state["extracted_rate_con"]
                     except Exception as e:
                         st.error(f"Failed to write to Google Sheets: {e}")
 
@@ -238,34 +252,48 @@ if gc:
                 with st.spinner("Appending to Google Sheets..."):
                     try:
                         ws_load_log = sh.worksheet("Load Log")
-                        
-                        # Find first empty row by looking at column A (Load / PO #)
                         col_a = ws_load_log.col_values(1)
-                        next_row = 2
-                        for idx, val in enumerate(col_a):
-                            if idx == 0: continue
-                            if not val.strip():
-                                next_row = idx + 1
-                                break
+                        
+                        # Check for duplicate PO # (ignore empty/hourly placeholders)
+                        duplicate_row = None
+                        if m_load_no.strip() and m_load_no.upper().strip() != "HOURLY":
+                            clean_load_no = m_load_no.strip().replace("PO#", "").replace("PO", "").strip()
+                            for idx, val in enumerate(col_a):
+                                if idx == 0: continue
+                                clean_val = val.strip().replace("PO#", "").replace("PO", "").strip()
+                                if clean_val == clean_load_no:
+                                    duplicate_row = idx + 1
+                                    break
+                                    
+                        if duplicate_row:
+                            st.error(f"❌ Duplicate Error: Load / PO # '{m_load_no}' has already been logged in row {duplicate_row}!")
                         else:
-                            next_row = len(col_a) + 1
-                        
-                        h_rate = f"=Settings!B$9" if m_hourly_rate == 30.0 else m_hourly_rate
-                        pct_rate = f"=Settings!B$8" if m_driver_rate_pct == 31.0 else (m_driver_rate_pct / 100.0)
-                        
-                        row_data = [
-                            m_load_no, m_dates.strftime("%m/%d/%Y"), m_week_ending.strftime("%Y-%m-%d"), 
-                            m_route, m_pay_type,
-                            m_hours_worked if m_pay_type == "Hourly" else "",
-                            h_rate if m_pay_type == "Hourly" else "",
-                            m_base_pay if m_pay_type == "Percentage" else "",
-                            pct_rate if m_pay_type == "Percentage" else "",
-                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
-                            "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
-                        ]
-                        
-                        ws_load_log.update(values=[row_data], range_name=f"A{next_row}:M{next_row}", value_input_option="USER_ENTERED")
-                        st.success(f"✅ Load {m_load_no} saved successfully in row {next_row}!")
+                            # Find first empty row by looking at column A (Load / PO #)
+                            next_row = 2
+                            for idx, val in enumerate(col_a):
+                                if idx == 0: continue
+                                if not val.strip():
+                                    next_row = idx + 1
+                                    break
+                            else:
+                                next_row = len(col_a) + 1
+                            
+                            h_rate = f"=Settings!B$9" if m_hourly_rate == 30.0 else m_hourly_rate
+                            pct_rate = f"=Settings!B$8" if m_driver_rate_pct == 31.0 else (m_driver_rate_pct / 100.0)
+                            
+                            row_data = [
+                                m_load_no, m_dates.strftime("%m/%d/%Y"), m_week_ending.strftime("%Y-%m-%d"), 
+                                m_route, m_pay_type,
+                                m_hours_worked if m_pay_type == "Hourly" else "",
+                                h_rate if m_pay_type == "Hourly" else "",
+                                m_base_pay if m_pay_type == "Percentage" else "",
+                                pct_rate if m_pay_type == "Percentage" else "",
+                                f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
+                                "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
+                            ]
+                            
+                            ws_load_log.update(values=[row_data], range_name=f"A{next_row}:M{next_row}", value_input_option="USER_ENTERED")
+                            st.success(f"✅ Load {m_load_no} saved successfully in row {next_row}!")
                     except Exception as e:
                         st.error(f"Failed to write to Google Sheets: {e}")
 
