@@ -192,7 +192,7 @@ if gc:
                             next_row = len(col_a) + 1
                         
                         # Prepare data row
-                        # Columns match: Load #, Dates, Week Ending, Route, Pay Type, Hours, Hourly Rate, Base Gross, Driver Rate%, Earned, Actual, Discrepancy, Completed?
+                        # Columns match: Load #, Dates, Week Ending, Route, Pay Type, Hours, Hourly Rate, Base Gross, Driver Rate%, Earned, Actual, Discrepancy, Paid?
                         h_rate = f"=Settings!B$9" if hourly_rate == 30.0 else hourly_rate
                         pct_rate = f"=Settings!B$8" if driver_rate_pct == 31.0 else (driver_rate_pct / 100.0)
                         
@@ -426,7 +426,7 @@ if gc:
                                 if idx == 0: continue
                                 logged_po = row[0].replace("PO#", "").replace("PO", "").strip()
                                 if logged_po == po:
-                                    # Update column K (Actual Settled Pay) and M (Completed)
+                                    # Update column K (Actual Settled Pay) and M (Paid)
                                     ws_load_log.update_cell(idx + 1, 11, s_amount) # K
                                     ws_load_log.update_cell(idx + 1, 13, "TRUE") # M
                                     break
