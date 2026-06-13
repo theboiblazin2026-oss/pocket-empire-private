@@ -187,12 +187,17 @@ if gc:
                         # Prepare data row
                         # Columns match: Load #, Dates, Week Ending, Route, Pay Type, Hours, Hourly Rate, Base Gross, Driver Rate%, Earned, Actual, Discrepancy, Completed?
                         # Note: Google Sheets index starts at 2 for row formulas
-                        pct_decimal = driver_rate_pct / 100.0
+                        h_rate = f"=Settings!B$9" if hourly_rate == 30.0 else hourly_rate
+                        pct_rate = f"=Settings!B$8" if driver_rate_pct == 31.0 else (driver_rate_pct / 100.0)
+                        
                         row_data = [
-                            load_no, dates, week_ending, route, pay_type, hours_worked,
-                            f"=Settings!B$9", base_pay, pct_decimal,
-                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, F{next_row}*G{next_row})',
-                            "", f"=K{next_row}-J{next_row}", "FALSE"
+                            load_no, dates, week_ending, route, pay_type,
+                            hours_worked if pay_type == "Hourly" else "",
+                            h_rate if pay_type == "Hourly" else "",
+                            base_pay if pay_type == "Percentage" else "",
+                            pct_rate if pay_type == "Percentage" else "",
+                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
+                            "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
                         ]
                         
                         ws_load_log.insert_row(row_data, next_row, value_input_option="USER_ENTERED")
@@ -230,12 +235,18 @@ if gc:
                         all_rows = ws_load_log.get_all_values()
                         next_row = len(all_rows) + 1
                         
+                        h_rate = f"=Settings!B$9" if m_hourly_rate == 30.0 else m_hourly_rate
+                        pct_rate = f"=Settings!B$8" if m_driver_rate_pct == 31.0 else (m_driver_rate_pct / 100.0)
+                        
                         row_data = [
                             m_load_no, m_dates.strftime("%m/%d/%Y"), m_week_ending.strftime("%Y-%m-%d"), 
-                            m_route, m_pay_type, m_hours_worked, f"=Settings!B$9", m_base_pay, 
-                            m_driver_rate_pct / 100.0,
-                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, F{next_row}*G{next_row})',
-                            "", f"=K{next_row}-J{next_row}", "FALSE"
+                            m_route, m_pay_type,
+                            m_hours_worked if m_pay_type == "Hourly" else "",
+                            h_rate if m_pay_type == "Hourly" else "",
+                            m_base_pay if m_pay_type == "Percentage" else "",
+                            pct_rate if m_pay_type == "Percentage" else "",
+                            f'=IF(E{next_row}="Percentage", H{next_row}*I{next_row}, IF(E{next_row}="Hourly", F{next_row}*G{next_row}, ""))',
+                            "", f'=IF(ISBLANK(K{next_row}), "", K{next_row}-J{next_row})', "FALSE"
                         ]
                         
                         ws_load_log.insert_row(row_data, next_row, value_input_option="USER_ENTERED")
@@ -451,13 +462,13 @@ if gc:
                             next_s_row = len(settle_vals) + 1
                             row_s = [
                                 week_target,
-                                f"=SUMIFS('Load Log'!J:J, 'Load Log'!C:C, A{next_s_row})",
-                                f"=SUMIFS('Deductions & Awards Log'!E:E, 'Deductions & Awards Log'!B:B, A{next_s_row}, 'Deductions & Awards Log'!E:E, \">0\")",
-                                "=SUMIF(Settings!C$3:C$4, TRUE, Settings!B$3:B$4)",
-                                f"=ABS(SUMIFS('Deductions & Awards Log'!E:E, 'Deductions & Awards Log'!B:B, A{next_s_row}, 'Deductions & Awards Log'!E:E, \"<0\"))",
-                                f"=B{next_s_row}+C{next_s_row}-D{next_s_row}-E{next_s_row}",
+                                f"=IF(ISBLANK(A{next_s_row}), \"\", SUMIFS('Load Log'!J:J, 'Load Log'!C:C, A{next_s_row}))",
+                                f"=IF(ISBLANK(A{next_s_row}), \"\", SUMIFS('Deductions & Awards Log'!E:E, 'Deductions & Awards Log'!B:B, A{next_s_row}, 'Deductions & Awards Log'!E:E, \">0\"))",
+                                f"=IF(ISBLANK(A{next_s_row}), \"\", SUMIF(Settings!C$3:C$4, TRUE, Settings!B$3:B$4))",
+                                f"=IF(ISBLANK(A{next_s_row}), \"\", ABS(SUMIFS('Deductions & Awards Log'!E:E, 'Deductions & Awards Log'!B:B, A{next_s_row}, 'Deductions & Awards Log'!E:E, \"<0\")))",
+                                f"=IF(ISBLANK(A{next_s_row}), \"\", B{next_s_row}+C{next_s_row}-D{next_s_row}-E{next_s_row})",
                                 s_data.get('net_pay'),
-                                f"=G{next_s_row}-F{next_s_row}",
+                                f"=IF(OR(ISBLANK(A{next_s_row}), ISBLANK(G{next_s_row})), \"\", G{next_s_row}-F{next_s_row})",
                                 "Match" if not discrepancies else "Discrepancy"
                             ]
                             ws_settlements.insert_row(row_s, next_s_row, value_input_option="USER_ENTERED")
