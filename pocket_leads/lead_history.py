@@ -59,7 +59,8 @@ def sync_from_sheet(creds_path, sheet_name="Lead Puller Master List", tab_name="
                 new_lead = {
                     "id": datetime.now().timestamp() + added_count, # Ensure unique ID
                     "company_name": company,
-                    "mc_number": "",
+                    "dot_number": str(row.get('USDOT', row.get('DOT', row.get('DOT Number', '')))).strip(),
+                    "mc_number": str(row.get('MC Number', row.get('MC#', row.get('MC_MX', '')))).strip(),
                     "contact_name": "", # Sheet doesn't have clear contact name column usually
                     "phone": phone,
                     "email": email,
@@ -98,13 +99,14 @@ def save_leads(leads):
     with open(LEADS_FILE, 'w') as f:
         json.dump(leads, f, indent=2)
 
-def add_lead(company_name, mc_number="", contact_name="", phone="", email="", notes=""):
+def add_lead(company_name, dot_number="", mc_number="", contact_name="", phone="", email="", notes=""):
     """Add a new lead to tracking"""
     leads = load_leads()
     
     lead = {
         "id": datetime.now().timestamp(),
         "company_name": company_name,
+        "dot_number": dot_number,
         "mc_number": mc_number,
         "contact_name": contact_name,
         "phone": phone,
@@ -222,7 +224,7 @@ def get_leads_by_status(status):
     return [l for l in leads if l["status"] == status]
 
 def search_leads(query):
-    """Search leads by company name, contact, or MC number"""
+    """Search leads by company name, contact, USDOT, or MC number"""
     leads = load_leads()
     query = query.lower()
     
@@ -230,6 +232,7 @@ def search_leads(query):
     for lead in leads:
         if (query in lead.get("company_name", "").lower() or
             query in lead.get("contact_name", "").lower() or
+            query in lead.get("dot_number", "").lower() or
             query in lead.get("mc_number", "").lower()):
             results.append(lead)
     

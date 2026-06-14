@@ -2,6 +2,8 @@ import streamlit as st
 import datetime
 import os
 import sys
+import time
+import subprocess
 
 # Ensure modules are loaded
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pocket_wealth')))
@@ -14,6 +16,32 @@ try:
 except ImportError:
     pass
 
+def check_git_updates():
+    if "last_update_check" not in st.session_state:
+        st.session_state.last_update_check = datetime.datetime.min
+    if "update_available" not in st.session_state:
+        st.session_state.update_available = False
+
+    now = datetime.datetime.now()
+    if (now - st.session_state.last_update_check).total_seconds() > 300:
+        try:
+            # Fetch remote status
+            subprocess.run(["git", "fetch"], capture_output=True, text=True, timeout=10)
+            # Find branch
+            branch_res = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, timeout=5)
+            branch = branch_res.stdout.strip()
+            # Check how many commits origin is ahead of HEAD
+            res = subprocess.run(["git", "rev-list", "--count", f"HEAD..origin/{branch}"], capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                st.session_state.update_available = (int(res.stdout.strip()) > 0)
+            else:
+                st.session_state.update_available = False
+        except Exception:
+            st.session_state.update_available = False
+        st.session_state.last_update_check = now
+    return st.session_state.update_available
+
+
 st.set_page_config(
     page_title="Pocket Empire Command Center",
     page_icon="🚀",
@@ -24,7 +52,7 @@ st.set_page_config(
 # --- Sidebar Search ---
 logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
 if os.path.exists(logo_path):
-    st.sidebar.image(logo_path, use_column_width=True)
+    st.sidebar.image(logo_path, use_container_width=True)
 st.sidebar.markdown("### 🔍 Global Search")
 search_query = st.sidebar.text_input("Find Lead, Route, Client...", key="global_search_input")
 
@@ -55,6 +83,22 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
     }
+    
+    /* Pulsing update banner style */
+    .update-banner {
+        background: rgba(0, 255, 136, 0.08) !important;
+        border: 1px solid rgba(0, 255, 136, 0.25) !important;
+        border-left: 5px solid #00FF88 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        margin-top: 15px !important;
+        margin-bottom: 20px !important;
+        animation: update-pulse-glow 2s infinite ease-in-out;
+    }
+    @keyframes update-pulse-glow {
+        0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.15); }
+        50% { box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,6 +108,43 @@ if os.path.exists(BANNER_PATH):
     st.image(BANNER_PATH, width=700)
 else:
     st.title("🚀 Pocket Empire Command Center")
+
+# --- Git Update Checker ---
+if check_git_updates():
+    st.markdown("""
+    <div class="update-banner">
+        <h4 style="margin: 0 0 5px 0; color: #00FF88;">⚡ System Update Available!</h4>
+        <p style="margin: 0; color: #E8F5E9; font-size: 0.95rem;">
+            New features or bug fixes have been pushed to the remote repository. Apply the update below to synchronize.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_up1, col_up2 = st.columns([3, 1])
+    with col_up1:
+        st.info("Clicking the update button will perform a 'git pull' and restart all Streamlit servers automatically.")
+    with col_up2:
+        if st.button("🚀 Apply Update", type="primary", use_container_width=True, key="git_apply_update"):
+            with st.spinner("Updating system..."):
+                pull_res = subprocess.run(["git", "pull"], capture_output=True, text=True, timeout=20)
+                if pull_res.returncode == 0:
+                    st.success("✅ Code pulled successfully! Restarting system...")
+                    script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../start_system.sh"))
+                    with open(os.devnull, 'r') as devnull:
+                        subprocess.Popen(
+                            ["bash", script_path],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                            stdin=subprocess.DEVNULL,
+                            start_new_session=True,
+                            cwd=os.path.dirname(script_path)
+                        )
+                    time.sleep(2)
+                    st.info("🔄 Reloading...")
+                    st.rerun()
+                else:
+                    st.error(f"❌ Update failed: {pull_res.stderr}")
+    st.divider()
 
 # --- Dashboard Grid ---
 # --- Dashboard Grid ---

@@ -125,8 +125,14 @@ def get_carrier_info(identifier, search_type="MC_MX"):
                     if td:
                         mc_text = td.text.strip()
                         # Extract just the MC number
-                        if "MC-" in mc_text:
+                        import re
+                        match = re.search(r'(MC|MX|FF)-?\s*(\d+)', mc_text)
+                        if match:
+                            data['mc_number'] = match.group(2)
+                        elif "MC-" in mc_text:
                             data['mc_number'] = mc_text.split("MC-")[1].split()[0].strip()
+                        else:
+                            data['mc_number'] = mc_text.strip()
                         break
         
         # Extract Operating Status
@@ -341,8 +347,8 @@ def score_by_identifier(identifier, search_by_name=False):
             clean_num = ''.join(filter(str.isdigit, id_upper))
             if len(clean_num) > 4 and len(clean_num) == len(id_upper):
                 title_case_id = clean_num
-                # Try MC first (most common), fallback to DOT if not found
-                search_type = "MC_MX"
+                # Try USDOT first (most common), fallback to MC if not found
+                search_type = "USDOT"
             else:
                  # Assume name search if not a clear ID
                  search_type = "Name"
@@ -396,7 +402,7 @@ def format_score_result(result):
         lines.append(f"**DBA:** {carrier['dba_name']}")
     
     lines.extend([
-        f"**DOT#:** {carrier.get('dot_number', 'N/A')}",
+        f"**USDOT#:** {carrier.get('dot_number', 'N/A')}",
         f"**MC#:** {carrier.get('mc_number', 'N/A')}",
         "",
         "## Score Breakdown:",
@@ -440,8 +446,8 @@ def analyze_risk_with_gemini(carrier_data):
         **Carrier Data:**
         - Legal Name: {carrier_data.get('legal_name', 'Unknown')}
         - DBA: {carrier_data.get('dba_name', 'N/A')}
+        - USDOT Number: {carrier_data.get('dot_number', 'N/A')}
         - MC Number: {carrier_data.get('mc_number', 'N/A')}
-        - DOT Number: {carrier_data.get('dot_number', 'N/A')}
         - Safety Rating: {carrier_data.get('safety_rating', 'None')}
         - Operating Status: {carrier_data.get('status', 'Unknown')}
         - Fleet Size: {carrier_data.get('power_units', 0)} Trucks, {carrier_data.get('drivers', 0)} Drivers

@@ -1,12 +1,9 @@
 [theme]
-primaryColor="#FFD700"  # Gold for Empire
-backgroundColor="#0E1117" # Dark Background
-secondaryBackgroundColor="#262730" # Sidebar
-textColor="#FAFAFA"
-font="sans serif"
+primaryColor = "#00FF88"
+backgroundColor = "#0B1A0B"
+secondaryBackgroundColor = "#1A2F1A"
+textColor = "#E8F5E9"
+font = "sans serif"
 
 [browser]
 gatherUsageStats = false
-
-[server]
-maxUploadSize = 1024

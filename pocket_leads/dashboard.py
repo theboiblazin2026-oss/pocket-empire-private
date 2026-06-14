@@ -33,10 +33,10 @@ def main():
         st.subheader("Score a Lead")
         
         # Search type selector
-        search_type = st.radio("Search By:", ["MC/DOT Number", "Company Name"], horizontal=True)
+        search_type = st.radio("Search By:", ["USDOT or MC Number", "Company Name"], horizontal=True)
         
-        if search_type == "MC/DOT Number":
-            identifier = st.text_input("Enter MC or DOT Number", placeholder="MC123456 or 1234567")
+        if search_type == "USDOT or MC Number":
+            identifier = st.text_input("Enter USDOT or MC Number", placeholder="1234567 or MC123456")
             search_by_name = False
         else:
             identifier = st.text_input("Enter Company Name", placeholder="ABC Trucking LLC")
@@ -63,8 +63,8 @@ def main():
                     st.subheader(carrier.get('legal_name', 'Unknown'))
                     
                     ic1, ic2 = st.columns(2)
-                    ic1.write(f"**MC:** {carrier.get('mc_number')}")
-                    ic2.write(f"**DOT:** {carrier.get('dot_number')}")
+                    ic1.write(f"**USDOT:** {carrier.get('dot_number')}")
+                    ic2.write(f"**MC:** {carrier.get('mc_number')}")
                     
                     st.write("**Breakdown:**")
                     for item in result.get('breakdown', []):

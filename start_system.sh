@@ -19,8 +19,8 @@ echo "   - Wealth Manager..."
 nohup $STREAMLIT_EXEC run pocket_wealth/dashboard.py --server.port 8501 --server.headless true > /dev/null 2>&1 &
 
 # 2. Reminders (8502)
-echo "   - Reminders..."
-nohup $STREAMLIT_EXEC run pocket_reminders/dashboard.py --server.port 8502 --server.headless true > /dev/null 2>&1 &
+# echo "   - Reminders..."
+# nohup $STREAMLIT_EXEC run pocket_reminders/dashboard.py --server.port 8502 --server.headless true > /dev/null 2>&1 &
 
 # 3. Credit Repair (8503)
 echo "   - Credit Repair..."

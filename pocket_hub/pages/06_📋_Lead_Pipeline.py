@@ -131,7 +131,7 @@ def main():
                 c1, c2 = st.columns([2, 1])
                 
                 with c1:
-                    st.markdown(f"**MC#:** {lead.get('mc_number', 'N/A')}")
+                    st.markdown(f"**USDOT#:** {lead.get('dot_number', 'N/A')} | **MC#:** {lead.get('mc_number', 'N/A')}")
                     st.markdown(f"**Contact:** {lead.get('contact_name', 'N/A')}")
                     st.markdown(f"**Phone:** {lead.get('phone', 'N/A')}")
                     st.markdown(f"**Email:** {lead.get('email', 'N/A')}")
@@ -184,7 +184,12 @@ def main():
         
         with st.form("add_lead"):
             company = st.text_input("Company Name *", placeholder="ABC Trucking LLC")
-            mc = st.text_input("MC/DOT Number", placeholder="MC123456")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                usdot = st.text_input("USDOT Number", placeholder="1234567")
+            with col2:
+                mc = st.text_input("MC Number", placeholder="123456")
             
             c1, c2 = st.columns(2)
             with c1:
@@ -196,7 +201,7 @@ def main():
             
             if st.form_submit_button("💾 Add Lead"):
                 if company:
-                    lh.add_lead(company, mc, contact, phone, email, notes)
+                    lh.add_lead(company, usdot, mc, contact, phone, email, notes)
                     st.success(f"Added: {company}")
                     st.balloons()
                     st.rerun()

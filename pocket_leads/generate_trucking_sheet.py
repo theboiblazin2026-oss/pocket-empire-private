@@ -21,18 +21,19 @@ def main():
     new_leads = [p for p in prospects if today_str in p.get("found_at", "")]
     
     with open(OUTPUT_FILE, "w") as f:
-        f.write("# 🚚 B2B Trucking Call Sheet: New MC Authorities\n\n")
-        f.write("*These companies just registered their MC Number with the FMCSA today. They are highly motivated but overwhelmed. Pitch the $1,497 Road Ready Package, down-sell to $1,000 Authority Starter.*\n\n")
+        f.write("# 🚚 B2B Trucking Call Sheet: New USDOT Registrations\n\n")
+        f.write("*These companies just registered their USDOT/MC with the FMCSA today. They are highly motivated but overwhelmed. Pitch the $1,497 Road Ready Package, down-sell to $1,000 Authority Starter.*\n\n")
         
         valid_count = 0
         for lead in new_leads:
             name = lead.get("legal_name", "Unknown")
             phone = lead.get("phone", "No Phone Available")
+            dot = lead.get("dot_number", lead.get("usdot", "Unknown"))
             mc = lead.get("mc_number", "Unknown")
             
             if name != "Unknown" and phone:
                 valid_count += 1
-                f.write(f"### {valid_count}. {name} (MC: {mc})\n")
+                f.write(f"### {valid_count}. {name} (USDOT: {dot} | MC: {mc})\n")
                 f.write(f"- **Phone:** {phone}\n")
                 f.write(f"- **Notes:** Newly registered authority.\n\n")
 
